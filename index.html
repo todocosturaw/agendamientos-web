@@ -1,0 +1,1350 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Agenda de Cursos | Todo Costura</title>
+  <meta name="description" content="Reservá tu curso. Seleccioná fecha, horario y confirmá en segundos." />
+  <meta name="theme-color" content="#ffffff" />
+
+  <style>
+    :root{
+      /* Marca */
+      --brand:#a52b64;
+      --brand2:#c94b86;
+
+      /* Base clara */
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --txt:#111827;
+      --muted:#6b7280;
+      --muted2:#9aa3b2;
+
+      --line:#e5e7eb;
+      --line2:#eef1f5;
+
+      --shadow: 0 14px 34px rgba(17,24,39,.10);
+      --shadow2: 0 26px 60px rgba(17,24,39,.12);
+
+      --radius:18px;
+      --radius2:24px;
+      --max: 1220px;
+      --pad: clamp(16px, 2.2vw, 26px);
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--txt);
+      font-family:var(--sans);
+      background:
+        radial-gradient(1000px 420px at 10% -10%, rgba(165,43,100,.10), transparent 60%),
+        radial-gradient(900px 420px at 92% 0%, rgba(201,75,134,.10), transparent 58%),
+        var(--bg);
+      overflow-x:hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    a{color:inherit; text-decoration:none}
+    button, input, select, textarea{font:inherit}
+    .wrap{max-width:var(--max); margin:0 auto; padding:0 var(--pad)}
+    .hidden{display:none !important}
+
+    /* Top nav */
+    header{
+      position:sticky; top:0; z-index:50;
+      background: rgba(255,255,255,.82);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line2);
+    }
+    .nav{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 14px 0;
+      gap: 12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:42px; height:42px; border-radius: 14px;
+      background: linear-gradient(180deg, var(--brand), rgba(165,43,100,.78));
+      box-shadow: 0 12px 24px rgba(165,43,100,.18);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo:after{
+      content:"";
+      position:absolute; inset:-60px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.45), transparent 55%);
+      transform: rotate(15deg);
+      opacity:.55;
+    }
+    .brand .name{
+      display:flex; flex-direction:column; line-height:1.05;
+    }
+    .brand .name b{
+      font-size: 14px; letter-spacing:.6px; text-transform: uppercase;
+    }
+    .brand .name span{
+      font-size: 12.5px; color:var(--muted);
+    }
+
+    .navlinks{
+      display:flex; align-items:center; gap: 10px;
+    }
+    .navlinks a{
+      font-size: 13px;
+      color:var(--muted);
+      padding: 10px 12px;
+      border-radius: 999px;
+      transition: .18s ease;
+    }
+    .navlinks a:hover{
+      background: rgba(165,43,100,.08);
+      color: var(--txt);
+    }
+
+    .navcta{
+      display:flex; align-items:center; gap: 10px;
+    }
+
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background: #fff;
+      color:var(--txt);
+      padding: 10px 14px;
+      border-radius: 999px;
+      transition: .18s ease;
+      user-select:none;
+      box-shadow: 0 10px 22px rgba(17,24,39,.06);
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(165,43,100,.25);
+    }
+    .btn.primary{
+      border:0;
+      background: linear-gradient(180deg, var(--brand), rgba(165,43,100,.82));
+      color:#fff;
+      box-shadow: 0 16px 30px rgba(165,43,100,.18);
+    }
+    .btn.primary:hover{ filter: saturate(1.04); }
+    .btn.icon{
+      width:42px; height:42px; display:grid; place-items:center;
+      padding:0;
+      border-radius: 14px;
+    }
+
+    /* Hero */
+    .hero{
+      padding: 46px 0 24px;
+    }
+    .heroGrid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: clamp(16px, 2.6vw, 28px);
+      align-items:stretch;
+    }
+    @media (max-width: 980px){
+      .heroGrid{grid-template-columns:1fr}
+      .navlinks{display:none}
+    }
+
+    .kicker{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      width: fit-content;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .dot{
+      width:10px; height:10px; border-radius: 99px;
+      background: var(--brand);
+      box-shadow: 0 0 0 6px rgba(165,43,100,.10);
+    }
+
+    h1{
+      margin: 0 0 12px;
+      font-size: clamp(30px, 3.8vw, 54px);
+      line-height: 1.06;
+      letter-spacing: -0.02em;
+    }
+    .gradText{
+      background: linear-gradient(90deg, var(--txt), rgba(165,43,100,.92) 55%, rgba(201,75,134,.88));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color: transparent;
+    }
+    .lead{
+      font-size: clamp(14.5px, 1.2vw, 17px);
+      color: var(--muted);
+      line-height: 1.65;
+      margin: 0 0 18px;
+      max-width: 70ch;
+    }
+
+    .heroActions{
+      display:flex; gap: 12px; flex-wrap:wrap;
+      margin-bottom: 16px;
+    }
+
+    .metrics{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    @media (max-width: 560px){
+      .metrics{grid-template-columns:1fr}
+    }
+    .metric{
+      padding: 14px;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+    .metric b{
+      display:block;
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+    .metric span{
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    /* Booking card */
+    .card{
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow2);
+      position:relative;
+      overflow:hidden;
+    }
+    .card:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(820px 240px at 10% 0%, rgba(165,43,100,.10), transparent 60%);
+      pointer-events:none;
+    }
+    .cardInner{ position:relative; padding: 18px; }
+
+    .cardTop{
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(165,43,100,.22);
+      background: rgba(165,43,100,.08);
+      color: var(--txt);
+      font-size: 12px;
+      font-weight: 700;
+      white-space:nowrap;
+    }
+    .badge i{
+      width: 10px; height:10px; border-radius: 99px;
+      background: var(--brand);
+      box-shadow: 0 0 0 6px rgba(165,43,100,.12);
+      display:inline-block;
+    }
+
+    .cardTitle{
+      margin: 0;
+      font-size: 13px;
+      letter-spacing:.6px;
+      text-transform: uppercase;
+      color: rgba(17,24,39,.92);
+      font-weight: 900;
+    }
+    .cardHint{
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height:1.45;
+    }
+
+    .divider{
+      height:1px;
+      background: var(--line2);
+      margin: 14px 0;
+    }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 560px){ .grid2{grid-template-columns:1fr} }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+    .labelRow{
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 10px;
+    }
+    .labelRow label{
+      font-size: 12px;
+      letter-spacing:.5px;
+      text-transform: uppercase;
+      color: rgba(17,24,39,.82);
+      font-weight: 800;
+    }
+    .pill{
+      font-size: 11px;
+      color: rgba(17,24,39,.78);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      border-radius: 999px;
+      padding: 6px 10px;
+    }
+    .control{
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--txt);
+      padding: 12px 12px;
+      outline:none;
+      transition: .18s ease;
+    }
+    .control:focus{
+      border-color: rgba(165,43,100,.45);
+      box-shadow: 0 0 0 6px rgba(165,43,100,.12);
+    }
+    select.control{cursor:pointer}
+
+    .courseCards{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (max-width: 980px){ .courseCards{grid-template-columns:1fr} }
+    .course{
+      position:relative;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 12px;
+      cursor:pointer;
+      transition: .18s ease;
+      overflow:hidden;
+    }
+    .course:hover{
+      transform: translateY(-2px);
+      border-color: rgba(165,43,100,.22);
+      background: rgba(165,43,100,.02);
+    }
+    .course.active{
+      border-color: rgba(165,43,100,.45);
+      box-shadow: 0 0 0 6px rgba(165,43,100,.10);
+      background: rgba(165,43,100,.06);
+    }
+    .course .t{
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .course .t b{
+      font-size: 13px;
+      letter-spacing:.4px;
+      text-transform: uppercase;
+    }
+    .course .price{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(17,24,39,.86);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      border-radius: 999px;
+      padding: 6px 10px;
+      white-space:nowrap;
+    }
+    .course p{
+      margin:0;
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height:1.5;
+    }
+
+    .slots{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .slot{
+      border: 1px solid var(--line);
+      background: #fff;
+      color: rgba(17,24,39,.92);
+      border-radius: 999px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+      cursor:pointer;
+      transition:.18s ease;
+      user-select:none;
+    }
+    .slot:hover{
+      transform: translateY(-1px);
+      border-color: rgba(165,43,100,.25);
+      background: rgba(165,43,100,.04);
+    }
+    .slot.active{
+      border-color: rgba(165,43,100,.55);
+      box-shadow: 0 0 0 6px rgba(165,43,100,.10);
+      background: rgba(165,43,100,.10);
+    }
+    .slot.disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      text-decoration: line-through;
+      background: #fafafa;
+    }
+
+    .summary{
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(245,246,250,.95);
+      border: 1px solid var(--line);
+    }
+    .sumRow{
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 12px;
+      margin: 8px 0;
+      font-size: 13px;
+      color: rgba(17,24,39,.92);
+    }
+    .sumRow span{color: var(--muted)}
+    .total{
+      margin-top: 10px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(165,43,100,.28);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .total b{
+      font-size: 15px;
+      letter-spacing:.2px;
+    }
+    .total .amt{
+      font-family: var(--mono);
+      font-size: 15px;
+      background: #fff;
+      border: 1px solid rgba(165,43,100,.25);
+      border-radius: 999px;
+      padding: 10px 12px;
+      color: rgba(17,24,39,.92);
+    }
+
+    .actions{
+      display:flex; gap: 10px; flex-wrap:wrap;
+      margin-top: 14px;
+    }
+    .btn.wide{
+      flex: 1 1 220px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      text-align:center;
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+    .btn.alt{
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .note{
+      margin-top: 10px;
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* Sections */
+    section{ padding: 34px 0; }
+    .secTitle{
+      font-size: clamp(22px, 2.4vw, 36px);
+      margin: 0 0 10px;
+      letter-spacing:-0.02em;
+    }
+    .secLead{
+      margin:0 0 18px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: clamp(14px, 1.1vw, 16px);
+      max-width: 84ch;
+    }
+    .featureGrid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 980px){ .featureGrid{grid-template-columns: 1fr} }
+    .feature{
+      padding: 16px;
+      border-radius: var(--radius2);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      box-shadow: var(--shadow);
+    }
+    .feature h3{
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    .feature p{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 100;
+      width: min(420px, calc(100% - 36px));
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.95);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+      transform: translateY(18px);
+      opacity: 0;
+      pointer-events:none;
+      transition: .22s ease;
+    }
+    .toast.show{
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events:auto;
+    }
+    .toastBar{ height: 4px; background: linear-gradient(90deg, var(--brand), var(--brand2)); }
+    .toastBody{
+      padding: 14px;
+      display:flex;
+      gap: 12px;
+      align-items:flex-start;
+    }
+    .toastBody .ticon{
+      width: 40px; height:40px;
+      border-radius: 14px;
+      background: rgba(165,43,100,.08);
+      border: 1px solid rgba(165,43,100,.18);
+      display:grid; place-items:center;
+      flex: 0 0 auto;
+    }
+    .toastBody b{ display:block; font-size: 13px; margin-bottom: 4px; }
+    .toastBody p{ margin:0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+    .toastClose{
+      margin-left:auto;
+      width: 36px; height:36px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      cursor:pointer;
+      transition:.18s ease;
+      display:grid; place-items:center;
+    }
+    .toastClose:hover{ background: rgba(165,43,100,.06); transform: translateY(-1px) }
+
+    footer{
+      padding: 28px 0 40px;
+      border-top: 1px solid var(--line2);
+      background: rgba(255,255,255,.55);
+    }
+    .footGrid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 12px;
+      align-items:flex-start;
+    }
+    @media (max-width: 980px){ .footGrid{grid-template-columns:1fr} }
+    .footBox{
+      border-radius: var(--radius2);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .footBox b{
+      display:block;
+      margin-bottom: 8px;
+      letter-spacing:.4px;
+      text-transform: uppercase;
+      font-size: 13px;
+      color: rgba(17,24,39,.92);
+    }
+    .footBox p{margin:0; color:var(--muted); line-height:1.65; font-size: 14px}
+    .miniLinks{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    .miniLinks a{
+      font-size: 12.5px;
+      color: rgba(17,24,39,.86);
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 9px 10px;
+      border-radius: 999px;
+      transition:.18s ease;
+    }
+    .miniLinks a:hover{ background: rgba(165,43,100,.06); transform: translateY(-1px); border-color: rgba(165,43,100,.20) }
+    .copyright{ margin-top: 12px; font-size: 12.5px; color: var(--muted2); }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="#inicio" aria-label="Inicio">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="name">
+          <b>Todo Costura</b>
+          <span>Agendamientos de Cursos</span>
+        </div>
+      </a>
+
+      <nav class="navlinks" aria-label="Navegación">
+        <a href="#reservar">Reservar</a>
+        <a href="#beneficios">Beneficios</a>
+        <a href="#faq">Preguntas</a>
+      </nav>
+
+      <div class="navcta">
+        <button class="btn icon" id="btnTheme" title="Vista" aria-label="Vista">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3v2M12 19v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M3 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="rgba(17,24,39,.78)" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" stroke="rgba(17,24,39,.78)" stroke-width="1.6"/>
+          </svg>
+        </button>
+        <a class="btn primary" href="#reservar">Reservar ahora</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="inicio">
+    <div class="wrap hero">
+      <div class="heroGrid">
+        <div>
+          <div class="kicker">
+            <span class="dot" aria-hidden="true"></span>
+            <span style="font-size:12.5px;color:rgba(17,24,39,.78);letter-spacing:.2px">
+              Reserva rápida, validada y lista para integrar con Cloudflare + Zoho
+            </span>
+          </div>
+
+          <h1>
+            Reservá tu curso con un flujo
+            <span class="gradText">simple y profesional</span>.
+          </h1>
+
+          <p class="lead">
+            Seleccioná curso, fecha y horario (solo: <b>Martes 08:30</b>, <b>Jueves 13:30</b>, <b>Sábado 08:30</b>).
+            La disponibilidad se consume desde tu Worker (Cloudflare) para no exponer Zoho en el navegador.
+          </p>
+
+          <div class="heroActions">
+            <a class="btn primary wide" href="#reservar">Iniciar reserva</a>
+            <button class="btn alt wide" id="btnDemoFill">Cargar demo</button>
+          </div>
+
+          <div class="metrics" aria-label="Métricas">
+            <div class="metric">
+              <b>Ventana</b>
+              <span>Próximos 60 días</span>
+            </div>
+            <div class="metric">
+              <b>Validación</b>
+              <span>Reglas de turno aplicadas</span>
+            </div>
+            <div class="metric">
+              <b>Seguridad</b>
+              <span>Zoho no se expone al cliente</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="reservar">
+          <div class="cardInner">
+            <div class="cardTop">
+              <div>
+                <p class="cardTitle">Reserva de Curso</p>
+                <p class="cardHint">Elegí curso, fecha y horario. Cupos se validan en backend.</p>
+              </div>
+              <div class="badge"><i></i> Confirmación asistida</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="field">
+              <div class="labelRow">
+                <label>Curso</label>
+                <span class="pill" id="pillCourse">Seleccionar</span>
+              </div>
+
+              <div class="courseCards" id="courseCards" role="listbox" aria-label="Cursos"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="grid2">
+              <div class="field">
+                <div class="labelRow">
+                  <label>Fecha</label>
+                  <span class="pill" id="pillDate">—</span>
+                </div>
+                <input class="control" id="date" type="date" />
+              </div>
+
+              <div class="field">
+                <div class="labelRow">
+                  <label>Asistentes</label>
+                  <span class="pill" id="pillSeats">1</span>
+                </div>
+                <select class="control" id="seats">
+                  <option value="1">1 asistente</option>
+                  <option value="2">2 asistentes</option>
+                  <option value="3">3 asistentes</option>
+                  <option value="4">4 asistentes</option>
+                  <option value="5">5 asistentes</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:12px">
+              <div class="labelRow">
+                <label>Horario disponible</label>
+                <span class="pill" id="pillTime">Seleccionar</span>
+              </div>
+              <div class="slots" id="slots" aria-label="Horarios"></div>
+              <div style="margin-top:8px; color:var(--muted); font-size:12.5px; line-height:1.5;">
+                Solo se muestran turnos permitidos (Mar 08:30 · Jue 13:30 · Sáb 08:30) y con cupos disponibles según el backend.
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="grid2">
+              <div class="field">
+                <div class="labelRow">
+                  <label>Nombre</label>
+                  <span class="pill">Obligatorio</span>
+                </div>
+                <input class="control" id="name" placeholder="Nombre y apellido" autocomplete="name" />
+              </div>
+              <div class="field">
+                <div class="labelRow">
+                  <label>WhatsApp</label>
+                  <span class="pill">Preferente</span>
+                </div>
+                <input class="control" id="phone" placeholder="+595 9xx xxx xxx" inputmode="tel" autocomplete="tel" />
+              </div>
+            </div>
+
+            <div class="grid2" style="margin-top:12px">
+              <div class="field">
+                <div class="labelRow">
+                  <label>Email</label>
+                  <span class="pill">Confirmación</span>
+                </div>
+                <input class="control" id="email" placeholder="correo@dominio.com" inputmode="email" autocomplete="email" />
+              </div>
+              <div class="field">
+                <div class="labelRow">
+                  <label>Método de pago</label>
+                  <span class="pill">Opcional</span>
+                </div>
+                <select class="control" id="pay">
+                  <option value="pendiente">Pago posterior</option>
+                  <option value="transferencia">Transferencia</option>
+                  <option value="tarjeta">Tarjeta</option>
+                  <option value="efectivo">Efectivo</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="summary" aria-label="Resumen">
+              <div class="sumRow"><span>Curso</span><b id="sumCourse">—</b></div>
+              <div class="sumRow"><span>Fecha</span><b id="sumDate">—</b></div>
+              <div class="sumRow"><span>Horario</span><b id="sumTime">—</b></div>
+              <div class="sumRow"><span>Asistentes</span><b id="sumSeats">1</b></div>
+              <div class="sumRow"><span>Subtotal</span><b id="sumSub">Gs. 0</b></div>
+              <div class="sumRow"><span>Descuento</span><b id="sumDisc">Gs. 0</b></div>
+              <div class="total">
+                <b>Total</b>
+                <div class="amt" id="sumTotal">Gs. 0</div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn primary wide" id="btnReserve">Confirmar reserva</button>
+              <button class="btn alt wide" id="btnPreview">Vista previa del payload</button>
+            </div>
+
+            <div class="note">
+              Producción: la UI consulta disponibilidad al Worker (/api/availability) y la reserva se envía al Worker (/reserve).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="beneficios">
+      <div class="wrap">
+        <h2 class="secTitle">Beneficios operativos</h2>
+        <p class="secLead">
+          Frontend claro para el usuario, backend controlado por tu Worker: validación de fechas/horarios/cupos y envío a Zoho (Flow/Creator) sin exponer credenciales.
+        </p>
+
+        <div class="featureGrid">
+          <div class="feature">
+            <h3>Reglas de turnos</h3>
+            <p>La UI solo permite Mar 08:30 · Jue 13:30 · Sáb 08:30. El Worker valida lo mismo (doble control).</p>
+          </div>
+
+          <div class="feature">
+            <h3>Disponibilidad real</h3>
+            <p>Los cupos se calculan en backend (Zoho Creator) y se devuelven por API al frontend.</p>
+          </div>
+
+          <div class="feature">
+            <h3>Seguridad</h3>
+            <p>El navegador nunca llama a Zoho. Solo consume tu API pública (Worker) con CORS controlado.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="wrap">
+        <h2 class="secTitle">Preguntas frecuentes</h2>
+        <p class="secLead">Configuración recomendada para operar estable y sin errores.</p>
+
+        <div class="featureGrid">
+          <div class="feature">
+            <h3>¿La UI puede mostrar cupos?</h3>
+            <p>Sí, si tu endpoint /api/availability devuelve capacity/booked/available por slot (fecha+hora).</p>
+          </div>
+          <div class="feature">
+            <h3>¿Qué pasa si el usuario cambia el HTML?</h3>
+            <p>No importa: el Worker debe validar todo antes de registrar reserva y actualizar cupos.</p>
+          </div>
+          <div class="feature">
+            <h3>¿Qué ventana maneja?</h3>
+            <p>60 días (fijo). El Worker puede limitar más si lo necesitás.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap footGrid">
+        <div class="footBox">
+          <b>Todo Costura | Agendamientos</b>
+          <p>Interfaz lista para integrarse con Cloudflare Workers y orquestar reservas con Zoho.</p>
+          <div class="miniLinks">
+            <a href="#reservar">Reservar</a>
+            <a href="#beneficios">Beneficios</a>
+            <a href="#faq">Preguntas</a>
+          </div>
+          <div class="copyright">© <span id="y"></span> Todo Costura. Todos los derechos reservados.</div>
+        </div>
+
+        <div class="footBox">
+          <b>Integración</b>
+          <p>Configurar API_BASE y conectar endpoints: /api/courses, /api/availability, /reserve.</p>
+          <div class="miniLinks">
+            <a href="javascript:void(0)" id="btnSetEndpoint">Configurar endpoint</a>
+            <a href="javascript:void(0)" id="btnTestToast">Probar notificación</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+    <div class="toastBar" aria-hidden="true"></div>
+    <div class="toastBody">
+      <div class="ticon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2l9 4v6c0 5-3.5 9.4-9 10-5.5-.6-9-5-9-10V6l9-4Z" stroke="rgba(17,24,39,.78)" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M8.8 12l2.2 2.2L15.6 9.6" stroke="rgba(17,24,39,.78)" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <b id="toastTitle">Listo</b>
+        <p id="toastMsg">Acción completada.</p>
+      </div>
+      <button class="toastClose" id="toastClose" aria-label="Cerrar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M7 7l10 10M17 7L7 17" stroke="rgba(17,24,39,.75)" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // Configuración
+    // =========================
+    // Producción: apuntar al Worker real (Cloudflare)
+    // Ej: const API_BASE = "https://agendamientos-todocostura.tu-dominio.workers.dev";
+    let API_BASE = "https://api.taller2.workers.dev";
+ // vacío = demo local
+
+    // Reglas de negocio (Front): Mar 08:30, Jue 13:30, Sáb 08:30
+    // JS getDay(): 0=Dom..6=Sáb
+    const ALLOWED = [
+      { dow: 2, time: "08:30" }, // Martes
+      { dow: 4, time: "13:30" }, // Jueves
+      { dow: 6, time: "08:30" }  // Sábado
+    ];
+    const DAYS_WINDOW = 60;
+
+    const CURRENCY = "PYG";
+    const fmt = (n) => new Intl.NumberFormat("es-PY", { style:"currency", currency: CURRENCY, maximumFractionDigits: 0 }).format(n);
+
+    // Cursos demo (en producción: vienen del Worker /api/courses)
+    const COURSES = [
+      { id:"curso-1", name:"Curso 1", desc:"Descripción breve.", price:350000, duration:"2h 30m", level:"Inicial" },
+      { id:"curso-2", name:"Curso 2", desc:"Descripción breve.", price:590000, duration:"4h", level:"Avanzado" },
+      { id:"curso-3", name:"Curso 3", desc:"Descripción breve.", price:890000, duration:"6h", level:"Intensivo" }
+    ];
+
+    const state = {
+      courseId: null,
+      date: null,
+      time: null,
+      seats: 1,
+      pay: "pendiente",
+      name: "",
+      phone: "",
+      email: "",
+
+      // availability cache: key "YYYY-MM-DDTHH:MM" -> { capacity, booked, available }
+      av: new Map()
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function toast(title, msg){
+      $("toastTitle").textContent = title;
+      $("toastMsg").textContent = msg;
+      const t = $("toast");
+      t.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => t.classList.remove("show"), 4200);
+    }
+
+    function ymd(d){
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,"0");
+      const dd = String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${dd}`;
+    }
+    function slotKey(date, time){ return `${date}T${time}`; }
+
+    function getAllowedTimeForDate(dateStr){
+      const [y,m,d] = dateStr.split("-").map(Number);
+      const dt = new Date(y, m-1, d);
+      const dow = dt.getDay();
+      const rule = ALLOWED.find(r => r.dow === dow);
+      return rule ? rule.time : null;
+    }
+
+    function withinWindow(dateStr){
+      const [y,m,d] = dateStr.split("-").map(Number);
+      const dt = new Date(y, m-1, d);
+      const today = new Date();
+      const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + DAYS_WINDOW);
+      return dt >= start && dt <= end;
+    }
+
+    function setMinDate(){
+      const d = new Date();
+      const min = ymd(d);
+      $("date").min = min;
+      if(!$("date").value) $("date").value = min;
+      state.date = $("date").value;
+      updatePills();
+    }
+
+    function renderCourses(){
+      const host = $("courseCards");
+      host.innerHTML = "";
+      COURSES.forEach(c => {
+        const el = document.createElement("div");
+        el.className = "course";
+        el.setAttribute("role","option");
+        el.dataset.id = c.id;
+        el.innerHTML = `
+          <div class="t">
+            <b>${c.name}</b>
+            <span class="price">${fmt(c.price)}</span>
+          </div>
+          <p>${c.desc}</p>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <span class="pill">${c.duration}</span>
+            <span class="pill">${c.level}</span>
+          </div>
+        `;
+        el.addEventListener("click", async () => {
+          state.courseId = c.id;
+          [...host.children].forEach(x => x.classList.remove("active"));
+          el.classList.add("active");
+
+          state.time = null;
+          await refreshAvailabilityForDate(); // si API_BASE está configurado, pide disponibilidad del día
+          renderSlots();
+          updateSummary();
+          updatePills();
+        });
+        host.appendChild(el);
+      });
+
+      state.courseId = COURSES[0].id;
+      host.children[0].classList.add("active");
+    }
+
+    function getCourse(){
+      return COURSES.find(c => c.id === state.courseId) || null;
+    }
+
+    function calc(){
+      const course = getCourse();
+      if(!course) return { sub:0, disc:0, total:0 };
+
+      const sub = course.price * state.seats;
+
+      let discRate = 0;
+      if(state.seats === 2) discRate = 0.05;
+      else if(state.seats === 3) discRate = 0.08;
+      else if(state.seats >= 4) discRate = 0.12;
+
+      const disc = Math.round(sub * discRate);
+      const total = sub - disc;
+      return { sub, disc, total };
+    }
+
+    function updatePills(){
+      const course = getCourse();
+      $("pillCourse").textContent = course ? course.name : "Seleccionar";
+      $("pillDate").textContent = state.date || "—";
+      $("pillSeats").textContent = String(state.seats);
+      $("pillTime").textContent = state.time || "Seleccionar";
+    }
+
+    function updateSummary(){
+      const course = getCourse();
+      $("sumCourse").textContent = course ? course.name : "—";
+      $("sumDate").textContent = state.date || "—";
+      $("sumTime").textContent = state.time || "—";
+      $("sumSeats").textContent = String(state.seats);
+
+      const { sub, disc, total } = calc();
+      $("sumSub").textContent = fmt(sub);
+      $("sumDisc").textContent = fmt(disc);
+      $("sumTotal").textContent = fmt(total);
+    }
+
+    function collectForm(){
+      state.name = $("name").value.trim();
+      state.phone = $("phone").value.trim();
+      state.email = $("email").value.trim();
+      state.pay = $("pay").value;
+      state.seats = Number($("seats").value || 1);
+    }
+
+    function validate(){
+      const course = getCourse();
+      const errors = [];
+
+      if(!course) errors.push("Seleccioná un curso.");
+      if(!state.date) errors.push("Seleccioná una fecha.");
+      if(!withinWindow(state.date)) errors.push("La fecha debe estar dentro de los próximos 60 días.");
+      const allowedTime = state.date ? getAllowedTimeForDate(state.date) : null;
+      if(!allowedTime) errors.push("Fecha inválida: solo martes, jueves y sábado.");
+      if(!state.time) errors.push("Seleccioná un horario.");
+      if(allowedTime && state.time !== allowedTime) errors.push("Horario inválido para esa fecha.");
+      if(!state.name) errors.push("Ingresá tu nombre.");
+      if(state.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.email)) errors.push("El email no parece válido.");
+
+      return errors;
+    }
+
+    function payloadPreview(){
+      const course = getCourse();
+      const { sub, disc, total } = calc();
+      return {
+        course_id: course ? course.id : null,
+        course_name: course ? course.name : null,
+        booking: {
+          date: state.date,
+          time: state.time,
+          seats: state.seats
+        },
+        student: {
+          name: state.name,
+          phone: state.phone,
+          email: state.email
+        },
+        payment: {
+          method: state.pay,
+          subtotal: sub,
+          discount: disc,
+          total: total,
+          currency: CURRENCY
+        },
+        meta: {
+          source: "web",
+          window_days: DAYS_WINDOW,
+          allowed: ALLOWED
+        },
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    async function refreshAvailabilityForDate(){
+      // Producción: consulta al Worker para obtener cupos del slot (fecha+hora) del curso.
+      // Recomendación: un endpoint que devuelva { date, time, capacity, booked, available }.
+      if(!API_BASE || !state.courseId || !state.date) return;
+
+      const allowedTime = getAllowedTimeForDate(state.date);
+      if(!allowedTime) return;
+
+      try{
+        const url = new URL(API_BASE + "/api/availability");
+        url.searchParams.set("course_id", state.courseId);
+        url.searchParams.set("days", "60");
+
+        // Para optimizar, también podés implementar /api/availability/day?course_id=...&date=YYYY-MM-DD
+        const r = await fetch(url.toString(), { method:"GET" });
+        if(!r.ok) throw new Error("availability http " + r.status);
+        const data = await r.json();
+
+        // Normalización mínima (ajustable a tu respuesta real)
+        const items = Array.isArray(data) ? data : (data.items || data.data || []);
+        state.av = new Map();
+        for(const x of items){
+          const date = String(x.date ?? x.Fecha ?? x.fecha ?? "");
+          const time = String(x.time ?? x.Hora ?? x.hora ?? "");
+          if(!date || !time) continue;
+          state.av.set(slotKey(date, time), {
+            capacity: Number(x.capacity ?? x.Cupos ?? x.cupos ?? 0),
+            booked: Number(x.booked ?? x.Reservados ?? x.reservados ?? 0),
+            available: Number(x.available ?? x.Disponibles ?? x.disponibles ?? 0)
+          });
+        }
+      }catch(e){
+        console.error(e);
+        toast("Disponibilidad", "No se pudo cargar disponibilidad desde el Worker. Revisá API_BASE y CORS.");
+      }
+    }
+
+    function renderSlots(){
+      const host = $("slots");
+      host.innerHTML = "";
+
+      if(!state.date){
+        host.innerHTML = `<div style="color:var(--muted); font-size:12.5px;">Seleccioná una fecha.</div>`;
+        return;
+      }
+
+      const allowedTime = getAllowedTimeForDate(state.date);
+      if(!allowedTime){
+        host.innerHTML = `<div style="color:var(--muted); font-size:12.5px; line-height:1.45;">
+          Fecha no habilitada. Solo martes, jueves y sábado (próximos 60 días).
+        </div>`;
+        state.time = null;
+        updatePills();
+        updateSummary();
+        return;
+      }
+
+      const key = slotKey(state.date, allowedTime);
+      const av = state.av.get(key);
+
+      // Si no hay backend configurado, demo: habilitado siempre
+      let disabled = false;
+      let labelExtra = "";
+
+      if(API_BASE){
+        if(!av){
+          disabled = true;
+          labelExtra = " · sin datos";
+        }else{
+          disabled = av.available <= 0;
+          labelExtra = ` · ${av.available} disp.`;
+        }
+      }
+
+      const el = document.createElement("div");
+      el.className = "slot" + (disabled ? " disabled" : "") + (state.time===allowedTime ? " active" : "");
+      el.textContent = allowedTime + labelExtra;
+
+      if(!disabled){
+        el.addEventListener("click", () => {
+          state.time = allowedTime;
+          [...host.children].forEach(x => x.classList.remove("active"));
+          el.classList.add("active");
+          updateSummary();
+          updatePills();
+        });
+      }else{
+        state.time = null;
+      }
+
+      host.appendChild(el);
+      updatePills();
+    }
+
+    async function postReserve(){
+      collectForm();
+      updateSummary();
+      updatePills();
+
+      const errs = validate();
+      if(errs.length){
+        toast("Revisión requerida", errs[0]);
+        return;
+      }
+
+      const body = payloadPreview();
+
+      if(!API_BASE){
+        toast("Reserva (demo)", "Configurá el endpoint del Worker para enviar /reserve.");
+        console.log("Payload preview:", body);
+        return;
+      }
+
+      try{
+        const r = await fetch(API_BASE + "/reserve", {
+          method: "POST",
+          headers: { "Content-Type":"application/json" },
+          body: JSON.stringify(body),
+        });
+
+        const text = await r.text();
+        if(!r.ok){
+          toast("Error al reservar", "El Worker respondió con error. Revisá logs.");
+          console.error("Reserve error:", r.status, text);
+          return;
+        }
+
+        toast("Reserva enviada", "Solicitud enviada al backend. Se confirmará según disponibilidad.");
+        console.log("Reserve ok:", text);
+      }catch(e){
+        toast("Conexión fallida", "No se pudo contactar al Worker. Revisá API_BASE y CORS.");
+        console.error(e);
+      }
+    }
+
+    function initEvents(){
+      $("y").textContent = new Date().getFullYear();
+
+      $("date").addEventListener("change", async (e) => {
+        state.date = e.target.value || null;
+        state.time = null;
+        await refreshAvailabilityForDate();
+        renderSlots();
+        updateSummary();
+        updatePills();
+      });
+
+      $("seats").addEventListener("change", () => {
+        state.seats = Number($("seats").value || 1);
+        updateSummary();
+        updatePills();
+      });
+
+      ["name","phone","email"].forEach(id => {
+        $(id).addEventListener("input", () => collectForm());
+      });
+
+      $("pay").addEventListener("change", () => { state.pay = $("pay").value; });
+
+      $("btnReserve").addEventListener("click", postReserve);
+
+      $("btnPreview").addEventListener("click", () => {
+        collectForm();
+        const errs = validate();
+        if(errs.length){
+          toast("Revisión requerida", errs[0]);
+          return;
+        }
+        const data = payloadPreview();
+        console.log("Payload preview:", data);
+        toast("Payload generado", "Revisá la consola del navegador (F12) para ver el JSON.");
+      });
+
+      $("toastClose").addEventListener("click", () => $("toast").classList.remove("show"));
+
+      $("btnDemoFill").addEventListener("click", async () => {
+        $("name").value = "María González";
+        $("phone").value = "+595 981 234 567";
+        $("email").value = "maria.gonzalez@correo.com";
+        $("pay").value = "transferencia";
+        $("seats").value = "2";
+        state.seats = 2;
+
+        const host = $("courseCards");
+        [...host.children].forEach(x => x.classList.remove("active"));
+        host.children[0].classList.add("active");
+        state.courseId = COURSES[0].id;
+
+        await refreshAvailabilityForDate();
+        renderSlots();
+        collectForm();
+        updateSummary();
+        updatePills();
+        toast("Demo cargada", "Datos de ejemplo aplicados.");
+      });
+
+      $("btnSetEndpoint").addEventListener("click", async () => {
+        const v = prompt("Pegá aquí la URL base de tu Worker (sin / al final). Ej: https://xxx.workers.dev", API_BASE || "");
+        if(v === null) return;
+        API_BASE = (v || "").trim().replace(/\/+$/,"");
+        if(API_BASE){
+          await refreshAvailabilityForDate();
+          renderSlots();
+          toast("Endpoint configurado", "La UI consultará /api/availability y enviará /reserve.");
+        }else{
+          toast("Modo demo", "API_BASE vacío: no se enviarán requests.");
+        }
+      });
+
+      $("btnTestToast").addEventListener("click", () => toast("Notificación activa", "La interfaz está funcionando."));
+
+      $("btnTheme").addEventListener("click", () => {
+        toast("Vista", "Estilo limpio aplicado (marca Todo Costura).");
+      });
+    }
+
+    (async function init(){
+      renderCourses();
+      setMinDate();
+      await refreshAvailabilityForDate();
+      renderSlots();
+      updateSummary();
+      initEvents();
+      toast("Interfaz lista", "Modo demo activo. Configurá el endpoint del Worker para producción.");
+    })();
+  </script>
+</body>
+</html>
