@@ -199,9 +199,9 @@
       refresh:   () => `${API_BASE}/api/refresh`
     };
 
-    // Polling: intenta leer bootstrap luego de refresh
-    const POLL_MAX_TRIES = 10;
-    const POLL_DELAY_MS = 1200;
+    // Polling: Zoho Flow puede tardar. Aumentamos ventana para evitar "no devolvió a tiempo".
+    const POLL_MAX_TRIES = 25;   // ~37s
+    const POLL_DELAY_MS = 1500;
 
     // ====== UTIL ======
     const $ = (id) => document.getElementById(id);
@@ -236,75 +236,30 @@
         .replaceAll("'","&#039;");
     }
     function parseCourseIdFromHash(){
-      // Soporta: #ID=...  o  #course_id=...
       const h = (location.hash || "").replace(/^#/, "");
       if (!h) return null;
       const params = new URLSearchParams(h);
       return params.get("ID") || params.get("course_id");
     }
 
-    function unwrapData(apiBootstrapJson){
-  const payload = apiBootstrapJson?.data;
-  if (!payload) return null;
-
-  // Caso A: lo que envía la función Deluge envuelto en crtEnviarCursoCloudflare_1
-  if (payload.crtEnviarCursoCloudflare_1?.data) return payload.crtEnviarCursoCloudflare_1.data;
-
-  // Caso B: wrapper típico "response.received.data" (Zoho Flow debug)
-  if (payload.response?.received?.data) return payload.response.received.data;
-
-  // Caso C: a veces queda como "received.data"
-  if (payload.received?.data) return payload.received.data;
-
-  // Caso D: a veces Zoho Flow guarda el JSON como string dentro de una key (rawData / body)
-  // Intentamos detectar y parsear cualquier string JSON plausible.
-  for (const k of Object.keys(payload)) {
-    const v = payload[k];
-    if (typeof v === "string" && v.trim().startsWith("{")) {
-      try {
-        const parsed = JSON.parse(v);
-        if (parsed?.crtEnviarCursoCloudflare_1?.data) return parsed.crtEnviarCursoCloudflare_1.data;
-        if (parsed?.response?.received?.data) return parsed.response.received.data;
-        if (parsed?.Datos_horarios || parsed?.nombre_curso || parsed?.ID) return parsed;
-      } catch {}
-    }
-  }
-
-  // Caso E: ya viene plano
-  if (payload.Datos_horarios || payload.nombre_curso || payload.ID) return payload;
-
-  return null;
-}
-
-
-    function normalizeSlots(courseData){
-      const list = courseData?.Datos_horarios;
-      if (!Array.isArray(list)) return [];
-      return list.map(s => ({
-        slot_id: String(s.ID ?? ""),
-        fecha: String(s.Fecha_de_inicio ?? ""),
-        hora: String(s.Hora_inicio ?? ""),
-        cupos_disp: Number(String(s.Cupos_disponibles ?? "0")) || 0,
-        cupos_total: String(s.Cupos_totales ?? ""),
-        raw: s
-      })).filter(x => x.slot_id);
+    function stripHtml(html){
+      const s = String(html || "");
+      return s ? s.replace(/<[^>]*>/g, "").trim() : "";
     }
 
-    function renderCourse(courseData){
-      const name = courseData?.nombre_curso || courseData?.Nombre || courseData?.name || "Curso";
+    function renderCourse(course){
+      const name = course?.nombre_curso || "Curso";
       courseTitle.textContent = name;
 
-      const descHtml = courseData?.Descripci_n_del_curso || courseData?.Descripcion || "";
-      // Mostramos como texto simple para no inyectar HTML externo
-      const plain = descHtml ? descHtml.replace(/<[^>]*>/g, "").trim() : "";
+      const plain = stripHtml(course?.descripcion_html || "");
       courseDesc.textContent = plain || "Seleccioná un horario disponible para continuar.";
 
       const meta = [];
-      if (courseData?.Plataforma) meta.push({k:"Plataforma", v: courseData.Plataforma});
-      if (courseData?.Alumnado) meta.push({k:"Alumnado", v: courseData.Alumnado});
-      if (courseData?.Tipo_de_aprendizaje) meta.push({k:"Aprendizaje", v: courseData.Tipo_de_aprendizaje});
-      if (courseData?.Categor_a) meta.push({k:"Categoría", v: courseData.Categor_a});
-      if (courseData?.Precio) meta.push({k:"Precio", v: courseData.Precio});
+      if (course?.plataforma) meta.push({k:"Plataforma", v: course.plataforma});
+      if (course?.alumnado) meta.push({k:"Alumnado", v: course.alumnado});
+      if (course?.tipo_aprendizaje) meta.push({k:"Aprendizaje", v: course.tipo_aprendizaje});
+      if (course?.categoria) meta.push({k:"Categoría", v: course.categoria});
+      if (course?.precio) meta.push({k:"Precio", v: course.precio});
 
       courseMeta.innerHTML = meta.map(m => `<span class="chip"><strong>${escapeHtml(m.k)}:</strong> ${escapeHtml(m.v)}</span>`).join("");
     }
@@ -319,15 +274,15 @@
       selectedBox.style.display = "none";
       selectedBox.textContent = "";
 
-      if (!slots.length){
+      if (!slots || !slots.length){
         slotsEl.innerHTML = `<div class="error">No se encontraron horarios en este momento.</div>`;
         return;
       }
 
-      slots.forEach((s, idx) => {
-        const available = s.cupos_disp > 0;
+      slots.forEach((s) => {
+        const available = Number(s.cupos_disponibles || 0) > 0;
         const capClass = available ? "ok" : "no";
-        const capText = available ? `Cupos: ${s.cupos_disp}` : "Agotado";
+        const capText = available ? `Cupos: ${s.cupos_disponibles}` : "Agotado";
 
         const row = document.createElement("div");
         row.className = "row";
@@ -387,7 +342,6 @@
       }
 
       if (res.json.ok !== true){
-        // puede traer { ok:false, status:"missing" }
         setStatus("Sin datos");
         if (res.json.status === "missing") {
           showError("Todavía no hay datos cacheados para este curso. Presioná “Actualizar”.");
@@ -397,20 +351,22 @@
         return null;
       }
 
-      const courseData = unwrapData(res.json);
-      if (!courseData){
+      // NUEVO FORMATO DEL WORKER: { ok, course_id, course, slots }
+      const course = res.json.course;
+      const slots = res.json.slots || [];
+
+      if (!course){
         setStatus("Error");
-        showError("Se recibió bootstrap pero no se pudo interpretar la estructura del JSON.");
+        showError("Se recibió bootstrap pero falta el objeto 'course'. Verificá el Worker /api/ingest normalizado.");
         return null;
       }
 
-      const slots = normalizeSlots(courseData);
-      renderCourse(courseData);
+      renderCourse(course);
       renderSlots(slots);
 
       setStatus("Listo");
       showOk(`Datos cargados. Horarios: ${slots.length}`);
-      return { courseData, slots };
+      return { course, slots };
     }
 
     async function refreshAndPoll(courseId){
@@ -424,7 +380,7 @@
         return;
       }
 
-      // Poll bootstrap hasta que exista
+      // Poll bootstrap hasta que exista y sea usable
       for (let i = 1; i <= POLL_MAX_TRIES; i++){
         await new Promise(res => setTimeout(res, POLL_DELAY_MS));
         const got = await loadFromBootstrap(courseId);
@@ -462,7 +418,6 @@
         showError("Seleccioná un horario para continuar.");
         return;
       }
-      // Próximo paso: reservar. Por ahora solo dejamos la selección lista.
       showOk(`Listo para continuar. slot_id=${selectedSlot.slot_id} (aún no se envía reserva).`);
     });
 
@@ -475,8 +430,6 @@
         return;
       }
       currentCourseId = id;
-
-      // Intento bootstrap primero (rápido). Si no existe, sugerimos actualizar.
       await loadFromBootstrap(id);
     })();
   </script>
