@@ -599,22 +599,25 @@
     }
 
     async function checkAvailability() {
-      // Tu backend actual puede no tener availability real por slots del curso.
-      // Mantenemos la llamada si existe, pero no bloqueamos si el endpoint no está alineado.
       if (!state.selectedSlotId) return true;
 
       try {
         const u = new URL(API_BASE + "/api/availability");
+        // CAMBIO: enviar course_id para que el Worker valide dentro del subform del curso
+        u.searchParams.set("course_id", state.courseId);
         u.searchParams.set("slot_id", state.selectedSlotId);
         u.searchParams.set("seats", String(state.seats || 1));
 
         const r = await fetch(u.toString(), { method: "GET" });
-        if (!r.ok) return true; // no bloquear UI si no está alineado
+        if (!r.ok) return true;
         const data = await r.json().catch(() => null);
         if (!data?.ok) return true;
 
         if (data.can_book !== true) {
-          toast("No disponible", (data.reasons && data.reasons[0]) ? data.reasons[0] : "No se puede reservar este slot.");
+          toast(
+            "No disponible",
+            (data.reasons && data.reasons[0]) ? data.reasons[0] : "No se puede reservar este slot."
+          );
           return false;
         }
         return true;
@@ -642,7 +645,6 @@
       const okAv = await checkAvailability();
       if (!okAv) return;
 
-      // Estructura recomendada: course_id + booking + student + billing (simple)
       const body = {
         course_id: state.courseId,
         booking: {
@@ -701,7 +703,6 @@
 
       $("btnReserve").addEventListener("click", postReserve);
 
-      // IMPORTANTE: ID en la URL ahora es COURSE_ID (no slot_id)
       const courseId = getHashParam("ID").trim();
       if (!courseId) {
         toast("Falta ID", "Abrí la página con #reservar?ID=...");
@@ -717,7 +718,6 @@
         state.course = boot.course;
         state.slots = boot.slots || [];
 
-        // Selección inicial: primer slot habilitado (o primero)
         const firstEnabled = (state.slots || []).find(s => s.enabled) || (state.slots || [])[0] || null;
         state.selectedSlotId = firstEnabled?.slot_id || null;
         state.selectedDateIso = firstEnabled?.date_iso || null;
