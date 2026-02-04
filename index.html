@@ -244,23 +244,38 @@
     }
 
     function unwrapData(apiBootstrapJson){
-      // Esperamos: { ok:true, data: <payload_original> }
-      // Tu payload real suele ser: { crtEnviarCursoCloudflare_1: { code, data: {...} } }
-      // o Flow wrapper: { response: { received: { code, data: {...} } } }
-      const payload = apiBootstrapJson?.data;
-      if (!payload) return null;
+  const payload = apiBootstrapJson?.data;
+  if (!payload) return null;
 
-      // Caso 1: crtEnviarCursoCloudflare_1
-      if (payload.crtEnviarCursoCloudflare_1?.data) return payload.crtEnviarCursoCloudflare_1.data;
+  // Caso A: lo que envía la función Deluge envuelto en crtEnviarCursoCloudflare_1
+  if (payload.crtEnviarCursoCloudflare_1?.data) return payload.crtEnviarCursoCloudflare_1.data;
 
-      // Caso 2: response.received.data
-      if (payload.response?.received?.data) return payload.response.received.data;
+  // Caso B: wrapper típico "response.received.data" (Zoho Flow debug)
+  if (payload.response?.received?.data) return payload.response.received.data;
 
-      // Caso 3: ya viene plano
-      if (payload.Datos_horarios || payload.nombre_curso || payload.ID) return payload;
+  // Caso C: a veces queda como "received.data"
+  if (payload.received?.data) return payload.received.data;
 
-      return null;
+  // Caso D: a veces Zoho Flow guarda el JSON como string dentro de una key (rawData / body)
+  // Intentamos detectar y parsear cualquier string JSON plausible.
+  for (const k of Object.keys(payload)) {
+    const v = payload[k];
+    if (typeof v === "string" && v.trim().startsWith("{")) {
+      try {
+        const parsed = JSON.parse(v);
+        if (parsed?.crtEnviarCursoCloudflare_1?.data) return parsed.crtEnviarCursoCloudflare_1.data;
+        if (parsed?.response?.received?.data) return parsed.response.received.data;
+        if (parsed?.Datos_horarios || parsed?.nombre_curso || parsed?.ID) return parsed;
+      } catch {}
     }
+  }
+
+  // Caso E: ya viene plano
+  if (payload.Datos_horarios || payload.nombre_curso || payload.ID) return payload;
+
+  return null;
+}
+
 
     function normalizeSlots(courseData){
       const list = courseData?.Datos_horarios;
