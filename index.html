@@ -486,22 +486,24 @@
     // Configuración
     // =========================
     const API_BASE = "https://api.taller2.workers.dev";
-
     const $ = (id) => document.getElementById(id);
 
     const CURRENCY = "PYG";
-    const fmt = (n) => new Intl.NumberFormat("es-PY", { style:"currency", currency: CURRENCY, maximumFractionDigits: 0 }).format(n || 0);
+    const fmt = (n) =>
+      new Intl.NumberFormat("es-PY", { style: "currency", currency: CURRENCY, maximumFractionDigits: 0 })
+        .format(n || 0);
 
+    // Estado UI
     const state = {
-      slotId: null,
+      courseId: null,       // ID del curso (Todos_los_cursos.ID)
       course: null,
       slots: [],
-      selectedSlotId: null,
+      selectedSlotId: null, // Datos_horarios[].ID
       selectedDateIso: null,
       seats: 1,
     };
 
-    function toast(title, msg){
+    function toast(title, msg) {
       $("toastTitle").textContent = title;
       $("toastMsg").textContent = msg;
       const t = $("toast");
@@ -510,44 +512,42 @@
       toast._t = setTimeout(() => t.classList.remove("show"), 4200);
     }
 
-    function getHashParam(name){
+    function getHashParam(name) {
       // Ej: #reservar?ID=453...
       const h = (location.hash || "").replace(/^#/, "");
       const qIndex = h.indexOf("?");
-      if(qIndex < 0) return "";
+      if (qIndex < 0) return "";
       const qs = h.slice(qIndex + 1);
       const sp = new URLSearchParams(qs);
       return sp.get(name) || "";
     }
 
-    function setCourseUI(course){
+    function setCourseUI(course) {
       $("pillCourse").textContent = course?.name || "—";
       $("courseName").textContent = course?.name || "—";
       $("coursePrice").textContent = fmt(course?.price || 0);
 
       const bits = [];
-      if(course?.category) bits.push(course.category);
-      if(course?.platform) bits.push(course.platform);
-      if(course?.type) bits.push(course.type);
-      if(course?.tutor) bits.push(("Tutor: " + course.tutor).replace(/\s+/g," ").trim());
+      if (course?.category) bits.push(course.category);
+      if (course?.platform) bits.push(course.platform);
+      if (course?.type) bits.push(course.type);
+      if (course?.tutor) bits.push(("Tutor: " + course.tutor).replace(/\s+/g, " ").trim());
       $("courseMeta").textContent = bits.length ? bits.join(" · ") : "—";
 
-      $("heroLead").textContent = course?.description_html
-        ? "Curso cargado. Seleccioná una fecha disponible para reservar."
-        : "Curso cargado. Seleccioná una fecha disponible para reservar.";
+      $("heroLead").textContent = "Curso cargado. Seleccioná una fecha disponible para reservar.";
     }
 
-    function renderSlots(){
+    function renderSlots() {
       const host = $("slots");
       host.innerHTML = "";
 
       const list = Array.isArray(state.slots) ? state.slots : [];
-      if(!list.length){
+      if (!list.length) {
         host.innerHTML = `<div style="color:var(--muted); font-size:12.5px;">No hay fechas disponibles.</div>`;
         return;
       }
 
-      for(const s of list){
+      for (const s of list) {
         const el = document.createElement("div");
         const disabled = !s.enabled;
         const active = state.selectedSlotId === s.slot_id;
@@ -555,14 +555,14 @@
         el.className = "slot" + (disabled ? " disabled" : "") + (active ? " active" : "");
         el.textContent = s.date_display || s.date_iso;
 
-        if(!disabled){
+        if (!disabled) {
           el.addEventListener("click", async () => {
             state.selectedSlotId = s.slot_id;
             state.selectedDateIso = s.date_iso;
             $("pillDate").textContent = s.date_display || s.date_iso;
             updateSummary();
             renderSlots();
-            await checkAvailability(); // valida seats en backend (por ahora ventana)
+            await checkAvailability();
           });
         }
 
@@ -570,7 +570,7 @@
       }
     }
 
-    function updateSummary(){
+    function updateSummary() {
       $("sumCourse").textContent = state.course?.name || "—";
       $("sumDate").textContent = state.selectedDateIso || "—";
       $("sumSeats").textContent = String(state.seats || 1);
@@ -580,81 +580,103 @@
       $("sumTotal").textContent = fmt(price * (state.seats || 1));
     }
 
-    async function loadBootstrap(slotId){
+    // =========================
+    // API calls (CORREGIDO)
+    // =========================
+    async function loadBootstrap(courseId) {
       const u = new URL(API_BASE + "/api/bootstrap");
-      u.searchParams.set("slot_id", slotId);
+      u.searchParams.set("course_id", courseId);
 
-      const r = await fetch(u.toString(), { method:"GET" });
-      if(!r.ok){
-        const t = await r.text().catch(() => "");
-        throw new Error("bootstrap http " + r.status + " " + t);
-      }
-      return r.json();
-    }
-
-    async function checkAvailability(){
-      if(!state.selectedSlotId) return true;
-
-      const u = new URL(API_BASE + "/api/availability");
-      u.searchParams.set("slot_id", state.selectedSlotId);
-      u.searchParams.set("seats", String(state.seats || 1));
-
-      const r = await fetch(u.toString(), { method:"GET" });
-      if(!r.ok) return false;
-
+      const r = await fetch(u.toString(), { method: "GET" });
       const data = await r.json().catch(() => null);
-      if(!data?.ok) return false;
 
-      if(data.can_book !== true){
-        toast("No disponible", (data.reasons && data.reasons[0]) ? data.reasons[0] : "No se puede reservar este slot.");
-        return false;
+      if (!r.ok || !data?.ok) {
+        const msg = data?.error ? String(data.error) : ("bootstrap http " + r.status);
+        throw new Error(msg);
       }
-      return true;
+
+      return data; // { ok:true, course_id, course, slots, selected_slot }
     }
 
-    function validate(){
+    async function checkAvailability() {
+      // Tu backend actual puede no tener availability real por slots del curso.
+      // Mantenemos la llamada si existe, pero no bloqueamos si el endpoint no está alineado.
+      if (!state.selectedSlotId) return true;
+
+      try {
+        const u = new URL(API_BASE + "/api/availability");
+        u.searchParams.set("slot_id", state.selectedSlotId);
+        u.searchParams.set("seats", String(state.seats || 1));
+
+        const r = await fetch(u.toString(), { method: "GET" });
+        if (!r.ok) return true; // no bloquear UI si no está alineado
+        const data = await r.json().catch(() => null);
+        if (!data?.ok) return true;
+
+        if (data.can_book !== true) {
+          toast("No disponible", (data.reasons && data.reasons[0]) ? data.reasons[0] : "No se puede reservar este slot.");
+          return false;
+        }
+        return true;
+      } catch {
+        return true;
+      }
+    }
+
+    function validate() {
       const errs = [];
-      if(!state.selectedSlotId) errs.push("Seleccioná una fecha.");
-      if(!$("razon").value.trim()) errs.push("Razón social es obligatoria.");
+      if (!state.selectedSlotId) errs.push("Seleccioná una fecha.");
+      if (!$("razon").value.trim()) errs.push("Razón social es obligatoria.");
       const email = $("email").value.trim();
-      if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.push("El email no parece válido.");
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.push("El email no parece válido.");
       return errs;
     }
 
-    async function postReserve(){
+    async function postReserve() {
       const errs = validate();
-      if(errs.length){
+      if (errs.length) {
         toast("Revisión requerida", errs[0]);
         return;
       }
 
       const okAv = await checkAvailability();
-      if(!okAv) return;
+      if (!okAv) return;
 
+      // Estructura recomendada: course_id + booking + student + billing (simple)
       const body = {
-        slot_id: state.selectedSlotId,
-        seats: Number($("seats").value || 1),
-
-        documento: $("documento").value,
-        nro_documento: $("nroDoc").value.trim(),
-        razon_social: $("razon").value.trim(),
-
-        email: $("email").value.trim(),
-        whatsapp: $("whatsapp").value.trim(),
-
-        plataforma: state.course?.platform || "Presencial",
-        estado_solicitud: "No pagado",
+        course_id: state.courseId,
+        booking: {
+          slot_id: state.selectedSlotId,
+          date: state.selectedDateIso,
+          time: null,
+          seats: Number($("seats").value || 1),
+        },
+        student: {
+          name: $("razon").value.trim(),
+          email: $("email").value.trim(),
+          phone: $("whatsapp").value.trim(),
+        },
+        billing: {
+          document_type: $("documento").value,
+          document_number: $("nroDoc").value.trim(),
+          razon_social: $("razon").value.trim(),
+        },
+        meta: {
+          platform: state.course?.platform || "Presencial",
+          status: "No pagado",
+          source: "web",
+        }
       };
 
-      try{
+      try {
         const r = await fetch(API_BASE + "/reserve", {
-          method:"POST",
-          headers: { "Content-Type":"application/json" },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
 
         const data = await r.json().catch(() => null);
-        if(!r.ok || !data?.ok){
+        if (!r.ok || !data?.ok) {
           toast("Error", data?.error || "No se pudo crear la reserva.");
           console.error("reserve error:", r.status, data);
           return;
@@ -662,13 +684,13 @@
 
         toast("Reserva enviada", "La solicitud fue registrada.");
         console.log("reserve ok:", data);
-      }catch(e){
+      } catch (e) {
         console.error(e);
         toast("Conexión fallida", "No se pudo contactar al Worker.");
       }
     }
 
-    (async function init(){
+    (async function init() {
       $("toastClose").addEventListener("click", () => $("toast").classList.remove("show"));
 
       $("seats").addEventListener("change", async () => {
@@ -679,39 +701,37 @@
 
       $("btnReserve").addEventListener("click", postReserve);
 
-      const slotId = getHashParam("ID").trim();
-      if(!slotId){
+      // IMPORTANTE: ID en la URL ahora es COURSE_ID (no slot_id)
+      const courseId = getHashParam("ID").trim();
+      if (!courseId) {
         toast("Falta ID", "Abrí la página con #reservar?ID=...");
-        $("heroLead").textContent = "Falta el parámetro ID (slot_id) en la URL.";
+        $("heroLead").textContent = "Falta el parámetro ID (course_id) en la URL.";
         return;
       }
 
-      state.slotId = slotId;
+      state.courseId = courseId;
 
-      try{
-        const boot = await loadBootstrap(slotId);
-        if(!boot?.ok) throw new Error("bootstrap not ok");
+      try {
+        const boot = await loadBootstrap(courseId);
 
         state.course = boot.course;
         state.slots = boot.slots || [];
 
-        // Selección inicial: el slot_id de la URL
-        state.selectedSlotId = boot?.selected_slot?.slot_id || slotId;
-        state.selectedDateIso = boot?.selected_slot?.date_iso || null;
+        // Selección inicial: primer slot habilitado (o primero)
+        const firstEnabled = (state.slots || []).find(s => s.enabled) || (state.slots || [])[0] || null;
+        state.selectedSlotId = firstEnabled?.slot_id || null;
+        state.selectedDateIso = firstEnabled?.date_iso || null;
 
         setCourseUI(state.course);
 
-        // Pintar pill de fecha
-        const current = (state.slots || []).find(x => x.slot_id === state.selectedSlotId);
-        $("pillDate").textContent = current?.date_display || current?.date_iso || "Seleccionar";
+        $("pillDate").textContent = firstEnabled?.date_display || firstEnabled?.date_iso || "Seleccionar";
 
         updateSummary();
         renderSlots();
 
-        // Validación inicial
         await checkAvailability();
         toast("Interfaz lista", "Seleccioná los datos y confirmá la reserva.");
-      }catch(e){
+      } catch (e) {
         console.error(e);
         toast("Error", "No se pudo cargar el curso desde Zoho/Worker.");
         $("heroLead").textContent = "No se pudo cargar la información del curso.";
