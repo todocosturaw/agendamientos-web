@@ -2,66 +2,468 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Horarios del Curso</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Agenda de Cursos | Todo Costura</title>
+  <meta name="description" content="Seleccioná un horario disponible y agendá tu curso." />
+  <meta name="theme-color" content="#ffffff" />
+  <style>
+    :root{
+      --brand:#a52b64;
+      --brand2:#c94b86;
+
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --txt:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+
+      --shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+      --r: 16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+    }
+    a{color:inherit}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    .header{
+      display:flex; gap:16px; align-items:center; justify-content:space-between;
+      padding:18px 20px; background:var(--card); border:1px solid var(--line);
+      border-radius: var(--r); box-shadow: var(--shadow);
+    }
+    .brand{
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .brand .k{font-size:13px;color:var(--muted)}
+    .brand .t{font-size:18px;font-weight:700; letter-spacing:.2px}
+    .badge{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line); color:var(--muted); background:#fff;
+      white-space:nowrap;
+    }
+    .grid{
+      display:grid; grid-template-columns: 1.2fr .8fr; gap:18px;
+      margin-top:18px;
+    }
+    @media (max-width: 960px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background:var(--card); border:1px solid var(--line);
+      border-radius: var(--r); box-shadow: var(--shadow);
+      padding:18px;
+    }
+    .h2{margin:0 0 10px 0; font-size:18px}
+    .p{margin:0; color:var(--muted); line-height:1.55; font-size:14px}
+    .meta{
+      display:flex; flex-wrap:wrap; gap:10px; margin-top:12px
+    }
+    .chip{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line); background:#fff;
+      color:#374151;
+    }
+    .chip strong{font-weight:700}
+    .btns{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end}
+    .btn{
+      appearance:none; border:1px solid var(--line);
+      background:#fff; color:var(--txt); border-radius:12px;
+      padding:10px 12px; font-weight:600; cursor:pointer;
+    }
+    .btn.primary{
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      color:#fff;
+    }
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+    .hr{height:1px;background:var(--line); margin:14px 0}
+
+    .row{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:12px; border:1px solid var(--line); border-radius:14px;
+      background:#fff; margin-top:10px;
+    }
+    .row .left{display:flex; flex-direction:column; gap:4px}
+    .row .date{font-weight:700}
+    .row .sub{font-size:13px; color:var(--muted)}
+    .row .right{display:flex; align-items:center; gap:10px}
+    .cap{
+      font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--line);
+      color:#374151; background:#fff;
+      white-space:nowrap;
+    }
+    .cap.ok{border-color:rgba(165,43,100,.35); color:var(--brand)}
+    .cap.no{border-color:#f3c2c2; color:#b91c1c}
+    .radio{
+      width:18px; height:18px;
+      accent-color: var(--brand);
+      cursor:pointer;
+    }
+
+    .form .field{margin-top:12px}
+    label{display:block; font-size:13px; color:#374151; margin:0 0 6px 0; font-weight:600}
+    input, textarea{
+      width:100%; padding:10px 12px; border-radius:12px;
+      border:1px solid var(--line); background:#fff; font-size:14px;
+      outline:none;
+    }
+    textarea{min-height:90px; resize:vertical}
+    .hint{font-size:12px; color:var(--muted); margin-top:6px}
+    .error{
+      margin-top:12px; padding:12px; border-radius:12px;
+      border:1px solid #f3c2c2; background:#fff; color:#b91c1c;
+      font-size:13px;
+    }
+    .okbox{
+      margin-top:12px; padding:12px; border-radius:12px;
+      border:1px solid rgba(165,43,100,.35); background:#fff; color:var(--brand);
+      font-size:13px;
+    }
+    .small{font-size:12px;color:var(--muted)}
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="header">
+      <div class="brand">
+        <div class="k">Todo Costura</div>
+        <div class="t">Agenda de cursos</div>
+      </div>
+      <div class="btns">
+        <span id="statusBadge" class="badge">Listo</span>
+        <button id="btnRefresh" class="btn">Actualizar</button>
+        <button id="btnReload" class="btn primary">Cargar curso</button>
+      </div>
+    </div>
 
-<h2>Horarios disponibles</h2>
+    <div class="grid">
+      <div class="card">
+        <h2 class="h2" id="courseTitle">Curso</h2>
+        <p class="p" id="courseDesc">Ingresá con un enlace del tipo: <span class="small">#ID=4537469000000223003</span></p>
 
-<button id="btnHorarios">Ver horarios</button>
+        <div class="meta" id="courseMeta"></div>
 
-<br><br>
+        <div class="hr"></div>
 
-<label>Fecha:</label>
-<select id="fecha"></select>
+        <h3 class="h2" style="margin-top:0">Horarios disponibles</h3>
+        <p class="p">Seleccioná un horario. Si no aparece nada, presioná “Actualizar”.</p>
 
-<br><br>
+        <div id="slots"></div>
 
-<label>Horario:</label>
-<select id="hora"></select>
+        <div id="msgArea"></div>
+      </div>
 
-<script>
-const params = new URLSearchParams(location.search);
-const course_id = params.get("course_id");
+      <div class="card form">
+        <h3 class="h2" style="margin-top:0">Datos del solicitante</h3>
+        <p class="p">Este formulario deja listo lo necesario para el siguiente paso (confirmar reserva). Por ahora no envía la reserva.</p>
 
-let horarios = [];
+        <div class="field">
+          <label for="fullName">Nombre y apellido</label>
+          <input id="fullName" type="text" placeholder="Ej: Juan Pérez" autocomplete="name" />
+        </div>
 
-document.getElementById("btnHorarios").onclick = async () => {
-  const res = await fetch(
-    `https://api.taller2.workers.dev/api/horarios?course_id=${course_id}`
-  );
-  const json = await res.json();
-  horarios = json.horarios;
-  cargarFechas();
-};
+        <div class="field">
+          <label for="phone">Teléfono / WhatsApp</label>
+          <input id="phone" type="tel" placeholder="Ej: +595 9xx xxx xxx" autocomplete="tel" />
+        </div>
 
-function cargarFechas() {
-  const fechas = [...new Set(horarios.map(h => h.fecha_inicio))];
-  const sel = document.getElementById("fecha");
-  sel.innerHTML = "";
-  fechas.forEach(f => {
-    const o = document.createElement("option");
-    o.value = f;
-    o.textContent = f;
-    sel.appendChild(o);
-  });
-  sel.onchange();
-}
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="Ej: cliente@correo.com" autocomplete="email" />
+        </div>
 
-document.getElementById("fecha").onchange = () => {
-  const fecha = document.getElementById("fecha").value;
-  const horas = horarios.filter(h => h.fecha_inicio === fecha);
+        <div class="field">
+          <label for="notes">Observaciones</label>
+          <textarea id="notes" placeholder="Comentarios adicionales (opcional)"></textarea>
+          <div class="hint">En la siguiente etapa esto se enviará a tu flujo de reserva.</div>
+        </div>
 
-  const sel = document.getElementById("hora");
-  sel.innerHTML = "";
-  horas.forEach(h => {
-    const o = document.createElement("option");
-    o.value = h.slot_id;
-    o.textContent = `${h.hora_inicio} (cupos ${h.cupos_disponibles})`;
-    sel.appendChild(o);
-  });
-};
-</script>
+        <div class="hr"></div>
 
+        <button id="btnContinue" class="btn primary" disabled>Continuar (próximo paso)</button>
+        <div class="hint">Se habilita cuando selecciones un horario.</div>
+
+        <div class="okbox" style="display:none" id="selectedBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    const API_BASE = "https://api.taller2.workers.dev"; // prod
+    const ENDPOINTS = {
+      bootstrap: (courseId) => `${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`,
+      refresh:   () => `${API_BASE}/api/refresh`
+    };
+
+    // Polling: intenta leer bootstrap luego de refresh
+    const POLL_MAX_TRIES = 10;
+    const POLL_DELAY_MS = 1200;
+
+    // ====== UTIL ======
+    const $ = (id) => document.getElementById(id);
+    const statusBadge = $("statusBadge");
+    const msgArea = $("msgArea");
+    const slotsEl = $("slots");
+    const courseTitle = $("courseTitle");
+    const courseDesc = $("courseDesc");
+    const courseMeta = $("courseMeta");
+
+    const btnRefresh = $("btnRefresh");
+    const btnReload = $("btnReload");
+    const btnContinue = $("btnContinue");
+    const selectedBox = $("selectedBox");
+
+    function setStatus(text){
+      statusBadge.textContent = text;
+    }
+    function showError(text){
+      msgArea.innerHTML = `<div class="error">${escapeHtml(text)}</div>`;
+    }
+    function showOk(text){
+      msgArea.innerHTML = `<div class="okbox">${escapeHtml(text)}</div>`;
+    }
+    function clearMsg(){
+      msgArea.innerHTML = "";
+    }
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;").replaceAll("<","&lt;")
+        .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function parseCourseIdFromHash(){
+      // Soporta: #ID=...  o  #course_id=...
+      const h = (location.hash || "").replace(/^#/, "");
+      if (!h) return null;
+      const params = new URLSearchParams(h);
+      return params.get("ID") || params.get("course_id");
+    }
+
+    function unwrapData(apiBootstrapJson){
+      // Esperamos: { ok:true, data: <payload_original> }
+      // Tu payload real suele ser: { crtEnviarCursoCloudflare_1: { code, data: {...} } }
+      // o Flow wrapper: { response: { received: { code, data: {...} } } }
+      const payload = apiBootstrapJson?.data;
+      if (!payload) return null;
+
+      // Caso 1: crtEnviarCursoCloudflare_1
+      if (payload.crtEnviarCursoCloudflare_1?.data) return payload.crtEnviarCursoCloudflare_1.data;
+
+      // Caso 2: response.received.data
+      if (payload.response?.received?.data) return payload.response.received.data;
+
+      // Caso 3: ya viene plano
+      if (payload.Datos_horarios || payload.nombre_curso || payload.ID) return payload;
+
+      return null;
+    }
+
+    function normalizeSlots(courseData){
+      const list = courseData?.Datos_horarios;
+      if (!Array.isArray(list)) return [];
+      return list.map(s => ({
+        slot_id: String(s.ID ?? ""),
+        fecha: String(s.Fecha_de_inicio ?? ""),
+        hora: String(s.Hora_inicio ?? ""),
+        cupos_disp: Number(String(s.Cupos_disponibles ?? "0")) || 0,
+        cupos_total: String(s.Cupos_totales ?? ""),
+        raw: s
+      })).filter(x => x.slot_id);
+    }
+
+    function renderCourse(courseData){
+      const name = courseData?.nombre_curso || courseData?.Nombre || courseData?.name || "Curso";
+      courseTitle.textContent = name;
+
+      const descHtml = courseData?.Descripci_n_del_curso || courseData?.Descripcion || "";
+      // Mostramos como texto simple para no inyectar HTML externo
+      const plain = descHtml ? descHtml.replace(/<[^>]*>/g, "").trim() : "";
+      courseDesc.textContent = plain || "Seleccioná un horario disponible para continuar.";
+
+      const meta = [];
+      if (courseData?.Plataforma) meta.push({k:"Plataforma", v: courseData.Plataforma});
+      if (courseData?.Alumnado) meta.push({k:"Alumnado", v: courseData.Alumnado});
+      if (courseData?.Tipo_de_aprendizaje) meta.push({k:"Aprendizaje", v: courseData.Tipo_de_aprendizaje});
+      if (courseData?.Categor_a) meta.push({k:"Categoría", v: courseData.Categor_a});
+      if (courseData?.Precio) meta.push({k:"Precio", v: courseData.Precio});
+
+      courseMeta.innerHTML = meta.map(m => `<span class="chip"><strong>${escapeHtml(m.k)}:</strong> ${escapeHtml(m.v)}</span>`).join("");
+    }
+
+    let currentCourseId = null;
+    let selectedSlot = null;
+
+    function renderSlots(slots){
+      slotsEl.innerHTML = "";
+      selectedSlot = null;
+      btnContinue.disabled = true;
+      selectedBox.style.display = "none";
+      selectedBox.textContent = "";
+
+      if (!slots.length){
+        slotsEl.innerHTML = `<div class="error">No se encontraron horarios en este momento.</div>`;
+        return;
+      }
+
+      slots.forEach((s, idx) => {
+        const available = s.cupos_disp > 0;
+        const capClass = available ? "ok" : "no";
+        const capText = available ? `Cupos: ${s.cupos_disp}` : "Agotado";
+
+        const row = document.createElement("div");
+        row.className = "row";
+
+        row.innerHTML = `
+          <div class="left">
+            <div class="date">${escapeHtml(s.fecha)} — ${escapeHtml(s.hora)}</div>
+            <div class="sub">Slot ID: <span class="small">${escapeHtml(s.slot_id)}</span></div>
+          </div>
+          <div class="right">
+            <span class="cap ${capClass}">${escapeHtml(capText)}</span>
+            <input class="radio" type="radio" name="slot" ${available ? "" : "disabled"} aria-label="Seleccionar horario" />
+          </div>
+        `;
+
+        const radio = row.querySelector("input[type=radio]");
+        radio.addEventListener("change", () => {
+          selectedSlot = s;
+          btnContinue.disabled = false;
+          selectedBox.style.display = "block";
+          selectedBox.textContent = `Horario seleccionado: ${s.fecha} ${s.hora} (slot_id ${s.slot_id})`;
+        });
+
+        slotsEl.appendChild(row);
+      });
+    }
+
+    async function apiGet(url){
+      const r = await fetch(url, { method:"GET" });
+      const t = await r.text();
+      let j = null;
+      try { j = JSON.parse(t); } catch {}
+      return { ok: r.ok, status: r.status, json: j, text: t };
+    }
+
+    async function apiPostJson(url, body){
+      const r = await fetch(url, {
+        method:"POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(body || {})
+      });
+      const t = await r.text();
+      let j = null;
+      try { j = JSON.parse(t); } catch {}
+      return { ok: r.ok, status: r.status, json: j, text: t };
+    }
+
+    async function loadFromBootstrap(courseId){
+      setStatus("Cargando…");
+      clearMsg();
+
+      const res = await apiGet(ENDPOINTS.bootstrap(courseId));
+      if (!res.ok || !res.json){
+        setStatus("Error");
+        showError(`No se pudo leer bootstrap. HTTP ${res.status}`);
+        return null;
+      }
+
+      if (res.json.ok !== true){
+        // puede traer { ok:false, status:"missing" }
+        setStatus("Sin datos");
+        if (res.json.status === "missing") {
+          showError("Todavía no hay datos cacheados para este curso. Presioná “Actualizar”.");
+        } else {
+          showError(`Respuesta inválida: ${res.text}`);
+        }
+        return null;
+      }
+
+      const courseData = unwrapData(res.json);
+      if (!courseData){
+        setStatus("Error");
+        showError("Se recibió bootstrap pero no se pudo interpretar la estructura del JSON.");
+        return null;
+      }
+
+      const slots = normalizeSlots(courseData);
+      renderCourse(courseData);
+      renderSlots(slots);
+
+      setStatus("Listo");
+      showOk(`Datos cargados. Horarios: ${slots.length}`);
+      return { courseData, slots };
+    }
+
+    async function refreshAndPoll(courseId){
+      setStatus("Actualizando…");
+      clearMsg();
+
+      const r = await apiPostJson(ENDPOINTS.refresh(), { course_id: courseId });
+      if (!r.ok || !r.json || r.json.ok !== true){
+        setStatus("Error");
+        showError(`No se pudo disparar refresh. HTTP ${r.status}. ${r.text}`);
+        return;
+      }
+
+      // Poll bootstrap hasta que exista
+      for (let i = 1; i <= POLL_MAX_TRIES; i++){
+        await new Promise(res => setTimeout(res, POLL_DELAY_MS));
+        const got = await loadFromBootstrap(courseId);
+        if (got) return;
+        setStatus(`Esperando datos… (${i}/${POLL_MAX_TRIES})`);
+      }
+
+      setStatus("Sin datos");
+      showError("Flow no devolvió datos a tiempo. Reintentá “Actualizar”.");
+    }
+
+    // ====== EVENTS ======
+    btnReload.addEventListener("click", async () => {
+      const id = parseCourseIdFromHash();
+      if (!id){
+        showError("Falta el ID del curso en el hash. Ejemplo: #ID=4537469000000223003");
+        return;
+      }
+      currentCourseId = id;
+      await loadFromBootstrap(id);
+    });
+
+    btnRefresh.addEventListener("click", async () => {
+      const id = currentCourseId || parseCourseIdFromHash();
+      if (!id){
+        showError("Falta el ID del curso en el hash. Ejemplo: #ID=4537469000000223003");
+        return;
+      }
+      currentCourseId = id;
+      await refreshAndPoll(id);
+    });
+
+    btnContinue.addEventListener("click", () => {
+      if (!selectedSlot){
+        showError("Seleccioná un horario para continuar.");
+        return;
+      }
+      // Próximo paso: reservar. Por ahora solo dejamos la selección lista.
+      showOk(`Listo para continuar. slot_id=${selectedSlot.slot_id} (aún no se envía reserva).`);
+    });
+
+    // Auto-load si viene hash
+    (async function init(){
+      const id = parseCourseIdFromHash();
+      if (!id){
+        setStatus("Esperando ID");
+        showError("Abrí esta página con un enlace del tipo: #ID=4537469000000223003");
+        return;
+      }
+      currentCourseId = id;
+
+      // Intento bootstrap primero (rápido). Si no existe, sugerimos actualizar.
+      await loadFromBootstrap(id);
+    })();
+  </script>
 </body>
 </html>
