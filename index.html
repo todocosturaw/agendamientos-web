@@ -3,435 +3,172 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Agenda de Cursos | Todo Costura</title>
-  <meta name="description" content="Seleccioná un horario disponible y agendá tu curso." />
-  <meta name="theme-color" content="#ffffff" />
-  <style>
-    :root{
-      --brand:#a52b64;
-      --brand2:#c94b86;
-
-      --bg:#f6f7fb;
-      --card:#ffffff;
-      --txt:#111827;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-
-      --shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
-      --r: 16px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--txt);
-    }
-    a{color:inherit}
-    .wrap{max-width:1100px;margin:0 auto;padding:24px}
-    .header{
-      display:flex; gap:16px; align-items:center; justify-content:space-between;
-      padding:18px 20px; background:var(--card); border:1px solid var(--line);
-      border-radius: var(--r); box-shadow: var(--shadow);
-    }
-    .brand{
-      display:flex; flex-direction:column; gap:4px;
-    }
-    .brand .k{font-size:13px;color:var(--muted)}
-    .brand .t{font-size:18px;font-weight:700; letter-spacing:.2px}
-    .badge{
-      font-size:12px; padding:6px 10px; border-radius:999px;
-      border:1px solid var(--line); color:var(--muted); background:#fff;
-      white-space:nowrap;
-    }
-    .grid{
-      display:grid; grid-template-columns: 1.2fr .8fr; gap:18px;
-      margin-top:18px;
-    }
-    @media (max-width: 960px){
-      .grid{grid-template-columns:1fr}
-    }
-    .card{
-      background:var(--card); border:1px solid var(--line);
-      border-radius: var(--r); box-shadow: var(--shadow);
-      padding:18px;
-    }
-    .h2{margin:0 0 10px 0; font-size:18px}
-    .p{margin:0; color:var(--muted); line-height:1.55; font-size:14px}
-    .meta{
-      display:flex; flex-wrap:wrap; gap:10px; margin-top:12px
-    }
-    .chip{
-      font-size:12px; padding:6px 10px; border-radius:999px;
-      border:1px solid var(--line); background:#fff;
-      color:#374151;
-    }
-    .chip strong{font-weight:700}
-    .btns{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end}
-    .btn{
-      appearance:none; border:1px solid var(--line);
-      background:#fff; color:var(--txt); border-radius:12px;
-      padding:10px 12px; font-weight:600; cursor:pointer;
-    }
-    .btn.primary{
-      border-color: transparent;
-      background: linear-gradient(135deg, var(--brand), var(--brand2));
-      color:#fff;
-    }
-    .btn:disabled{opacity:.6; cursor:not-allowed}
-    .hr{height:1px;background:var(--line); margin:14px 0}
-
-    .row{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding:12px; border:1px solid var(--line); border-radius:14px;
-      background:#fff; margin-top:10px;
-    }
-    .row .left{display:flex; flex-direction:column; gap:4px}
-    .row .date{font-weight:700}
-    .row .sub{font-size:13px; color:var(--muted)}
-    .row .right{display:flex; align-items:center; gap:10px}
-    .cap{
-      font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--line);
-      color:#374151; background:#fff;
-      white-space:nowrap;
-    }
-    .cap.ok{border-color:rgba(165,43,100,.35); color:var(--brand)}
-    .cap.no{border-color:#f3c2c2; color:#b91c1c}
-    .radio{
-      width:18px; height:18px;
-      accent-color: var(--brand);
-      cursor:pointer;
-    }
-
-    .form .field{margin-top:12px}
-    label{display:block; font-size:13px; color:#374151; margin:0 0 6px 0; font-weight:600}
-    input, textarea{
-      width:100%; padding:10px 12px; border-radius:12px;
-      border:1px solid var(--line); background:#fff; font-size:14px;
-      outline:none;
-    }
-    textarea{min-height:90px; resize:vertical}
-    .hint{font-size:12px; color:var(--muted); margin-top:6px}
-    .error{
-      margin-top:12px; padding:12px; border-radius:12px;
-      border:1px solid #f3c2c2; background:#fff; color:#b91c1c;
-      font-size:13px;
-    }
-    .okbox{
-      margin-top:12px; padding:12px; border-radius:12px;
-      border:1px solid rgba(165,43,100,.35); background:#fff; color:var(--brand);
-      font-size:13px;
-    }
-    .small{font-size:12px;color:var(--muted)}
-  </style>
+  <title>Test Horarios (Worker)</title>
 </head>
 <body>
-  <div class="wrap">
-    <div class="header">
-      <div class="brand">
-        <div class="k">Todo Costura</div>
-        <div class="t">Agenda de cursos</div>
-      </div>
-      <div class="btns">
-        <span id="statusBadge" class="badge">Listo</span>
-        <button id="btnRefresh" class="btn">Actualizar</button>
-        <button id="btnReload" class="btn primary">Cargar curso</button>
-      </div>
-    </div>
+  <h1>Test: Ver horarios desde Worker</h1>
 
-    <div class="grid">
-      <div class="card">
-        <h2 class="h2" id="courseTitle">Curso</h2>
-        <p class="p" id="courseDesc">Ingresá con un enlace del tipo: <span class="small">#ID=4537469000000223003</span></p>
+  <p>
+    Course ID:
+    <input id="courseId" style="width:360px" value="4537469000000223003" />
+  </p>
 
-        <div class="meta" id="courseMeta"></div>
+  <p>
+    <button id="btnVer">Ver horarios</button>
+    <button id="btnBootstrap">Abrir bootstrap (JSON)</button>
+  </p>
 
-        <div class="hr"></div>
+  <div id="status"></div>
+  <hr />
 
-        <h3 class="h2" style="margin-top:0">Horarios disponibles</h3>
-        <p class="p">Seleccioná un horario. Si no aparece nada, presioná “Actualizar”.</p>
+  <h2>Curso</h2>
+  <div id="curso"></div>
 
-        <div id="slots"></div>
+  <h2>Horarios</h2>
+  <form id="formSlots">
+    <div id="slots"></div>
+  </form>
 
-        <div id="msgArea"></div>
-      </div>
+  <p>
+    <button id="btnContinuar" disabled>Continuar con horario seleccionado</button>
+  </p>
 
-      <div class="card form">
-        <h3 class="h2" style="margin-top:0">Datos del solicitante</h3>
-        <p class="p">Este formulario deja listo lo necesario para el siguiente paso (confirmar reserva). Por ahora no envía la reserva.</p>
-
-        <div class="field">
-          <label for="fullName">Nombre y apellido</label>
-          <input id="fullName" type="text" placeholder="Ej: Juan Pérez" autocomplete="name" />
-        </div>
-
-        <div class="field">
-          <label for="phone">Teléfono / WhatsApp</label>
-          <input id="phone" type="tel" placeholder="Ej: +595 9xx xxx xxx" autocomplete="tel" />
-        </div>
-
-        <div class="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" placeholder="Ej: cliente@correo.com" autocomplete="email" />
-        </div>
-
-        <div class="field">
-          <label for="notes">Observaciones</label>
-          <textarea id="notes" placeholder="Comentarios adicionales (opcional)"></textarea>
-          <div class="hint">En la siguiente etapa esto se enviará a tu flujo de reserva.</div>
-        </div>
-
-        <div class="hr"></div>
-
-        <button id="btnContinue" class="btn primary" disabled>Continuar (próximo paso)</button>
-        <div class="hint">Se habilita cuando selecciones un horario.</div>
-
-        <div class="okbox" style="display:none" id="selectedBox"></div>
-      </div>
-    </div>
-  </div>
+  <pre id="debug" style="white-space:pre-wrap;"></pre>
 
   <script>
-    // ====== CONFIG ======
-    const API_BASE = "https://api.taller2.workers.dev"; // prod
-    const ENDPOINTS = {
-      bootstrap: (courseId) => `${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`,
-      refresh:   () => `${API_BASE}/api/refresh`
-    };
+    const API_BASE = "https://api.taller2.workers.dev";
 
-    // Polling: Zoho Flow puede tardar. Aumentamos ventana para evitar "no devolvió a tiempo".
-    const POLL_MAX_TRIES = 80;   // ~37s
-    const POLL_DELAY_MS = 1500;
-
-    // ====== UTIL ======
     const $ = (id) => document.getElementById(id);
-    const statusBadge = $("statusBadge");
-    const msgArea = $("msgArea");
+    const courseIdEl = $("courseId");
+    const btnVer = $("btnVer");
+    const btnBootstrap = $("btnBootstrap");
+    const btnContinuar = $("btnContinuar");
+
+    const statusEl = $("status");
+    const cursoEl = $("curso");
     const slotsEl = $("slots");
-    const courseTitle = $("courseTitle");
-    const courseDesc = $("courseDesc");
-    const courseMeta = $("courseMeta");
+    const debugEl = $("debug");
 
-    const btnRefresh = $("btnRefresh");
-    const btnReload = $("btnReload");
-    const btnContinue = $("btnContinue");
-    const selectedBox = $("selectedBox");
+    let selectedSlot = null;
+    let lastJson = null;
 
-    function setStatus(text){
-      statusBadge.textContent = text;
-    }
-    function showError(text){
-      msgArea.innerHTML = `<div class="error">${escapeHtml(text)}</div>`;
-    }
-    function showOk(text){
-      msgArea.innerHTML = `<div class="okbox">${escapeHtml(text)}</div>`;
-    }
-    function clearMsg(){
-      msgArea.innerHTML = "";
-    }
+    function setStatus(t){ statusEl.textContent = t; }
     function escapeHtml(s){
       return String(s)
-        .replaceAll("&","&amp;").replaceAll("<","&lt;")
-        .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
     }
-    function parseCourseIdFromHash(){
-      const h = (location.hash || "").replace(/^#/, "");
-      if (!h) return null;
-      const params = new URLSearchParams(h);
-      return params.get("ID") || params.get("course_id");
+
+    async function getBootstrap(courseId){
+      const url = `${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`;
+      const r = await fetch(url, { method: "GET" });
+      const text = await r.text();
+      let json = null;
+      try { json = JSON.parse(text); } catch {}
+      return { ok: r.ok, status: r.status, text, json, url };
     }
 
-    function stripHtml(html){
-      const s = String(html || "");
-      return s ? s.replace(/<[^>]*>/g, "").trim() : "";
+    function renderCurso(course){
+      if (!course) { cursoEl.innerHTML = "<em>Sin datos</em>"; return; }
+      cursoEl.innerHTML = `
+        <div><strong>${escapeHtml(course.nombre_curso || "Curso")}</strong></div>
+        <div>Plataforma: ${escapeHtml(course.plataforma || "")}</div>
+        <div>Alumnado: ${escapeHtml(course.alumnado || "")}</div>
+        <div>Aprendizaje: ${escapeHtml(course.tipo_aprendizaje || "")}</div>
+        <div>Categoría: ${escapeHtml(course.categoria || "")}</div>
+        <div>Precio: ${escapeHtml(course.precio || "")}</div>
+      `;
     }
-
-    function renderCourse(course){
-      const name = course?.nombre_curso || "Curso";
-      courseTitle.textContent = name;
-
-      const plain = stripHtml(course?.descripcion_html || "");
-      courseDesc.textContent = plain || "Seleccioná un horario disponible para continuar.";
-
-      const meta = [];
-      if (course?.plataforma) meta.push({k:"Plataforma", v: course.plataforma});
-      if (course?.alumnado) meta.push({k:"Alumnado", v: course.alumnado});
-      if (course?.tipo_aprendizaje) meta.push({k:"Aprendizaje", v: course.tipo_aprendizaje});
-      if (course?.categoria) meta.push({k:"Categoría", v: course.categoria});
-      if (course?.precio) meta.push({k:"Precio", v: course.precio});
-
-      courseMeta.innerHTML = meta.map(m => `<span class="chip"><strong>${escapeHtml(m.k)}:</strong> ${escapeHtml(m.v)}</span>`).join("");
-    }
-
-    let currentCourseId = null;
-    let selectedSlot = null;
 
     function renderSlots(slots){
-      slotsEl.innerHTML = "";
       selectedSlot = null;
-      btnContinue.disabled = true;
-      selectedBox.style.display = "none";
-      selectedBox.textContent = "";
+      btnContinuar.disabled = true;
+      slotsEl.innerHTML = "";
 
-      if (!slots || !slots.length){
-        slotsEl.innerHTML = `<div class="error">No se encontraron horarios en este momento.</div>`;
+      if (!Array.isArray(slots) || slots.length === 0){
+        slotsEl.innerHTML = "<em>No hay horarios (o todavía no está cacheado en KV).</em>";
         return;
       }
 
-      slots.forEach((s) => {
+      slots.forEach((s, i) => {
         const available = Number(s.cupos_disponibles || 0) > 0;
-        const capClass = available ? "ok" : "no";
-        const capText = available ? `Cupos: ${s.cupos_disponibles}` : "Agotado";
+        const disabled = available ? "" : "disabled";
+        const label = `${s.fecha} ${s.hora} — cupos: ${s.cupos_disponibles} — slot_id: ${s.slot_id}`;
 
         const row = document.createElement("div");
-        row.className = "row";
-
+        row.style.margin = "6px 0";
         row.innerHTML = `
-          <div class="left">
-            <div class="date">${escapeHtml(s.fecha)} — ${escapeHtml(s.hora)}</div>
-            <div class="sub">Slot ID: <span class="small">${escapeHtml(s.slot_id)}</span></div>
-          </div>
-          <div class="right">
-            <span class="cap ${capClass}">${escapeHtml(capText)}</span>
-            <input class="radio" type="radio" name="slot" ${available ? "" : "disabled"} aria-label="Seleccionar horario" />
-          </div>
+          <label>
+            <input type="radio" name="slot" value="${escapeHtml(s.slot_id)}" ${disabled} />
+            ${escapeHtml(label)} ${available ? "" : "(AGOTADO)"}
+          </label>
         `;
 
-        const radio = row.querySelector("input[type=radio]");
-        radio.addEventListener("change", () => {
+        const input = row.querySelector("input");
+        input.addEventListener("change", () => {
           selectedSlot = s;
-          btnContinue.disabled = false;
-          selectedBox.style.display = "block";
-          selectedBox.textContent = `Horario seleccionado: ${s.fecha} ${s.hora} (slot_id ${s.slot_id})`;
+          btnContinuar.disabled = false;
+          setStatus(`Seleccionado: ${s.fecha} ${s.hora} (slot_id ${s.slot_id})`);
         });
 
         slotsEl.appendChild(row);
       });
     }
 
-    async function apiGet(url){
-      const r = await fetch(url, { method:"GET" });
-      const t = await r.text();
-      let j = null;
-      try { j = JSON.parse(t); } catch {}
-      return { ok: r.ok, status: r.status, json: j, text: t };
-    }
+    async function verHorarios(){
+      const courseId = courseIdEl.value.trim();
+      if (!courseId){ setStatus("Falta course_id"); return; }
 
-    async function apiPostJson(url, body){
-      const r = await fetch(url, {
-        method:"POST",
-        headers: { "Content-Type":"application/json" },
-        body: JSON.stringify(body || {})
-      });
-      const t = await r.text();
-      let j = null;
-      try { j = JSON.parse(t); } catch {}
-      return { ok: r.ok, status: r.status, json: j, text: t };
-    }
+      setStatus("Cargando...");
+      const res = await getBootstrap(courseId);
 
-    async function loadFromBootstrap(courseId){
-      setStatus("Cargando…");
-      clearMsg();
+      debugEl.textContent = `GET ${res.url}\nHTTP ${res.status}\n\n${res.text}`;
 
-      const res = await apiGet(ENDPOINTS.bootstrap(courseId));
       if (!res.ok || !res.json){
-        setStatus("Error");
-        showError(`No se pudo leer bootstrap. HTTP ${res.status}`);
-        return null;
+        setStatus(`Error leyendo bootstrap (HTTP ${res.status})`);
+        return;
       }
+
+      lastJson = res.json;
 
       if (res.json.ok !== true){
-        setStatus("Sin datos");
-        if (res.json.status === "missing") {
-          showError("Todavía no hay datos cacheados para este curso. Presioná “Actualizar”.");
+        if (res.json.status === "missing"){
+          setStatus("Todavía no hay datos cacheados (status=missing). Ejecutá el ingest desde Zoho/Flow o manual.");
         } else {
-          showError(`Respuesta inválida: ${res.text}`);
+          setStatus("Respuesta inválida");
         }
-        return null;
+        renderCurso(null);
+        renderSlots([]);
+        return;
       }
 
-      // NUEVO FORMATO DEL WORKER: { ok, course_id, course, slots }
-      const course = res.json.course;
-      const slots = res.json.slots || [];
-
-      if (!course){
-        setStatus("Error");
-        showError("Se recibió bootstrap pero falta el objeto 'course'. Verificá el Worker /api/ingest normalizado.");
-        return null;
-      }
-
-      renderCourse(course);
-      renderSlots(slots);
-
-      setStatus("Listo");
-      showOk(`Datos cargados. Horarios: ${slots.length}`);
-      return { course, slots };
+      renderCurso(res.json.course);
+      renderSlots(res.json.slots || []);
+      setStatus(`Listo. Horarios: ${(res.json.slots || []).length}`);
     }
 
-    async function refreshAndPoll(courseId){
-      setStatus("Actualizando…");
-      clearMsg();
+    btnVer.addEventListener("click", verHorarios);
 
-      const r = await apiPostJson(ENDPOINTS.refresh(), { course_id: courseId });
-      if (!r.ok || !r.json || r.json.ok !== true){
-        setStatus("Error");
-        showError(`No se pudo disparar refresh. HTTP ${r.status}. ${r.text}`);
-        return;
-      }
-
-      // Poll bootstrap hasta que exista y sea usable
-      for (let i = 1; i <= POLL_MAX_TRIES; i++){
-        await new Promise(res => setTimeout(res, POLL_DELAY_MS));
-        const got = await loadFromBootstrap(courseId);
-        if (got) return;
-        setStatus(`Esperando datos… (${i}/${POLL_MAX_TRIES})`);
-      }
-
-      setStatus("Sin datos");
-      showError("Flow no devolvió datos a tiempo. Reintentá “Actualizar”.");
-    }
-
-    // ====== EVENTS ======
-    btnReload.addEventListener("click", async () => {
-      const id = parseCourseIdFromHash();
-      if (!id){
-        showError("Falta el ID del curso en el hash. Ejemplo: #ID=4537469000000223003");
-        return;
-      }
-      currentCourseId = id;
-      await loadFromBootstrap(id);
+    btnBootstrap.addEventListener("click", () => {
+      const courseId = courseIdEl.value.trim();
+      if (!courseId) return;
+      const url = `${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`;
+      window.open(url, "_blank");
     });
 
-    btnRefresh.addEventListener("click", async () => {
-      const id = currentCourseId || parseCourseIdFromHash();
-      if (!id){
-        showError("Falta el ID del curso en el hash. Ejemplo: #ID=4537469000000223003");
-        return;
-      }
-      currentCourseId = id;
-      await refreshAndPoll(id);
-    });
-
-    btnContinue.addEventListener("click", () => {
+    btnContinuar.addEventListener("click", () => {
       if (!selectedSlot){
-        showError("Seleccioná un horario para continuar.");
+        setStatus("Seleccioná un horario primero.");
         return;
       }
-      showOk(`Listo para continuar. slot_id=${selectedSlot.slot_id} (aún no se envía reserva).`);
+      alert(`OK: horario seleccionado\n\ncourse_id=${courseIdEl.value.trim()}\nslot_id=${selectedSlot.slot_id}\nfecha=${selectedSlot.fecha}\nhora=${selectedSlot.hora}`);
     });
 
-    // Auto-load si viene hash
-    (async function init(){
-      const id = parseCourseIdFromHash();
-      if (!id){
-        setStatus("Esperando ID");
-        showError("Abrí esta página con un enlace del tipo: #ID=4537469000000223003");
-        return;
-      }
-      currentCourseId = id;
-      await loadFromBootstrap(id);
-    })();
+    // auto-carga al abrir
+    verHorarios();
   </script>
 </body>
 </html>
