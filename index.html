@@ -99,9 +99,7 @@
     }
 
     /* Left: hero */
-    .hero{
-      padding:12px 0;
-    }
+    .hero{padding:12px 0}
     .hero h1{
       margin:8px 0 10px 0;
       font-size:44px;
@@ -175,10 +173,7 @@
       font-size:12px;
       white-space:nowrap;
     }
-    .infoTable{
-      width:100%;
-      border-collapse:collapse;
-    }
+    .infoTable{width:100%;border-collapse:collapse}
     .infoTable td{
       padding:11px 16px;
       border-bottom:1px solid #f0f2f6;
@@ -186,28 +181,22 @@
       font-size:13.5px;
     }
     .infoTable tr:last-child td{border-bottom:0}
-    .infoTable td.k{
-      width:42%;
-      color:#4b5563;
-      font-weight:800;
-    }
-    .infoTable td.v{
-      color:#111827;
-      font-weight:700;
-    }
-    .infoTable .mutedv{
-      color:var(--muted);
-      font-weight:700;
-    }
-    .priceBig{
-      font-size:16px;
-      font-weight:950;
-    }
-    .priceSub{
-      margin-top:2px;
-      font-size:12.5px;
-      color:var(--muted);
-      font-weight:700;
+    .infoTable td.k{width:42%;color:#4b5563;font-weight:800}
+    .infoTable td.v{color:#111827;font-weight:700}
+    .infoTable .mutedv{color:var(--muted);font-weight:700}
+
+    .priceBig{font-size:16px;font-weight:950}
+    .priceSub{margin-top:2px;font-size:12.5px;color:var(--muted);font-weight:700}
+    .priceSub strong{color:#111827;font-weight:900}
+    .badgeOk{
+      display:inline-flex;align-items:center;
+      padding:3px 8px;border-radius:999px;
+      border:1px solid rgba(10,122,47,.18);
+      background: rgba(10,122,47,.08);
+      color:#0a7a2f;
+      font-weight:900;
+      font-size:11.5px;
+      margin-left:8px;
     }
 
     /* Right: card */
@@ -237,7 +226,6 @@
       font-size:13.5px;
       line-height:1.45;
     }
-
     .cardBody{padding:16px 18px 18px}
 
     .section{margin-top:14px}
@@ -512,26 +500,11 @@
           </div>
 
           <table class="infoTable" role="presentation">
-            <tr>
-              <td class="k">Curso</td>
-              <td class="v" id="svcName">—</td>
-            </tr>
-            <tr>
-              <td class="k">Categoría</td>
-              <td class="v mutedv" id="svcCategory">—</td>
-            </tr>
-            <tr>
-              <td class="k">Modalidad</td>
-              <td class="v mutedv" id="svcLearning">—</td>
-            </tr>
-            <tr>
-              <td class="k">Plataforma</td>
-              <td class="v mutedv" id="svcPlatform">—</td>
-            </tr>
-            <tr>
-              <td class="k">Tutor</td>
-              <td class="v mutedv" id="svcTutor">—</td>
-            </tr>
+            <tr><td class="k">Curso</td><td class="v" id="svcName">—</td></tr>
+            <tr><td class="k">Categoría</td><td class="v mutedv" id="svcCategory">—</td></tr>
+            <tr><td class="k">Modalidad</td><td class="v mutedv" id="svcLearning">—</td></tr>
+            <tr><td class="k">Plataforma</td><td class="v mutedv" id="svcPlatform">—</td></tr>
+            <tr><td class="k">Tutor</td><td class="v mutedv" id="svcTutor">—</td></tr>
             <tr>
               <td class="k">Precio</td>
               <td class="v">
@@ -838,7 +811,7 @@
   }
 
   // =====================
-  // Pricing (usa `precio` y `descuento_pct` del Worker)
+  // Pricing
   // =====================
   function toNumberFlexible(x){
     if (x === null || x === undefined) return NaN;
@@ -881,21 +854,17 @@
 
     const unitList = toNumberFlexible(course?.precio);
 
-    // Worker devuelve descuento_pct ya parseado (number|null). Si no, lo parseamos igual.
+    // 1) Preferimos descuento_pct si viene
     let pct = course?.descuento_pct;
     pct = (pct === null || pct === undefined || pct === "") ? NaN : Number(pct);
+
+    // 2) Fallback a descuento (string), ej "15%" o "15"
     if (!Number.isFinite(pct)){
       pct = toNumberFlexible(course?.descuento);
     }
-    if (Number.isFinite(pct)){
-      pct = Math.max(0, Math.min(100, pct));
-    } else {
-      pct = NaN;
-    }
 
+    // 3) Si el curso es gratis/gratuito y no vino descuento, asumimos 100
     const isFree = /gratuit|gratis/.test(tipoLower) || (Number.isFinite(unitList) && unitList <= 0);
-
-    // Si es gratuito y no vino descuento, asumimos 100.
     const effectivePct = (isFree && !Number.isFinite(pct)) ? 100 : pct;
 
     let unitFinal = unitList;
@@ -904,15 +873,16 @@
       if (unitFinal < 0) unitFinal = 0;
     }
 
-    const showDiscount = Number.isFinite(effectivePct) && (effectivePct > 0 || isFree);
+    const showDiscount = Number.isFinite(effectivePct) && effectivePct > 0;
 
-    return { tipo, unitList, unitFinal, discountPct: effectivePct, showDiscount };
+    return { tipo, unitList, unitFinal, discountPct: effectivePct, showDiscount, isFree };
   }
 
   function getTutorName(course){
-    const t = course?.tutor || null; // Worker normaliza tutor a {id,nombre}
+    const t = course?.tutor || null;
+    const direct = String(course?.tutor_nombre || "").trim();
     const n = String(t?.nombre || "").trim();
-    return n || "—";
+    return direct || n || "—";
   }
 
   function renderServiceInfo(){
@@ -945,27 +915,32 @@
     svcPlatformEl.textContent = platform || "—";
     svcTutorEl.textContent = tutor;
 
+    // Precio unitario
     if (Number.isFinite(pricing.unitList)){
-      svcUnitPriceEl.textContent = `${moneyFmtPYG(pricing.unitList)} por participante`;
+      if (pricing.isFree || (Number.isFinite(pricing.discountPct) && pricing.discountPct >= 100)){
+        svcUnitPriceEl.innerHTML = `Gratis <span class="badgeOk">0</span>`;
+      } else {
+        svcUnitPriceEl.textContent = `${moneyFmtPYG(pricing.unitList)} por participante`;
+      }
     } else {
       svcUnitPriceEl.textContent = "—";
     }
 
+    // Línea de descuento
     if (pricing.showDiscount){
       svcDiscountLineEl.style.display = "block";
-      svcDiscountLineEl.textContent = `Descuento: ${Number.isFinite(pricing.discountPct) ? pricing.discountPct : 0}%`;
-      if (Number.isFinite(totalFinal)){
-        svcTotalLineEl.textContent = `Total para ${q} participante(s): ${moneyFmtPYG(totalFinal)}`;
-      } else {
-        svcTotalLineEl.textContent = `Total: —`;
-      }
+      svcDiscountLineEl.innerHTML = `Descuento: <strong>${Number.isFinite(pricing.discountPct) ? pricing.discountPct : 0}%</strong>`;
     } else {
       svcDiscountLineEl.style.display = "none";
-      if (Number.isFinite(totalList)){
-        svcTotalLineEl.textContent = `Total para ${q} participante(s): ${moneyFmtPYG(totalList)}`;
-      } else {
-        svcTotalLineEl.textContent = `Total: —`;
-      }
+    }
+
+    // Total a pagar (con descuento si corresponde)
+    if (pricing.showDiscount && Number.isFinite(totalFinal)){
+      svcTotalLineEl.innerHTML = `Total a pagar para ${q} participante(s): <strong>${moneyFmtPYG(totalFinal)}</strong>`;
+    } else if (Number.isFinite(totalList)){
+      svcTotalLineEl.innerHTML = `Total para ${q} participante(s): <strong>${moneyFmtPYG(totalList)}</strong>`;
+    } else {
+      svcTotalLineEl.textContent = "Total: —";
     }
 
     serviceCardEl.style.display = "block";
@@ -1338,7 +1313,7 @@
   }
 
   // =====================
-  // Payload (interno, NO se muestra)
+  // Payload
   // =====================
   function buildPayload(){
     return {
@@ -1450,7 +1425,7 @@
     STATE.course_id = courseId;
     STATE.course = res.json.course || null;
 
-    // 👇 Acepta `slots` o `horarios` dependiendo del backend
+    // acepta slots u horarios
     STATE.slots = res.json.slots || res.json.horarios || [];
 
     renderServiceInfo();
