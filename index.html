@@ -240,9 +240,7 @@
 
     .cardBody{padding:16px 18px 18px}
 
-    .section{
-      margin-top:14px;
-    }
+    .section{margin-top:14px}
     .section:first-child{margin-top:0}
     .section h3{
       margin:0 0 10px 0;
@@ -318,15 +316,8 @@
       background: rgba(107,114,128,.08);
       color:#4b5563;
     }
-    .slot.disabled{
-      opacity:.55;
-      background:#fcfcfe;
-    }
-    .slot.disabled:hover{
-      box-shadow:none;
-      transform:none;
-      border-color: var(--line);
-    }
+    .slot.disabled{opacity:.55;background:#fcfcfe}
+    .slot.disabled:hover{box-shadow:none;transform:none;border-color: var(--line)}
 
     /* Participant blocks */
     .pbox{
@@ -846,15 +837,41 @@
     return {ok:r.ok, status:r.status, text:t, json:j};
   }
 
-  // ===== Pricing / Service Info =====
-  function parseMoney(x){
+  // =====================
+  // Pricing (FIX: soporta "100%", "100", "100.00", "100 %")
+  // =====================
+  function toNumberFlexible(x){
     if (x === null || x === undefined) return NaN;
-    const n = Number(String(x).replace(/,/g, "").trim());
+    let s = String(x).trim();
+    if (!s) return NaN;
+
+    // deja solo dígitos, coma, punto y signo
+    s = s.replace(/[^\d.,-]/g, "");
+    if (!s) return NaN;
+
+    const lastComma = s.lastIndexOf(",");
+    const lastDot = s.lastIndexOf(".");
+    if (lastComma !== -1 && lastDot !== -1){
+      // el último separador se toma como decimal
+      const decSep = lastComma > lastDot ? "," : ".";
+      const thouSep = decSep === "," ? "." : ",";
+      s = s.split(thouSep).join("");
+      s = s.replace(decSep, ".");
+    } else if (lastComma !== -1 && lastDot === -1){
+      // solo coma: puede ser decimal
+      s = s.replace(",", ".");
+    } else if (lastDot !== -1 && lastComma === -1){
+      // solo punto: si parece miles (ej 250.000), removemos puntos
+      const parts = s.split(".");
+      if (parts.length > 2) s = parts.join("");
+    }
+
+    const n = Number(s);
     return Number.isFinite(n) ? n : NaN;
   }
 
   function clampPct(x){
-    const n = Number(x);
+    const n = toNumberFlexible(x);
     if (!Number.isFinite(n)) return NaN;
     return Math.max(0, Math.min(100, n));
   }
@@ -869,26 +886,40 @@
   }
 
   function getCoursePricing(course){
-    const tipo = String(course?.Tipo_de_curso ?? course?.type ?? "").trim();
-    const listUnit = parseMoney(course?.Precio ?? course?.price ?? course?.precio);
+    const tipoRaw = String(course?.Tipo_de_curso ?? course?.type ?? "").trim();
+    const tipo = tipoRaw || "—";
 
-    const rawPct = course?.Descuento ?? course?.discount_pct ?? "";
-    let pct = clampPct(parseMoney(rawPct));
+    const listUnit = toNumberFlexible(course?.Precio ?? course?.price ?? course?.precio);
 
-    const isFree = (tipo.toLowerCase() === "gratuito");
-    if (isFree && !Number.isFinite(pct)) pct = 100;
+    // FIX: toma descuento aunque venga "100%" o "100 %"
+    const pct = clampPct(course?.Descuento ?? course?.discount_pct ?? course?.descuento ?? "");
 
+    // Detecta gratuito de forma flexible (por texto + por precio 0)
+    const tipoLower = tipoRaw.toLowerCase();
+    const isFreeByType = /gratuit|gratis/.test(tipoLower);
+    const isFreeByPrice = Number.isFinite(listUnit) && listUnit <= 0;
+    const isFree = isFreeByType || isFreeByPrice;
+
+    // Si es gratuito y no vino descuento, por defecto 100
+    const effectivePct = (isFree && !Number.isFinite(pct)) ? 100 : pct;
+
+    // Si hay descuento numérico, lo aplicamos siempre. Si no hay descuento, final = list.
     let finalUnit = listUnit;
-    if (isFree && Number.isFinite(listUnit)){
-      finalUnit = listUnit * (1 - (Number.isFinite(pct) ? pct : 100) / 100);
+    if (Number.isFinite(listUnit) && Number.isFinite(effectivePct)){
+      finalUnit = listUnit * (1 - effectivePct / 100);
+      if (finalUnit < 0) finalUnit = 0;
     }
+
+    // Mostrar línea de descuento si el campo tiene valor (o si es gratuito)
+    const showDiscount = Number.isFinite(effectivePct) && (effectivePct > 0 || isFree);
 
     return {
       tipo,
-      isFree,
       listUnit: Number.isFinite(listUnit) ? listUnit : NaN,
-      discountPct: Number.isFinite(pct) ? pct : NaN,
-      finalUnit: Number.isFinite(finalUnit) ? finalUnit : NaN
+      discountPct: Number.isFinite(effectivePct) ? effectivePct : NaN,
+      finalUnit: Number.isFinite(finalUnit) ? finalUnit : NaN,
+      showDiscount,
+      isFree
     };
   }
 
@@ -918,7 +949,6 @@
 
     const pricing = getCoursePricing(c);
 
-    // qty (si no hay slot aún, igual mostramos total para qty=1)
     const q = (() => {
       const v = normalizeInt(qtyEl?.value);
       return (Number.isFinite(v) && v > 0) ? v : 1;
@@ -926,7 +956,9 @@
 
     const unitList = pricing.listUnit;
     const unitFinal = pricing.finalUnit;
+
     const totalFinal = (Number.isFinite(unitFinal) ? unitFinal * q : NaN);
+    const totalList = (Number.isFinite(unitList) ? unitList * q : NaN);
 
     serviceTypePillEl.textContent = pricing.tipo || "—";
     svcNameEl.textContent = name || "—";
@@ -936,25 +968,25 @@
     svcTutorEl.textContent = tutor;
 
     if (Number.isFinite(unitList)){
-      svcUnitPriceEl.textContent = moneyFmtPYG(unitList) + " por participante";
+      svcUnitPriceEl.textContent = `${moneyFmtPYG(unitList)} por participante`;
     } else {
       svcUnitPriceEl.textContent = "—";
     }
 
-    if (pricing.isFree){
+    // FIX: ahora muestra descuento si lo cargaste en Creator (aunque no sea "Gratuito")
+    if (pricing.showDiscount){
       svcDiscountLineEl.style.display = "block";
-      svcDiscountLineEl.textContent =
-        `Descuento aplicado: ${Number.isFinite(pricing.discountPct) ? pricing.discountPct : 100}%`;
+      svcDiscountLineEl.textContent = `Descuento: ${Number.isFinite(pricing.discountPct) ? pricing.discountPct : 0}%`;
     } else {
       svcDiscountLineEl.style.display = "none";
       svcDiscountLineEl.textContent = "";
     }
 
-    if (Number.isFinite(totalFinal)){
+    // Total: si hay descuento aplicado, mostramos final; si no, mostramos lista
+    if (pricing.showDiscount && Number.isFinite(totalFinal)){
       svcTotalLineEl.textContent = `Total para ${q} participante(s): ${moneyFmtPYG(totalFinal)}`;
-    } else if (Number.isFinite(unitList)){
-      // si no calculó final, mostrar total con lista
-      svcTotalLineEl.textContent = `Total para ${q} participante(s): ${moneyFmtPYG(unitList * q)}`;
+    } else if (Number.isFinite(totalList)){
+      svcTotalLineEl.textContent = `Total para ${q} participante(s): ${moneyFmtPYG(totalList)}`;
     } else {
       svcTotalLineEl.textContent = "Total: —";
     }
@@ -1362,10 +1394,7 @@
 
   qtyEl.addEventListener("input", () => {
     const s = STATE.selected_slot;
-    if (!s) {
-      renderServiceInfo();
-      return;
-    }
+    if (!s) { renderServiceInfo(); return; }
 
     const disp = normalizeInt(s.cupos_disponibles);
     let qty = normalizeInt(qtyEl.value);
@@ -1523,7 +1552,6 @@
       else hideLoading();
     }
   })();
-  //hola
 </script>
 </body>
 </html>
