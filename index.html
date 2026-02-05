@@ -144,8 +144,9 @@
   const POLL_DELAY_MS = 1500;
   const POLL_MAX_TRIES = 120;
 
-  const WEBHOOK_URL =
-    "https://flow.zoho.com/871021303/flow/webhook/incoming?zapikey=1001.71e42fa6e10f917d8d7575a01f962607.6b966cbe0089d194f3349e44e44cd04b&isdebug=false";
+  // ✅ IMPORTANTE: el frontend NO debe llamar a flow.zoho.com (CORS + exposición de zapikey)
+  // En su lugar, llama al Worker: /api/reserva, que reenvía server-side a Flow.
+  const WEBHOOK_URL = `${API_BASE}/api/reserva`;
 
   const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
 
@@ -709,7 +710,7 @@
 
     btnConfirm.disabled = true;
     btnPreview.disabled = true;
-    setSendMsg("<span class='muted'>Enviando al webhook…</span>", "");
+    setSendMsg("<span class='muted'>Enviando…</span>", "");
 
     try{
       const res = await postWebhookJson(payload);
@@ -729,7 +730,6 @@
     } catch (e){
       setSendMsg(`<span class='err'>Error de red: ${htmlEscape(e?.message || String(e))}</span>`, "");
     } finally {
-      // Confirmación se invalida si cambia algo
       btnPreview.disabled = !isFormValid();
       btnConfirm.disabled = true;
       STATE.last_preview_payload = null;
@@ -755,7 +755,6 @@
     setStatus(`OK: horarios=${(STATE.slots||[]).length}`);
     refreshBillingDocUI();
 
-    // Al inicio, comprobante vacío => form no válido
     btnPreview.disabled = !isFormValid();
     return res.json;
   }
@@ -805,8 +804,6 @@
     const boot = await loadBootstrap(courseId);
 
     const shouldForce = (boot?.ok !== true);
-    // const shouldForce = true;
-
     if (shouldForce){
       const updated = await forceRefreshAndWait(courseId);
       if (updated) await loadBootstrap(courseId);
