@@ -10,6 +10,7 @@
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     label{display:block;margin:6px 0}
     input[type="number"], input[type="text"], input[type="email"]{padding:8px;border:1px solid #ccc;border-radius:8px;width:100%}
+    select{padding:8px;border:1px solid #ccc;border-radius:8px}
     button{padding:10px 12px;border:0;border-radius:10px;cursor:pointer}
     button:disabled{opacity:.5;cursor:not-allowed}
     .muted{color:#666}
@@ -19,6 +20,7 @@
     @media (max-width:720px){ .grid{grid-template-columns:1fr} }
     pre{background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px}
     .pbox{border:1px solid #eee;border-radius:10px;padding:10px;margin-top:10px}
+    .hidden{display:none !important}
   </style>
 </head>
 <body>
@@ -49,6 +51,50 @@
 
     <div id="namesWrap"></div>
 
+    <div class="card" style="margin-top:14px">
+      <h2>Datos de facturación</h2>
+
+      <div class="row">
+        <div>
+          <label for="needInvoice">¿Requiere factura?</label>
+          <select id="needInvoice">
+            <option value="no" selected>No</option>
+            <option value="si">Sí</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="billingWrap" class="hidden" style="margin-top:10px">
+        <div class="grid">
+          <div>
+            <label for="billName">Razón social / Nombre *</label>
+            <input id="billName" type="text" placeholder="Ej: Todo Costura S.A.">
+          </div>
+          <div>
+            <label for="billRuc">RUC / Nro. documento *</label>
+            <input id="billRuc" type="text" placeholder="Ej: 80012345-6">
+          </div>
+          <div>
+            <label for="billEmail">Correo de facturación *</label>
+            <input id="billEmail" type="email" placeholder="facturacion@dominio.com">
+          </div>
+          <div>
+            <label for="billPhone">Teléfono (opcional)</label>
+            <input id="billPhone" type="text" placeholder="+595...">
+          </div>
+          <div>
+            <label for="billAddress">Dirección *</label>
+            <input id="billAddress" type="text" placeholder="Calle, número, barrio">
+          </div>
+          <div>
+            <label for="billCity">Ciudad *</label>
+            <input id="billCity" type="text" placeholder="Ej: Asunción">
+          </div>
+        </div>
+        <div class="muted" style="margin-top:8px">Los campos marcados con * son obligatorios si requiere factura.</div>
+      </div>
+    </div>
+
     <div style="margin-top:10px">
       <button id="btnSubmit" disabled>Continuar (validar)</button>
       <div id="formMsg" style="margin-top:8px"></div>
@@ -74,17 +120,19 @@
   const btnSubmit = document.getElementById("btnSubmit");
   const formMsg = document.getElementById("formMsg");
 
-  let STATE = {
-    course_id: null,
-    slots: [],
-    selected_slot: null
-  };
+  const needInvoiceEl = document.getElementById("needInvoice");
+  const billingWrapEl = document.getElementById("billingWrap");
+  const billNameEl = document.getElementById("billName");
+  const billRucEl = document.getElementById("billRuc");
+  const billEmailEl = document.getElementById("billEmail");
+  const billPhoneEl = document.getElementById("billPhone");
+  const billAddressEl = document.getElementById("billAddress");
+  const billCityEl = document.getElementById("billCity");
+
+  let STATE = { course_id:null, slots:[], selected_slot:null };
 
   function setStatus(t){ statusEl.textContent = t; }
-  function setMsg(html, cls){
-    formMsg.className = cls || "";
-    formMsg.innerHTML = html || "";
-  }
+  function setMsg(html, cls){ formMsg.className = cls || ""; formMsg.innerHTML = html || ""; }
 
   function getCourseIdFromHash(){
     const h = (location.hash || "").replace(/^#/, "");
@@ -116,8 +164,16 @@
   }
 
   function isEmailBasic(v){
-    // validación simple (suficiente para UI; servidor revalida)
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
+  }
+
+  function disableForm(reason){
+    qtyEl.disabled = true;
+    btnBuild.disabled = true;
+    btnSubmit.disabled = true;
+    qtyHintEl.textContent = reason || "";
+    namesWrap.innerHTML = "";
+    setMsg(reason ? `<span class="muted">${reason}</span>` : "", "");
   }
 
   function renderSlots(slots){
@@ -150,8 +206,7 @@
       const label = document.createElement("label");
       label.htmlFor = id;
       label.style.margin = "0";
-      label.textContent =
-        `${s.fecha} ${s.hora} — disponibles: ${s.cupos_disponibles} — slot: ${s.slot_id}`;
+      label.textContent = `${s.fecha} ${s.hora} — disponibles: ${s.cupos_disponibles} — slot: ${s.slot_id}`;
 
       div.appendChild(input);
       div.appendChild(label);
@@ -160,15 +215,6 @@
 
     slotsHelpEl.textContent = "Seleccioná un horario para habilitar la cantidad de personas.";
     disableForm("Seleccioná un horario.");
-  }
-
-  function disableForm(reason){
-    qtyEl.disabled = true;
-    btnBuild.disabled = true;
-    btnSubmit.disabled = true;
-    qtyHintEl.textContent = reason || "";
-    namesWrap.innerHTML = "";
-    setMsg(reason ? `<span class="muted">${reason}</span>` : "", "");
   }
 
   function onSlotSelected(){
@@ -190,17 +236,37 @@
     qtyHintEl.textContent = `Máximo permitido por disponibilidad: ${disp}.`;
     btnBuild.disabled = false;
 
-    rebuildIfNeeded();
+    const existingBlocks = namesWrap.querySelectorAll('[data-pblock="1"]').length;
+    const qty = normalizeInt(qtyEl.value);
+    if (existingBlocks && existingBlocks !== qty) buildParticipants();
+
     btnSubmit.disabled = !isFormValid();
     setMsg("", "");
   }
 
-  function rebuildIfNeeded(){
-    const existingBlocks = namesWrap.querySelectorAll('[data-pblock="1"]').length;
-    const qty = normalizeInt(qtyEl.value);
-    if (existingBlocks && existingBlocks !== qty){
-      buildParticipants();
-    }
+  function makeField(i, key, labelText, type, required, placeholder){
+    const wrap = document.createElement("div");
+
+    const lab = document.createElement("label");
+    lab.htmlFor = `p${i}_${key}`;
+    lab.textContent = labelText + (required ? " *" : "");
+    wrap.appendChild(lab);
+
+    const inp = document.createElement("input");
+    inp.type = type;
+    inp.id = `p${i}_${key}`;
+    inp.placeholder = placeholder || "";
+    inp.setAttribute("data-i", String(i));
+    inp.setAttribute("data-k", key);
+    if (required) inp.setAttribute("data-req","1");
+
+    inp.addEventListener("input", () => {
+      btnSubmit.disabled = !isFormValid();
+      setMsg("", "");
+    });
+
+    wrap.appendChild(inp);
+    return wrap;
   }
 
   function buildParticipants(){
@@ -262,32 +328,6 @@
     setMsg("", "");
   }
 
-  function makeField(i, key, labelText, type, required, placeholder){
-    const wrap = document.createElement("div");
-
-    const lab = document.createElement("label");
-    lab.htmlFor = `p${i}_${key}`;
-    lab.textContent = labelText + (required ? " *" : "");
-    wrap.appendChild(lab);
-
-    const inp = document.createElement("input");
-    inp.type = type;
-    inp.id = `p${i}_${key}`;
-    inp.placeholder = placeholder || "";
-    inp.setAttribute("data-p","1");
-    inp.setAttribute("data-i", String(i));
-    inp.setAttribute("data-k", key);
-    if (required) inp.setAttribute("data-req","1");
-
-    inp.addEventListener("input", () => {
-      btnSubmit.disabled = !isFormValid();
-      setMsg("", "");
-    });
-
-    wrap.appendChild(inp);
-    return wrap;
-  }
-
   function getParticipants(){
     const blocks = Array.from(namesWrap.querySelectorAll('[data-pblock="1"]'));
     const out = [];
@@ -296,16 +336,44 @@
       const i = idx + 1;
       const q = (k) => (namesWrap.querySelector(`#p${i}_${k}`)?.value || "").trim();
 
-      const p = {
+      out.push({
         nombres: q("nombres"),
         apellidos: q("apellidos"),
         cedula: q("cedula"),
         email: q("email"),
         contacto: q("contacto") || ""
-      };
-      out.push(p);
+      });
     }
     return out;
+  }
+
+  function getBilling(){
+    const need = needInvoiceEl.value === "si";
+    if (!need){
+      return { requiere_factura:false };
+    }
+    return {
+      requiere_factura: true,
+      razon_social: (billNameEl.value||"").trim(),
+      ruc: (billRucEl.value||"").trim(),
+      email: (billEmailEl.value||"").trim(),
+      telefono: (billPhoneEl.value||"").trim(),
+      direccion: (billAddressEl.value||"").trim(),
+      ciudad: (billCityEl.value||"").trim()
+    };
+  }
+
+  function isBillingValid(){
+    const b = getBilling();
+    if (!b.requiere_factura) return true;
+
+    if (!b.razon_social) return false;
+    if (!b.ruc) return false;
+    if (!b.email || !isEmailBasic(b.email)) return false;
+    if (!b.direccion) return false;
+    if (!b.ciudad) return false;
+
+    return true;
   }
 
   function isFormValid(){
@@ -325,11 +393,28 @@
       if (!p.apellidos) return false;
       if (!p.cedula) return false;
       if (!p.email || !isEmailBasic(p.email)) return false;
-      // contacto opcional => no valida
     }
+
+    if (!isBillingValid()) return false;
 
     return true;
   }
+
+  // Billing toggle + revalidate
+  function refreshBillingUI(){
+    const need = needInvoiceEl.value === "si";
+    billingWrapEl.classList.toggle("hidden", !need);
+    btnSubmit.disabled = !isFormValid();
+    setMsg("", "");
+  }
+
+  needInvoiceEl.addEventListener("change", refreshBillingUI);
+  [billNameEl, billRucEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
+    el.addEventListener("input", ()=>{
+      btnSubmit.disabled = !isFormValid();
+      setMsg("", "");
+    });
+  });
 
   btnBuild.addEventListener("click", () => buildParticipants());
 
@@ -361,6 +446,7 @@
       slot_id: STATE.selected_slot.slot_id,
       cantidad_personas: normalizeInt(qtyEl.value),
       participantes: getParticipants(),
+      facturacion: getBilling(),
       slot_snapshot: {
         fecha: STATE.selected_slot.fecha,
         hora: STATE.selected_slot.hora,
@@ -372,9 +458,7 @@
     console.log("RESERVA_PAYLOAD", payload);
 
     // Cuando tengas tu endpoint:
-    // apiPost(`${API_BASE}/api/reservar`, payload).then(res=>{
-    //   console.log(res);
-    // });
+    // apiPost(`${API_BASE}/api/reservar`, payload).then(res=>console.log(res));
   });
 
   async function loadBootstrap(courseId){
@@ -388,6 +472,8 @@
 
     renderSlots(STATE.slots);
     setStatus(`OK: horarios=${(STATE.slots||[]).length}`);
+
+    refreshBillingUI();
     return res.json;
   }
 
