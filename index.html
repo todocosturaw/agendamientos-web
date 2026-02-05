@@ -47,6 +47,7 @@
       justify-content:space-between;
       gap:14px;
       margin-bottom:22px;
+      flex-wrap:wrap;
     }
     .brand{
       display:flex;align-items:center;gap:12px;min-width:240px;
@@ -57,6 +58,7 @@
       background: rgba(165,43,100,.06);
       display:grid;place-items:center;
       overflow:hidden;
+      flex:0 0 auto;
     }
     .logoBox img{width:100%;height:100%;object-fit:cover;display:block}
     .brandText{
@@ -227,7 +229,7 @@
     }
     .slot input{margin-top:2px}
     .slot label{margin:0;color:var(--txt);font-weight:900;font-size:13.5px}
-    .slot .meta{margin-top:4px;color:var(--muted);font-size:12.5px;line-height:1.35}
+    .slot .meta{margin-top:4px;color:var(--muted);font-size:12.5px;line-height:1.35;display:flex;gap:8px;flex-wrap:wrap}
     .kpi{
       display:inline-flex;align-items:center;
       padding:4px 10px;border-radius:999px;
@@ -236,7 +238,20 @@
       color:#7a1f4a;
       font-weight:900;
       font-size:12px;
-      margin-left:6px;
+    }
+    .kpi.gray{
+      border-color: rgba(107,114,128,.25);
+      background: rgba(107,114,128,.08);
+      color:#4b5563;
+    }
+    .slot.disabled{
+      opacity:.55;
+      background:#fcfcfe;
+    }
+    .slot.disabled:hover{
+      box-shadow:none;
+      transform:none;
+      border-color: var(--line);
     }
 
     /* Participant blocks */
@@ -285,22 +300,10 @@
       box-shadow: 0 12px 22px rgba(17,24,39,.06);
     }
 
-    /* Messages / preview */
+    /* Messages */
     .msg{margin-top:10px;font-size:13px;line-height:1.35}
     .err{color:#b00020;font-weight:800}
     .ok{color:#0a7a2f;font-weight:800}
-
-    pre{
-      margin:12px 0 0 0;
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-      white-space:pre-wrap;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size:12px;
-      color:#111827;
-    }
 
     /* Loading overlay */
     .loading{
@@ -388,7 +391,6 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <div class="logoBox" style="width:40px;height:40px;border-radius:14px">
-            <!-- Reemplazá src por tu logo real -->
             <img id="logoImg2" alt="Todo Costura" src="" style="display:none">
             <div id="logoFallback2" style="font-weight:950;color:var(--brand);font-size:12px">TC</div>
           </div>
@@ -411,7 +413,6 @@
     <div class="topbar">
       <div class="brand">
         <div class="logoBox">
-          <!-- Reemplazá src por tu logo real (PNG/SVG) -->
           <img id="logoImg" alt="Todo Costura" src="" style="display:none">
           <div id="logoFallback" style="font-weight:950;color:var(--brand);font-size:12px">TC</div>
         </div>
@@ -537,14 +538,15 @@
           <div class="section">
             <h3>Confirmación</h3>
             <div class="btns">
-              <button id="btnPreview" class="ghost" disabled>Vista previa</button>
+              <!-- Vista previa DESHABILITADA/OCULTA -->
+              <button id="btnPreview" class="ghost" style="display:none" disabled>Vista previa</button>
               <button id="btnConfirm" class="primary" disabled>Confirmar y enviar</button>
             </div>
 
             <div id="formMsg" class="msg"></div>
             <div id="sendMsg" class="msg"></div>
 
-            <pre id="previewJson" style="display:none;"></pre>
+            <!-- No se muestra JSON -->
             <pre id="debug" style="display:none;"></pre>
           </div>
         </div>
@@ -564,8 +566,8 @@
 
   const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
 
-  // Logo (opcional): poné una URL absoluta o relativa (ej: "./logo-todocostura.png")
-  const LOGO_URL = ""; // <- completá si querés usar imagen
+  // Logo (opcional)
+  const LOGO_URL = ""; // ej: "./logo-todocostura.png"
 
   // =====================
   // DOM
@@ -583,7 +585,6 @@
 
   const formMsg = document.getElementById("formMsg");
   const sendMsg = document.getElementById("sendMsg");
-  const previewJsonEl = document.getElementById("previewJson");
 
   // Billing
   const billNameEl = document.getElementById("billName");
@@ -600,7 +601,6 @@
   const payFileStatusEl = document.getElementById("payFileStatus");
 
   // Confirm
-  const btnPreview = document.getElementById("btnPreview");
   const btnConfirm = document.getElementById("btnConfirm");
 
   // Loading
@@ -623,7 +623,6 @@
     course: null,
     slots: [],
     selected_slot: null,
-    last_preview_payload: null,
     payment_proof: null // {filename,mime_type,size_bytes,base64}
   };
 
@@ -670,6 +669,40 @@
     return p.get("ID") || p.get("course_id");
   }
 
+  function parseISODate(iso){
+    const s = String(iso||"").trim();
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+    if (!y || !mo || !d) return null;
+    return new Date(y, mo-1, d);
+  }
+
+  function formatDateHuman(iso){
+    const d = parseISODate(iso);
+    if (!d) return String(iso||"").trim() || "—";
+    const dd = String(d.getDate()).padStart(2,"0");
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const yy = d.getFullYear();
+    return `${dd}/${mm}/${yy}`;
+  }
+
+  function slotSortKey(s){
+    const fecha = String(s?.fecha||"").trim();
+    const hora = String(s?.hora||"").trim();
+    // si no hay fecha/hora, los manda al final
+    const d = parseISODate(fecha);
+    const dayKey = d ? d.getTime() : Number.MAX_SAFE_INTEGER;
+    // hora formato "HH:mm"
+    let hmKey = Number.MAX_SAFE_INTEGER;
+    const m = hora.match(/^(\d{1,2}):(\d{2})/);
+    if (m){
+      const hh = Number(m[1]), mm = Number(m[2]);
+      if (Number.isFinite(hh) && Number.isFinite(mm)) hmKey = hh*60+mm;
+    }
+    return [dayKey, hmKey, fecha, hora];
+  }
+
   async function apiGet(url){
     const r = await fetch(url, { method:"GET" });
     const t = await r.text();
@@ -699,13 +732,6 @@
     return {ok:r.ok, status:r.status, text:t, json:j};
   }
 
-  function resetPreview(){
-    STATE.last_preview_payload = null;
-    previewJsonEl.style.display = "none";
-    previewJsonEl.textContent = "";
-    btnConfirm.disabled = true;
-  }
-
   // =====================
   // Loading UI
   // =====================
@@ -722,7 +748,7 @@
   }
 
   // =====================
-  // Logo (optional)
+  // Logo
   // =====================
   function setupLogo(){
     if (!LOGO_URL) return;
@@ -733,15 +759,8 @@
     });
     [logoFallback, logoFallback2].forEach((el) => el.style.display = "none");
 
-    // Si falla la carga, vuelve al fallback
-    logoImg.onerror = () => {
-      logoImg.style.display = "none";
-      logoFallback.style.display = "block";
-    };
-    logoImg2.onerror = () => {
-      logoImg2.style.display = "none";
-      logoFallback2.style.display = "block";
-    };
+    logoImg.onerror = () => { logoImg.style.display="none"; logoFallback.style.display="block"; };
+    logoImg2.onerror = () => { logoImg2.style.display="none"; logoFallback2.style.display="block"; };
   }
 
   // =====================
@@ -771,13 +790,11 @@
   function disableForm(reason){
     qtyEl.disabled = true;
     btnBuild.disabled = true;
-    btnPreview.disabled = true;
     btnConfirm.disabled = true;
     qtyHintEl.textContent = reason || "";
     namesWrap.innerHTML = "";
     setMsg(reason ? `<span class="muted">${htmlEscape(reason)}</span>` : "", "");
     setSendMsg("", "");
-    resetPreview();
   }
 
   function renderSlots(slots){
@@ -790,17 +807,32 @@
       return disableForm("No hay turnos disponibles.");
     }
 
-    slots.forEach((s, idx) => {
+    // Ordenar por fecha/hora (lista, sin calendario)
+    const sorted = slots.slice().sort((a,b)=>{
+      const ka = slotSortKey(a);
+      const kb = slotSortKey(b);
+      for (let i=0;i<ka.length;i++){
+        if (ka[i] < kb[i]) return -1;
+        if (ka[i] > kb[i]) return 1;
+      }
+      return 0;
+    });
+
+    sorted.forEach((s, idx) => {
       const id = `slot_${idx}`;
 
+      const disp = normalizeInt(s.cupos_disponibles);
+      const isOk = Number.isFinite(disp) && disp > 0;
+
       const box = document.createElement("div");
-      box.className = "slot";
+      box.className = "slot" + (isOk ? "" : " disabled");
 
       const input = document.createElement("input");
       input.type = "radio";
       input.name = "slot";
       input.id = id;
-      input.value = s.slot_id;
+      input.value = String(s.slot_id ?? idx);
+      input.disabled = !isOk;
 
       input.addEventListener("change", () => {
         STATE.selected_slot = s;
@@ -812,13 +844,17 @@
 
       const lab = document.createElement("label");
       lab.htmlFor = id;
-      lab.textContent = `${s.fecha} · ${s.hora}`;
+      // UI: NO mostrar slot_id
+      const fechaHuman = formatDateHuman(s.fecha);
+      lab.textContent = `${fechaHuman} · ${String(s.hora || "—")}`;
       right.appendChild(lab);
 
-      const disp = normalizeInt(s.cupos_disponibles);
       const meta = document.createElement("div");
       meta.className = "meta";
-      meta.innerHTML = `Cupos: <span class="kpi">${htmlEscape(disp)}</span>`;
+      meta.innerHTML = `
+        <span class="kpi">Cupos: ${htmlEscape(Number.isFinite(disp) ? disp : "-")}</span>
+        <span class="kpi gray">${isOk ? "Disponible" : "Sin cupos"}</span>
+      `;
       right.appendChild(meta);
 
       box.appendChild(input);
@@ -853,10 +889,9 @@
     const qty = normalizeInt(qtyEl.value);
     if (existingBlocks && existingBlocks !== qty) buildParticipants();
 
-    btnPreview.disabled = !isFormValid();
+    btnConfirm.disabled = !isFormValid();
     setMsg("", "");
     setSendMsg("", "");
-    resetPreview();
   }
 
   // =====================
@@ -877,9 +912,8 @@
     inp.placeholder = placeholder || "";
 
     inp.addEventListener("input", () => {
-      btnPreview.disabled = !isFormValid();
+      btnConfirm.disabled = !isFormValid();
       setSendMsg("");
-      resetPreview();
     });
 
     wrap.appendChild(inp);
@@ -897,20 +931,17 @@
 
     if (!Number.isFinite(qty) || qty < 1){
       setMsg("Cantidad inválida.", "err");
-      btnPreview.disabled = true;
-      resetPreview();
+      btnConfirm.disabled = true;
       return;
     }
     if (!Number.isFinite(disp) || disp < 1){
       setMsg("Disponibilidad inválida para este turno.", "err");
-      btnPreview.disabled = true;
-      resetPreview();
+      btnConfirm.disabled = true;
       return;
     }
     if (qty > disp){
       setMsg(`No se pueden registrar ${qty} participantes. Cupos disponibles: ${disp}.`, "err");
-      btnPreview.disabled = true;
-      resetPreview();
+      btnConfirm.disabled = true;
       return;
     }
 
@@ -943,10 +974,9 @@
       namesWrap.appendChild(box);
     }
 
-    btnPreview.disabled = !isFormValid();
+    btnConfirm.disabled = !isFormValid();
     setMsg("", "");
     setSendMsg("", "");
-    resetPreview();
   }
 
   function getParticipants(){
@@ -978,8 +1008,7 @@
       billDocLabelEl.textContent = "Documento personal (Cédula) *";
       billDocNumberEl.placeholder = "Ej: 1234567";
     }
-    btnPreview.disabled = !isFormValid();
-    resetPreview();
+    btnConfirm.disabled = !isFormValid();
   }
 
   function getBilling(){
@@ -1030,17 +1059,17 @@
   async function handlePaymentFile(file){
     STATE.payment_proof = null;
     payFileStatusEl.textContent = "Procesando…";
-    resetPreview();
+    btnConfirm.disabled = true;
 
     if (!file){
       payFileStatusEl.textContent = "Sin archivo";
-      btnPreview.disabled = !isFormValid();
+      btnConfirm.disabled = !isFormValid();
       return;
     }
 
     if (file.size > MAX_FILE_BYTES){
       payFileStatusEl.textContent = "Archivo demasiado grande (máx. 5 MB)";
-      btnPreview.disabled = true;
+      btnConfirm.disabled = true;
       return;
     }
 
@@ -1057,7 +1086,7 @@
       payFileStatusEl.textContent = `Error: ${e.message}`;
       STATE.payment_proof = null;
     } finally {
-      btnPreview.disabled = !isFormValid();
+      btnConfirm.disabled = !isFormValid();
     }
   }
 
@@ -1090,7 +1119,7 @@
   }
 
   // =====================
-  // Payload + Preview
+  // Payload (interno, NO se muestra)
   // =====================
   function buildPayload(){
     return {
@@ -1100,28 +1129,19 @@
       },
       course_id: STATE.course_id,
       course: safeCourse(STATE.course),
-
       slot: {
         slot_id: STATE.selected_slot?.slot_id || null,
         fecha: STATE.selected_slot?.fecha || null,
         hora: STATE.selected_slot?.hora || null,
         cupos_disponibles_snapshot: STATE.selected_slot?.cupos_disponibles ?? null
       },
-
       reservation: {
         cantidad_participantes: normalizeInt(qtyEl.value),
         participantes: getParticipants()
       },
-
       billing: getBilling(),
-
       payment_proof: STATE.payment_proof
     };
-  }
-
-  function renderPreview(payload){
-    previewJsonEl.textContent = JSON.stringify(payload, null, 2);
-    previewJsonEl.style.display = "block";
   }
 
   // =====================
@@ -1142,57 +1162,34 @@
 
     qtyEl.value = String(qty);
 
-    btnPreview.disabled = !isFormValid();
+    btnConfirm.disabled = !isFormValid();
     setSendMsg("");
-    resetPreview();
   });
 
   billDocTypeEl.addEventListener("change", refreshBillingDocUI);
   [billNameEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
     el.addEventListener("input", ()=>{
-      btnPreview.disabled = !isFormValid();
+      btnConfirm.disabled = !isFormValid();
       setSendMsg("");
-      resetPreview();
     });
   });
 
   payFileEl.addEventListener("change", async (ev)=>{
     const file = ev.target.files && ev.target.files[0] ? ev.target.files[0] : null;
     await handlePaymentFile(file);
-    btnPreview.disabled = !isFormValid();
+    btnConfirm.disabled = !isFormValid();
     setSendMsg("");
-    resetPreview();
-  });
-
-  btnPreview.addEventListener("click", () => {
-    if (!isFormValid()){
-      setMsg("<span class='err'>Faltan datos obligatorios, la cantidad excede cupos o falta el comprobante.</span>");
-      btnConfirm.disabled = true;
-      return;
-    }
-    const payload = buildPayload();
-    STATE.last_preview_payload = payload;
-    renderPreview(payload);
-    setMsg("");
-    setSendMsg("<span class='ok'>Vista previa generada. Revisá y confirmá el envío.</span>");
-    btnConfirm.disabled = false;
   });
 
   btnConfirm.addEventListener("click", async () => {
-    if (!STATE.last_preview_payload){
-      setSendMsg("<span class='err'>Primero generá la vista previa.</span>");
-      return;
-    }
     if (!isFormValid()){
-      setSendMsg("<span class='err'>Los datos ya no son válidos. Generá nuevamente la vista previa.</span>");
-      btnConfirm.disabled = true;
+      setMsg("<span class='err'>Revisá: turno, participantes, facturación y comprobante.</span>");
       return;
     }
 
-    const payload = STATE.last_preview_payload;
+    const payload = buildPayload();
 
     btnConfirm.disabled = true;
-    btnPreview.disabled = true;
     setSendMsg("<span class='muted'>Enviando…</span>");
 
     try{
@@ -1204,6 +1201,7 @@
         setSendMsg(`<span class='err'>No se pudo completar el envío (HTTP ${res.status}).</span>`);
       }
 
+      // Debug interno oculto
       debugEl.style.display = "none";
       debugEl.textContent =
         `POST ${res.status}\n` +
@@ -1214,9 +1212,7 @@
     } catch (e){
       setSendMsg(`<span class='err'>Error de red: ${htmlEscape(e?.message || String(e))}</span>`);
     } finally {
-      btnPreview.disabled = !isFormValid();
-      btnConfirm.disabled = true;
-      STATE.last_preview_payload = null;
+      btnConfirm.disabled = !isFormValid();
     }
   });
 
@@ -1242,7 +1238,7 @@
     setStatus(`Listo · ${(STATE.slots||[]).length} turnos`);
     refreshBillingDocUI();
 
-    btnPreview.disabled = !isFormValid();
+    btnConfirm.disabled = !isFormValid();
 
     showLoading("Listo", "Podés continuar con la inscripción.", 1.0);
     setTimeout(hideLoading, 180);
@@ -1269,7 +1265,6 @@
     }
 
     for (let i=1;i<=POLL_MAX_TRIES;i++){
-      // progreso "suave" mientras espera
       const p = Math.min(0.90, 0.40 + (i / POLL_MAX_TRIES) * 0.50);
       loadBarEl.style.width = Math.round(p*100) + "%";
 
