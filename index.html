@@ -1,12 +1,57 @@
 <!doctype html>
 <html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reservas - test</title></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reservas - test</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial,sans-serif;padding:16px}
+    .card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    label{display:block;margin:6px 0}
+    input[type="number"], input[type="text"]{padding:8px;border:1px solid #ccc;border-radius:8px}
+    button{padding:10px 12px;border:0;border-radius:10px;cursor:pointer}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .muted{color:#666}
+    .err{color:#b00020;font-weight:600}
+    .ok{color:#0a7a2f;font-weight:600}
+    pre{background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px}
+  </style>
+</head>
 <body>
   <h1>Reservas (test)</h1>
+
   <div id="status"></div>
-  <h2>Horarios</h2>
-  <div id="slots"></div>
+
+  <div class="card">
+    <h2>Horarios</h2>
+    <div id="slots"></div>
+    <div id="slotsHelp" class="muted"></div>
+  </div>
+
+  <div class="card">
+    <h2>Registro</h2>
+
+    <div class="row">
+      <div>
+        <label for="qty">Cantidad de personas</label>
+        <input id="qty" type="number" min="1" step="1" value="1" disabled>
+        <div id="qtyHint" class="muted"></div>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button id="btnBuild" disabled>Generar participantes</button>
+      </div>
+    </div>
+
+    <div id="namesWrap"></div>
+
+    <div style="margin-top:10px">
+      <button id="btnSubmit" disabled>Continuar (validar)</button>
+      <div id="formMsg" style="margin-top:8px"></div>
+    </div>
+  </div>
+
   <pre id="debug" style="white-space:pre-wrap;"></pre>
 
 <script>
@@ -16,9 +61,27 @@
 
   const statusEl = document.getElementById("status");
   const slotsEl = document.getElementById("slots");
+  const slotsHelpEl = document.getElementById("slotsHelp");
   const debugEl = document.getElementById("debug");
 
+  const qtyEl = document.getElementById("qty");
+  const qtyHintEl = document.getElementById("qtyHint");
+  const btnBuild = document.getElementById("btnBuild");
+  const namesWrap = document.getElementById("namesWrap");
+  const btnSubmit = document.getElementById("btnSubmit");
+  const formMsg = document.getElementById("formMsg");
+
+  let STATE = {
+    course_id: null,
+    slots: [],
+    selected_slot: null
+  };
+
   function setStatus(t){ statusEl.textContent = t; }
+  function setMsg(html, cls){
+    formMsg.className = cls || "";
+    formMsg.innerHTML = html || "";
+  }
 
   function getCourseIdFromHash(){
     const h = (location.hash || "").replace(/^#/, "");
@@ -44,26 +107,261 @@
     return {ok:r.ok, status:r.status, text:t, json:j, url};
   }
 
+  function normalizeInt(x){
+    const n = Number(x);
+    return Number.isFinite(n) ? Math.trunc(n) : NaN;
+  }
+
   function renderSlots(slots){
     slotsEl.innerHTML = "";
+    slotsHelpEl.textContent = "";
+    STATE.selected_slot = null;
+
     if (!Array.isArray(slots) || slots.length === 0){
       slotsEl.innerHTML = "<em>Sin horarios</em>";
+      disableForm("No hay horarios disponibles.");
       return;
     }
-    slots.forEach(s=>{
-      const div=document.createElement("div");
-      div.textContent = `${s.fecha} ${s.hora} - cupos ${s.cupos_disponibles} - slot ${s.slot_id}`;
+
+    // Render radios
+    slots.forEach((s, idx) => {
+      const id = `slot_${idx}`;
+      const div = document.createElement("div");
+      div.className = "row";
+      div.style.padding = "6px 0";
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "slot";
+      input.id = id;
+      input.value = s.slot_id;
+
+      input.addEventListener("change", () => {
+        STATE.selected_slot = s;
+        onSlotSelected();
+      });
+
+      const label = document.createElement("label");
+      label.htmlFor = id;
+      label.style.margin = "0";
+      label.textContent =
+        `${s.fecha} ${s.hora} — disponibles: ${s.cupos_disponibles} — slot: ${s.slot_id}`;
+
+      div.appendChild(input);
+      div.appendChild(label);
       slotsEl.appendChild(div);
     });
+
+    slotsHelpEl.textContent = "Seleccioná un horario para habilitar la cantidad de personas.";
+    disableForm("Seleccioná un horario.");
   }
+
+  function disableForm(reason){
+    qtyEl.disabled = true;
+    btnBuild.disabled = true;
+    btnSubmit.disabled = true;
+    qtyHintEl.textContent = reason || "";
+    namesWrap.innerHTML = "";
+    setMsg(reason ? `<span class="muted">${reason}</span>` : "", "");
+  }
+
+  function onSlotSelected(){
+    const s = STATE.selected_slot;
+    if (!s){
+      disableForm("Seleccioná un horario.");
+      return;
+    }
+
+    const disp = normalizeInt(s.cupos_disponibles);
+
+    if (!Number.isFinite(disp) || disp <= 0){
+      // si hay 0 disponibles, no se debe poder registrar nada
+      disableForm("Este horario no tiene cupos disponibles.");
+      return;
+    }
+
+    // habilitar qty con max = cupos_disponibles (NO totales)
+    qtyEl.disabled = false;
+    qtyEl.min = "1";
+    qtyEl.max = String(disp);
+
+    // ajustar value si quedó fuera de rango
+    let v = normalizeInt(qtyEl.value);
+    if (!Number.isFinite(v) || v < 1) v = 1;
+    if (v > disp) v = disp;
+    qtyEl.value = String(v);
+
+    qtyHintEl.textContent = `Máximo permitido por disponibilidad: ${disp}.`;
+    btnBuild.disabled = false;
+
+    // si ya había nombres generados, regenerar si cambió el max y el qty actual queda inválido
+    rebuildNamesIfNeeded();
+
+    // habilitar submit solo si validación OK
+    btnSubmit.disabled = !isFormValid();
+    setMsg("", "");
+  }
+
+  function rebuildNamesIfNeeded(){
+    // si ya hay inputs de nombres, verificar que el qty coincida
+    const existing = namesWrap.querySelectorAll('input[data-participant="1"]').length > 0
+      ? namesWrap.querySelectorAll('input[type="text"]').length
+      : 0;
+
+    const qty = normalizeInt(qtyEl.value);
+
+    if (existing && existing !== qty){
+      buildParticipants(); // mantiene consistencia qty <-> inputs
+    }
+  }
+
+  function buildParticipants(){
+    namesWrap.innerHTML = "";
+
+    const s = STATE.selected_slot;
+    if (!s){ return; }
+
+    const disp = normalizeInt(s.cupos_disponibles);
+    const qty = normalizeInt(qtyEl.value);
+
+    if (!Number.isFinite(qty) || qty < 1){
+      setMsg("Cantidad inválida.", "err");
+      btnSubmit.disabled = true;
+      return;
+    }
+    if (!Number.isFinite(disp) || disp < 1){
+      setMsg("Disponibilidad inválida para este horario.", "err");
+      btnSubmit.disabled = true;
+      return;
+    }
+
+    // Validación clave: qty <= cupos_disponibles (NO cupos_totales)
+    if (qty > disp){
+      setMsg(`No podés registrar ${qty}. Cupos disponibles: ${disp}.`, "err");
+      btnSubmit.disabled = true;
+      return;
+    }
+
+    const title = document.createElement("div");
+    title.className = "muted";
+    title.style.marginTop = "10px";
+    title.textContent = "Nombres de participantes";
+    namesWrap.appendChild(title);
+
+    for (let i=1;i<=qty;i++){
+      const wrap = document.createElement("div");
+      wrap.style.margin = "8px 0";
+
+      const lab = document.createElement("label");
+      lab.textContent = `Participante ${i}`;
+      lab.htmlFor = `p_${i}`;
+
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.id = `p_${i}`;
+      inp.placeholder = "Nombre y apellido";
+      inp.style.width = "100%";
+      inp.setAttribute("data-participant","1");
+
+      inp.addEventListener("input", () => {
+        btnSubmit.disabled = !isFormValid();
+        setMsg("", "");
+      });
+
+      wrap.appendChild(lab);
+      wrap.appendChild(inp);
+      namesWrap.appendChild(wrap);
+    }
+
+    btnSubmit.disabled = !isFormValid();
+    setMsg("", "");
+  }
+
+  function getParticipantNames(){
+    const inputs = Array.from(namesWrap.querySelectorAll('input[type="text"]'));
+    return inputs.map(i => (i.value || "").trim()).filter(Boolean);
+  }
+
+  function isFormValid(){
+    const s = STATE.selected_slot;
+    if (!s) return false;
+
+    const disp = normalizeInt(s.cupos_disponibles);
+    const qty = normalizeInt(qtyEl.value);
+    if (!Number.isFinite(disp) || disp < 1) return false;
+    if (!Number.isFinite(qty) || qty < 1 || qty > disp) return false;
+
+    const names = getParticipantNames();
+    // exige que existan exactamente qty nombres no vacíos
+    if (names.length !== qty) return false;
+
+    return true;
+  }
+
+  btnBuild.addEventListener("click", () => {
+    buildParticipants();
+  });
+
+  qtyEl.addEventListener("input", () => {
+    const s = STATE.selected_slot;
+    if (!s) return;
+
+    const disp = normalizeInt(s.cupos_disponibles);
+    let qty = normalizeInt(qtyEl.value);
+
+    if (!Number.isFinite(qty)) qty = 1;
+    if (qty < 1) qty = 1;
+
+    // clamp al máximo por disponibilidad
+    if (Number.isFinite(disp) && disp > 0 && qty > disp) qty = disp;
+
+    qtyEl.value = String(qty);
+
+    // no regenero automático para no molestar; se regenera con "Generar participantes"
+    btnSubmit.disabled = !isFormValid();
+    setMsg("", "");
+  });
+
+  btnSubmit.addEventListener("click", () => {
+    const ok = isFormValid();
+    if (!ok){
+      setMsg("Faltan datos o la cantidad excede los cupos disponibles del horario.", "err");
+      return;
+    }
+
+    const payload = {
+      course_id: STATE.course_id,
+      slot_id: STATE.selected_slot.slot_id,
+      cantidad_personas: normalizeInt(qtyEl.value),
+      participantes: getParticipantNames(),
+      // opcional si lo querés mostrar/guardar en logs:
+      slot_snapshot: {
+        fecha: STATE.selected_slot.fecha,
+        hora: STATE.selected_slot.hora,
+        cupos_disponibles: STATE.selected_slot.cupos_disponibles
+      }
+    };
+
+    setMsg("Validación OK. Payload listo (mirá consola).", "ok");
+    console.log("RESERVA_PAYLOAD", payload);
+
+    // Cuando tengas tu endpoint:
+    // apiPost(`${API_BASE}/api/reservar`, payload).then(res=>{
+    //   console.log(res);
+    // });
+  });
 
   async function loadBootstrap(courseId){
     const res = await apiGet(`${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`);
     debugEl.textContent = `BOOTSTRAP ${res.status}\n${res.text}`;
     if (!res.ok || !res.json) return null;
-    if (res.json.ok !== true) return res.json; // missing u otro
-    renderSlots(res.json.slots || []);
-    setStatus(`OK: horarios=${(res.json.slots||[]).length}`);
+    if (res.json.ok !== true) return res.json;
+
+    STATE.course_id = courseId;
+    STATE.slots = res.json.slots || [];
+
+    renderSlots(STATE.slots);
+    setStatus(`OK: horarios=${(STATE.slots||[]).length}`);
     return res.json;
   }
 
@@ -72,7 +370,6 @@
   }
 
   async function forceRefreshAndWait(courseId){
-    // antes
     const before = await getDebugKV(courseId);
     const beforeTs = before?.json?.last_ingest_for_course?.ts || null;
 
@@ -85,7 +382,6 @@
       return false;
     }
 
-    // polling hasta que cambie el ingest
     for (let i=1;i<=POLL_MAX_TRIES;i++){
       await new Promise(res=>setTimeout(res, POLL_DELAY_MS));
       const d = await getDebugKV(courseId);
@@ -108,11 +404,8 @@
       return;
     }
 
-    // 1) intento cargar lo que haya
     const boot = await loadBootstrap(courseId);
 
-    // 2) si falta o querés siempre “último estado”, forzar refresh
-    // si querés que siempre actualice, dejá esta condición como TRUE.
     const shouldForce = (boot?.ok !== true); // solo si missing
     // const shouldForce = true; // <-- si querés SIEMPRE forzar
 
