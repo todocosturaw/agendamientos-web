@@ -104,7 +104,7 @@
       max-width:90ch;
     }
 
-    /* Booking layout */
+    /* Booking layout (Zoho Bookings-like): left = picker, right = details */
     .grid{
       display:grid;
       grid-template-columns: 1.05fr .95fr;
@@ -175,7 +175,7 @@
       box-shadow: 0 10px 18px rgba(165,43,100,.10);
     }
 
-    /* Calendar */
+    /* Calendar (simple / lightweight) */
     .calTop{
       display:flex;align-items:center;justify-content:space-between;gap:10px;
       margin-bottom:10px;
@@ -185,7 +185,9 @@
       font-size:14px;
       letter-spacing:.2px;
     }
-    .calNav{display:flex;gap:8px}
+    .calNav{
+      display:flex;gap:8px;
+    }
     .iconBtn{
       width:38px;height:38px;border-radius:12px;
       border:1px solid var(--line);
@@ -235,7 +237,9 @@
     }
 
     /* Time slots */
-    .slotsWrap{margin-top:16px}
+    .slotsWrap{
+      margin-top:16px;
+    }
     .slotsGrid{
       display:grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -350,7 +354,6 @@
     .msg{margin-top:10px;font-size:13px;line-height:1.35}
     .err{color:#b00020;font-weight:900}
     .ok{color:#0a7a2f;font-weight:900}
-
     pre{
       margin:12px 0 0 0;
       background:#fff;
@@ -361,79 +364,6 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size:12px;
       color:#111827;
-    }
-
-    /* NUEVO: Vista previa legible */
-    .previewBox{
-      margin-top:12px;
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:#fff;
-      overflow:hidden;
-    }
-    .previewHead{
-      padding:12px 12px 10px;
-      border-bottom:1px solid var(--line);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      background: linear-gradient(180deg, #ffffff, #fbfbfd);
-    }
-    .previewHead strong{font-weight:950;font-size:13.5px;color:#111827}
-    .previewMeta{font-size:12px;color:var(--muted)}
-    .previewBody{padding:12px}
-    .pvSection{margin-top:12px}
-    .pvSection:first-child{margin-top:0}
-    .pvTitle{
-      font-size:12.5px;
-      font-weight:950;
-      color:#334155;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      margin-bottom:8px;
-    }
-    .pvRow{
-      display:flex;gap:10px;flex-wrap:wrap;
-      font-size:13px;line-height:1.45;
-      color:#0f172a;
-    }
-    .pvKey{color:var(--muted);min-width:170px;font-weight:800}
-    .pvVal{font-weight:900}
-    .pvTable{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      font-size:13px;
-      overflow:hidden;
-      border:1px solid var(--line);
-      border-radius:14px;
-    }
-    .pvTable th, .pvTable td{
-      padding:10px 10px;
-      border-bottom:1px solid var(--line);
-      vertical-align:top;
-    }
-    .pvTable th{
-      text-align:left;
-      font-size:12px;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      color:#334155;
-      background:#fbfbfd;
-      font-weight:950;
-    }
-    .pvTable tr:last-child td{border-bottom:0}
-    details.previewTech{
-      margin-top:10px;
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:#fff;
-      padding:10px 12px;
-    }
-    details.previewTech summary{
-      cursor:pointer;
-      font-weight:950;
-      color:#334155;
-      font-size:13px;
-      outline:none;
     }
 
     /* Loading overlay */
@@ -470,7 +400,9 @@
       animation: spin 1s linear infinite;
     }
     @keyframes spin{to{transform:rotate(360deg)}}
-    .loadTitle{display:flex;flex-direction:column;gap:4px}
+    .loadTitle{
+      display:flex;flex-direction:column;gap:4px;
+    }
     .loadTitle strong{font-weight:950;font-size:14px;color:#111827}
     .loadTitle span{font-size:12.5px;color:var(--muted)}
     .progressWrap{padding:16px 18px 18px}
@@ -540,6 +472,7 @@
     <div class="topbar">
       <div class="brand">
         <div class="logoBox">
+          <!-- Logo: poné una URL o ruta local -->
           <img id="logoImg" alt="Todo Costura" src="" style="display:none">
           <div id="logoFallback" style="font-weight:950;color:var(--brand);font-size:12px">TC</div>
         </div>
@@ -727,15 +660,7 @@
               <div id="formMsg" class="msg"></div>
               <div id="sendMsg" class="msg"></div>
 
-              <!-- NUEVO: Vista previa legible -->
-              <div id="previewUI" class="previewBox" style="display:none;"></div>
-
-              <!-- Opcional: JSON técnico (colapsable) -->
-              <details id="previewTech" class="previewTech" style="display:none;">
-                <summary>Ver JSON (técnico)</summary>
-                <pre id="previewJson"></pre>
-              </details>
-
+              <pre id="previewJson" style="display:none;"></pre>
               <pre id="debug" style="display:none;"></pre>
             </div>
           </div>
@@ -807,8 +732,6 @@
   const formMsg = document.getElementById("formMsg");
   const sendMsg = document.getElementById("sendMsg");
   const previewJsonEl = document.getElementById("previewJson");
-  const previewUIEl = document.getElementById("previewUI");
-  const previewTechEl = document.getElementById("previewTech");
   const debugEl = document.getElementById("debug");
 
   // Loading
@@ -910,21 +833,9 @@
 
   function resetPreview(){
     STATE.last_preview_payload = null;
-    previewUIEl.style.display = "none";
-    previewUIEl.innerHTML = "";
-    previewTechEl.style.display = "none";
+    previewJsonEl.style.display = "none";
     previewJsonEl.textContent = "";
     btnConfirm.disabled = true;
-  }
-
-  function humanBytes(n){
-    const x = Number(n);
-    if (!Number.isFinite(x) || x < 0) return "-";
-    if (x < 1024) return `${x} B`;
-    const kb = x / 1024;
-    if (kb < 1024) return `${Math.round(kb)} KB`;
-    const mb = kb / 1024;
-    return `${mb.toFixed(2)} MB`;
   }
 
   // =====================
@@ -973,6 +884,7 @@
   // Slots -> Date grouping
   // =====================
   function toISODateFromSlot(slot){
+    // esperamos slot.fecha como "YYYY-MM-DD" (ideal). Si viene en otro formato, ajustar acá.
     return String(slot.fecha || "").trim();
   }
 
@@ -1026,6 +938,7 @@
   function renderCalendar(){
     calMonthEl.textContent = fmtMonthYear(calCursor);
 
+    // header DOW (render once)
     if (!calDowEl.dataset.ready){
       calDowEl.innerHTML = DOW.map(x=>`<div class="dow">${x}</div>`).join("");
       calDowEl.dataset.ready = "1";
@@ -1037,20 +950,25 @@
     const month = calCursor.getMonth();
     const first = new Date(year, month, 1);
 
+    // convert JS sunday-based to monday-based grid
     const jsDow = first.getDay(); // 0=Sun
-    const mondayBased = (jsDow === 0) ? 6 : (jsDow - 1);
+    const mondayBased = (jsDow === 0) ? 6 : (jsDow - 1); // 0=Mon..6=Sun
     const daysInMonth = new Date(year, month+1, 0).getDate();
 
+    // previous month padding
     const prevDays = mondayBased;
     const prevLast = new Date(year, month, 0).getDate();
 
-    const available = new Set(getAvailableDates(STATE.slots));
+    const available = new Set(getAvailableDates(STATE.slots)); // dates with at least one slot
+
+    // total cells: 42 (6 weeks) looks consistent
     const totalCells = 42;
 
     for (let i=0;i<totalCells;i++){
       const cell = document.createElement("div");
       cell.className = "day";
 
+      let cellDate = null;
       if (i < prevDays){
         const dayNum = prevLast - prevDays + 1 + i;
         cell.textContent = String(dayNum);
@@ -1058,9 +976,11 @@
       } else if (i < prevDays + daysInMonth){
         const dayNum = (i - prevDays) + 1;
         cell.textContent = String(dayNum);
-        const cellDate = new Date(year, month, dayNum);
+        cellDate = new Date(year, month, dayNum);
+
         const iso = isoFromDate(cellDate);
 
+        // enable only if date has slots
         const isAvail = available.has(iso);
         if (!isAvail){
           cell.classList.add("muted");
@@ -1075,9 +995,11 @@
           });
         }
 
+        // selected styling
         if (STATE.selected_date === iso){
           cell.classList.add("selected");
         }
+
       } else {
         const dayNum = i - (prevDays + daysInMonth) + 1;
         cell.textContent = String(dayNum);
@@ -1130,12 +1052,14 @@
       } else {
         btn.addEventListener("click", () => {
           STATE.selected_slot = s;
+          // re-render selection
           Array.from(timeSlotsEl.querySelectorAll(".timeBtn")).forEach(x=>x.classList.remove("selected"));
           btn.classList.add("selected");
           onSlotSelected();
         });
       }
 
+      // if same selected
       if (STATE.selected_slot && STATE.selected_slot.slot_id === s.slot_id){
         btn.classList.add("selected");
       }
@@ -1460,118 +1384,9 @@
     };
   }
 
-  // NUEVO: JSON técnico redacted (para que no muestre base64)
-  function buildRedactedForPreview(payload){
-    const copy = JSON.parse(JSON.stringify(payload || {}));
-    if (copy.payment_proof && typeof copy.payment_proof === "object"){
-      const b64 = copy.payment_proof.base64;
-      copy.payment_proof.base64 = b64 ? `[redacted base64, ${String(b64).length} chars]` : null;
-    }
-    return copy;
-  }
-
-  // NUEVO: Vista previa legible (cliente)
-  function renderPreviewUI(payload){
-    const course = payload.course || {};
-    const slot = payload.slot || {};
-    const resv = payload.reservation || {};
-    const bill = payload.billing || {};
-    const pp = payload.payment_proof || {};
-
-    const courseName = course.name || course.nombre_curso || "Curso";
-    const courseCat = course.category || course.categoria || "-";
-    const coursePlat = course.platform || course.plataforma || "-";
-    const courseLearn = course.learning_type || course.tipo_aprendizaje || "-";
-    const price = (course.price ?? course.precio ?? "-");
-
-    const sentAt = payload.meta?.sent_at_iso ? new Date(payload.meta.sent_at_iso).toLocaleString() : "-";
-
-    const participants = Array.isArray(resv.participantes) ? resv.participantes : [];
-    const qty = resv.cantidad_participantes ?? participants.length ?? "-";
-
-    const ppName = pp.filename || "-";
-    const ppType = pp.mime_type || "-";
-    const ppSize = humanBytes(pp.size_bytes);
-
-    const participantsRows = participants.map((p, i) => {
-      return `
-        <tr>
-          <td style="font-weight:950;">${i+1}</td>
-          <td>${htmlEscape((p.nombres||"") + " " + (p.apellidos||""))}</td>
-          <td>${htmlEscape(p.cedula||"")}</td>
-          <td>${htmlEscape(p.email||"")}</td>
-          <td>${htmlEscape(p.contacto||"")}</td>
-        </tr>
-      `;
-    }).join("");
-
-    previewUIEl.innerHTML = `
-      <div class="previewHead">
-        <strong>Vista previa de la reserva</strong>
-        <div class="previewMeta">Generada: ${htmlEscape(sentAt)}</div>
-      </div>
-      <div class="previewBody">
-        <div class="pvSection">
-          <div class="pvTitle">Curso</div>
-          <div class="pvRow"><div class="pvKey">Nombre</div><div class="pvVal">${htmlEscape(courseName)}</div></div>
-          <div class="pvRow"><div class="pvKey">Categoría</div><div class="pvVal">${htmlEscape(courseCat)}</div></div>
-          <div class="pvRow"><div class="pvKey">Modalidad</div><div class="pvVal">${htmlEscape(courseLearn)}</div></div>
-          <div class="pvRow"><div class="pvKey">Plataforma</div><div class="pvVal">${htmlEscape(coursePlat)}</div></div>
-          <div class="pvRow"><div class="pvKey">Precio</div><div class="pvVal">${htmlEscape(price)}</div></div>
-        </div>
-
-        <div class="pvSection">
-          <div class="pvTitle">Turno</div>
-          <div class="pvRow"><div class="pvKey">Fecha</div><div class="pvVal">${htmlEscape(slot.fecha || "-")}</div></div>
-          <div class="pvRow"><div class="pvKey">Hora</div><div class="pvVal">${htmlEscape(slot.hora || "-")}</div></div>
-          <div class="pvRow"><div class="pvKey">Cupos disponibles</div><div class="pvVal">${htmlEscape(slot.cupos_disponibles_snapshot ?? "-")}</div></div>
-        </div>
-
-        <div class="pvSection">
-          <div class="pvTitle">Participantes (${htmlEscape(qty)})</div>
-          <table class="pvTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Nombre</th>
-                <th>Cédula</th>
-                <th>Email</th>
-                <th>Contacto</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${participantsRows || `<tr><td colspan="5" class="muted">Sin participantes.</td></tr>`}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="pvSection">
-          <div class="pvTitle">Facturación</div>
-          <div class="pvRow"><div class="pvKey">Razón social / Nombre</div><div class="pvVal">${htmlEscape(bill.razon_social || "-")}</div></div>
-          <div class="pvRow"><div class="pvKey">Tipo documento</div><div class="pvVal">${htmlEscape(bill.tipo_documento || "-")}</div></div>
-          <div class="pvRow"><div class="pvKey">Documento</div><div class="pvVal">${htmlEscape(bill.documento || "-")}</div></div>
-          <div class="pvRow"><div class="pvKey">Email</div><div class="pvVal">${htmlEscape(bill.email || "-")}</div></div>
-          <div class="pvRow"><div class="pvKey">Teléfono</div><div class="pvVal">${htmlEscape(bill.telefono || "-")}</div></div>
-          <div class="pvRow"><div class="pvKey">Dirección</div><div class="pvVal">${htmlEscape(bill.direccion || "-")}</div></div>
-          <div class="pvRow"><div class="pvKey">Ciudad</div><div class="pvVal">${htmlEscape(bill.ciudad || "-")}</div></div>
-        </div>
-
-        <div class="pvSection">
-          <div class="pvTitle">Comprobante</div>
-          <div class="pvRow"><div class="pvKey">Archivo</div><div class="pvVal">${htmlEscape(ppName)}</div></div>
-          <div class="pvRow"><div class="pvKey">Tipo</div><div class="pvVal">${htmlEscape(ppType)}</div></div>
-          <div class="pvRow"><div class="pvKey">Tamaño</div><div class="pvVal">${htmlEscape(ppSize)}</div></div>
-        </div>
-      </div>
-    `;
-
-    previewUIEl.style.display = "block";
-  }
-
-  function renderTechJson(payload){
-    const redacted = buildRedactedForPreview(payload);
-    previewJsonEl.textContent = JSON.stringify(redacted, null, 2);
-    previewTechEl.style.display = "block";
+  function renderPreview(payload){
+    previewJsonEl.textContent = JSON.stringify(payload, null, 2);
+    previewJsonEl.style.display = "block";
   }
 
   // =====================
@@ -1622,15 +1437,9 @@
     }
     const payload = buildPayload();
     STATE.last_preview_payload = payload;
-
-    // Vista previa para el cliente (NO JSON)
-    renderPreviewUI(payload);
-
-    // JSON técnico opcional (redacted)
-    renderTechJson(payload);
-
+    renderPreview(payload);
     setMsg("");
-    setSendMsg("<span class='ok'>Vista previa generada. Revisá y confirmá el envío.</span>");
+    setSendMsg("<span class='ok'>Vista previa generada. Revisá y confirmá.</span>");
     btnConfirm.disabled = false;
   });
 
@@ -1665,7 +1474,7 @@
         `POST ${res.status}\n` +
         `URL: ${RESERVA_ENDPOINT}\n\n` +
         `${res.text}\n\n` +
-        `PAYLOAD:\n${JSON.stringify(buildRedactedForPreview(payload), null, 2)}`;
+        `PAYLOAD:\n${JSON.stringify(payload, null, 2)}`;
 
     } catch (e){
       setSendMsg(`<span class='err'>Error de red: ${htmlEscape(e?.message || String(e))}</span>`);
@@ -1696,6 +1505,7 @@
 
     renderCourse(STATE.course);
 
+    // calendar cursor to current month (or first available date month)
     calCursor = new Date();
     const av = getAvailableDates(STATE.slots);
     if (av.length){
@@ -1710,6 +1520,7 @@
     setStatus(`Listo · ${STATE.slots.length} horarios`);
     refreshBillingDocUI();
 
+    // initial state: waiting date selection
     setStep(1);
     disableForm("Seleccioná fecha y horario.");
 
