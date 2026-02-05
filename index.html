@@ -3,13 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Reservas - test</title>
+  <title>Reservas - test (Final)</title>
   <style>
     body{font-family:system-ui,Segoe UI,Arial,sans-serif;padding:16px}
     .card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     label{display:block;margin:6px 0}
-    input[type="number"], input[type="text"], input[type="email"]{padding:8px;border:1px solid #ccc;border-radius:8px;width:100%}
+    input[type="number"], input[type="text"], input[type="email"], input[type="file"]{
+      padding:8px;border:1px solid #ccc;border-radius:8px;width:100%
+    }
     select{padding:8px;border:1px solid #ccc;border-radius:8px}
     button{padding:10px 12px;border:0;border-radius:10px;cursor:pointer}
     button:disabled{opacity:.5;cursor:not-allowed}
@@ -24,7 +26,7 @@
   </style>
 </head>
 <body>
-  <h1>Reservas (test)</h1>
+  <h1>Reservas (test) - Final</h1>
 
   <div id="status"></div>
 
@@ -57,7 +59,7 @@
     <div id="namesWrap"></div>
 
     <div class="card" style="margin-top:14px">
-      <h2>Datos de facturación</h2>
+      <h2>Datos de facturación (obligatorio)</h2>
 
       <div class="grid">
         <div>
@@ -100,7 +102,22 @@
       </div>
 
       <div class="muted" style="margin-top:8px">
-        * Campos obligatorios para emitir factura. “Tipo de documento” define si se usa Cédula o RUC.
+        * Campos obligatorios para emitir factura.
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Comprobante de pago (obligatorio)</h2>
+      <div class="grid">
+        <div>
+          <label for="payFile">Adjuntar comprobante *</label>
+          <input id="payFile" type="file" accept="image/*,application/pdf">
+          <div id="payFileHint" class="muted">Formatos: JPG/PNG/PDF. Máx: 5 MB.</div>
+        </div>
+        <div>
+          <label>Estado</label>
+          <div id="payFileStatus" class="muted">Sin archivo</div>
+        </div>
       </div>
     </div>
 
@@ -125,14 +142,12 @@
   // =====================
   const API_BASE = "https://api.taller2.workers.dev";
   const POLL_DELAY_MS = 1500;
-  const POLL_MAX_TRIES = 120; // 3 min
+  const POLL_MAX_TRIES = 120;
 
-  // Webhook Zoho Flow (como pediste)
-  const ZOHO_FLOW_WEBHOOK_URL =
+  const WEBHOOK_URL =
     "https://flow.zoho.com/871021303/flow/webhook/incoming?zapikey=1001.71e42fa6e10f917d8d7575a01f962607.6b966cbe0089d194f3349e44e44cd04b&isdebug=false";
 
-  // Nota operativa: este zapikey queda expuesto en HTML público. Funciona, pero no es seguro.
-  // Lo ideal: enviar a tu Worker y que el Worker reenvíe al webhook (con una clave interna).
+  const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
 
   // =====================
   // DOM
@@ -159,6 +174,10 @@
   const billAddressEl = document.getElementById("billAddress");
   const billCityEl = document.getElementById("billCity");
 
+  // Payment proof
+  const payFileEl = document.getElementById("payFile");
+  const payFileStatusEl = document.getElementById("payFileStatus");
+
   // Confirm
   const btnPreview = document.getElementById("btnPreview");
   const btnConfirm = document.getElementById("btnConfirm");
@@ -170,10 +189,11 @@
   // =====================
   let STATE = {
     course_id: null,
-    course: null,      // objeto course desde /api/bootstrap
+    course: null,
     slots: [],
     selected_slot: null,
-    last_preview_payload: null
+    last_preview_payload: null,
+    payment_proof: null // {filename,mime_type,size_bytes,base64}
   };
 
   // =====================
@@ -207,16 +227,14 @@
     return {ok:r.ok, status:r.status, text:t, json:j, url};
   }
 
-  async function postWebhookJson(url, payload){
-    // Enviar JSON “tal cual” al webhook
-    const r = await fetch(url, {
+  async function postWebhookJson(payload){
+    const r = await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type":"application/json" },
       body: JSON.stringify(payload)
     });
     const t = await r.text();
-    let j=null; try{ j=JSON.parse(t);}catch{}
-    return {ok:r.ok, status:r.status, text:t, json:j, url};
+    return {ok:r.ok, status:r.status, text:t};
   }
 
   function normalizeInt(x){
@@ -230,18 +248,20 @@
 
   function htmlEscape(s){
     return String(s ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
   }
 
   function safeCourse(course){
-    // Enviamos “todo lo que venga” del worker, pero normalizamos nulls.
-    // Si mañana agregás campos, no hay que tocar nada.
     if (!course || typeof course !== "object") return null;
     return JSON.parse(JSON.stringify(course));
+  }
+
+  function resetPreview(){
+    STATE.last_preview_payload = null;
+    previewJsonEl.style.display = "none";
+    previewJsonEl.textContent = "";
+    btnConfirm.disabled = true;
   }
 
   // =====================
@@ -252,22 +272,21 @@
       courseBoxEl.innerHTML = "<em>Sin datos de curso</em>";
       return;
     }
-    const name = htmlEscape(course.name || course.nombre || "Curso");
-    const category = htmlEscape(course.category || course.categoria || "");
-    const price = course.price ?? course.precio ?? null;
-    const type = htmlEscape(course.type || course.tipo || "");
+    const name = htmlEscape(course.name || "Curso");
+    const category = htmlEscape(course.category || "");
+    const price = course.price ?? null;
+    const type = htmlEscape(course.type || "");
     const platform = htmlEscape(course.platform || "");
     const learning = htmlEscape(course.learning_type || "");
     const audience = htmlEscape(course.audience || "");
     const mode = htmlEscape(course.participants_mode || "");
     const tutor = htmlEscape(course.tutor || "");
 
-    const line1 = `<div><strong>${name}</strong></div>`;
-    const line2 = `<div class="muted">Categoría: ${category || "-" } · Tipo: ${type || "-"} · Precio: ${price ?? "-"}</div>`;
-    const line3 = `<div class="muted">Plataforma: ${platform || "-"} · Modalidad: ${learning || "-"} · Audiencia: ${audience || "-"}</div>`;
-    const line4 = `<div class="muted">Modo participantes: ${mode || "-"} · Tutor: ${tutor || "-"}</div>`;
-
-    courseBoxEl.innerHTML = line1 + line2 + line3 + line4;
+    courseBoxEl.innerHTML =
+      `<div><strong>${name}</strong></div>` +
+      `<div class="muted">Categoría: ${category || "-"} · Tipo: ${type || "-"} · Precio: ${price ?? "-"}</div>` +
+      `<div class="muted">Plataforma: ${platform || "-"} · Modalidad: ${learning || "-"} · Audiencia: ${audience || "-"}</div>` +
+      `<div class="muted">Modo participantes: ${mode || "-"} · Tutor: ${tutor || "-"}</div>`;
   }
 
   // =====================
@@ -280,11 +299,9 @@
     btnConfirm.disabled = true;
     qtyHintEl.textContent = reason || "";
     namesWrap.innerHTML = "";
-    previewJsonEl.style.display = "none";
-    previewJsonEl.textContent = "";
-    STATE.last_preview_payload = null;
     setMsg(reason ? `<span class="muted">${reason}</span>` : "", "");
     setSendMsg("", "");
+    resetPreview();
   }
 
   function renderSlots(slots){
@@ -351,11 +368,10 @@
     const qty = normalizeInt(qtyEl.value);
     if (existingBlocks && existingBlocks !== qty) buildParticipants();
 
-    // Revalida
     btnPreview.disabled = !isFormValid();
-    btnConfirm.disabled = true;
     setMsg("", "");
     setSendMsg("", "");
+    resetPreview();
   }
 
   // =====================
@@ -373,15 +389,11 @@
     inp.type = type;
     inp.id = `p${i}_${key}`;
     inp.placeholder = placeholder || "";
-    if (required) inp.setAttribute("data-req","1");
 
     inp.addEventListener("input", () => {
       btnPreview.disabled = !isFormValid();
-      btnConfirm.disabled = true;
-      STATE.last_preview_payload = null;
-      previewJsonEl.style.display = "none";
-      setMsg("", "");
       setSendMsg("", "");
+      resetPreview();
     });
 
     wrap.appendChild(inp);
@@ -400,19 +412,19 @@
     if (!Number.isFinite(qty) || qty < 1){
       setMsg("Cantidad inválida.", "err");
       btnPreview.disabled = true;
-      btnConfirm.disabled = true;
+      resetPreview();
       return;
     }
     if (!Number.isFinite(disp) || disp < 1){
       setMsg("Disponibilidad inválida para este horario.", "err");
       btnPreview.disabled = true;
-      btnConfirm.disabled = true;
+      resetPreview();
       return;
     }
     if (qty > disp){
       setMsg(`No podés registrar ${qty}. Cupos disponibles: ${disp}.`, "err");
       btnPreview.disabled = true;
-      btnConfirm.disabled = true;
+      resetPreview();
       return;
     }
 
@@ -447,19 +459,17 @@
     }
 
     btnPreview.disabled = !isFormValid();
-    btnConfirm.disabled = true;
     setMsg("", "");
     setSendMsg("", "");
+    resetPreview();
   }
 
   function getParticipants(){
     const blocks = Array.from(namesWrap.querySelectorAll('[data-pblock="1"]'));
     const out = [];
-
     for (let idx=0; idx<blocks.length; idx++){
       const i = idx + 1;
       const q = (k) => (namesWrap.querySelector(`#p${i}_${k}`)?.value || "").trim();
-
       out.push({
         nombres: q("nombres"),
         apellidos: q("apellidos"),
@@ -484,16 +494,13 @@
       billDocNumberEl.placeholder = "Ej: 1234567";
     }
     btnPreview.disabled = !isFormValid();
-    btnConfirm.disabled = true;
-    STATE.last_preview_payload = null;
-    previewJsonEl.style.display = "none";
-    setSendMsg("", "");
+    resetPreview();
   }
 
   function getBilling(){
     return {
       razon_social: (billNameEl.value||"").trim(),
-      tipo_documento: billDocTypeEl.value, // "personal" | "fiscal"
+      tipo_documento: billDocTypeEl.value,
       documento: (billDocNumberEl.value||"").trim(),
       email: (billEmailEl.value||"").trim(),
       telefono: (billPhoneEl.value||"").trim(),
@@ -511,6 +518,63 @@
     if (!b.direccion) return false;
     if (!b.ciudad) return false;
     return true;
+  }
+
+  // =====================
+  // Payment proof (file)
+  // =====================
+  function isPaymentProofValid(){
+    return Boolean(STATE.payment_proof && STATE.payment_proof.base64);
+  }
+
+  function fileToBase64(file){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
+      reader.onload = () => {
+        const result = String(reader.result || "");
+        // result es "data:mime/type;base64,XXXXX"
+        const idx = result.indexOf("base64,");
+        if (idx === -1) return reject(new Error("Formato Base64 inválido"));
+        const base64 = result.substring(idx + 7);
+        resolve(base64);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handlePaymentFile(file){
+    STATE.payment_proof = null;
+    payFileStatusEl.textContent = "Procesando…";
+    resetPreview();
+
+    if (!file){
+      payFileStatusEl.textContent = "Sin archivo";
+      btnPreview.disabled = !isFormValid();
+      return;
+    }
+
+    if (file.size > MAX_FILE_BYTES){
+      payFileStatusEl.textContent = "Archivo demasiado grande (máx 5 MB)";
+      btnPreview.disabled = true;
+      return;
+    }
+
+    try{
+      const base64 = await fileToBase64(file);
+      STATE.payment_proof = {
+        filename: file.name,
+        mime_type: file.type || "application/octet-stream",
+        size_bytes: file.size,
+        base64
+      };
+      payFileStatusEl.textContent = `OK: ${file.name} (${Math.round(file.size/1024)} KB)`;
+    } catch(e){
+      payFileStatusEl.textContent = `Error: ${e.message}`;
+      STATE.payment_proof = null;
+    } finally {
+      btnPreview.disabled = !isFormValid();
+    }
   }
 
   // =====================
@@ -536,31 +600,23 @@
     }
 
     if (!isBillingValid()) return false;
+    if (!isPaymentProofValid()) return false;
 
     return true;
   }
 
   // =====================
-  // Payload (FULL)
+  // Payload + Preview
   // =====================
   function buildPayload(){
-    const cantidad = normalizeInt(qtyEl.value);
-
-    // Enviar el objeto course completo tal como viene del worker,
-    // para que en Flow/Deluge tengas "todo" sin rearmar.
-    const courseObj = safeCourse(STATE.course);
-
     return {
       meta: {
         source: "web_agendamiento",
         sent_at_iso: new Date().toISOString()
       },
       course_id: STATE.course_id,
+      course: safeCourse(STATE.course),
 
-      // Curso completo (nombre, precio, tipo, categoria, etc.)
-      course: courseObj,
-
-      // Slot seleccionado
       slot: {
         slot_id: STATE.selected_slot?.slot_id || null,
         fecha: STATE.selected_slot?.fecha || null,
@@ -568,20 +624,19 @@
         cupos_disponibles_snapshot: STATE.selected_slot?.cupos_disponibles ?? null
       },
 
-      // Reserva
       reservation: {
-        cantidad_personas: cantidad,
+        cantidad_personas: normalizeInt(qtyEl.value),
         participantes: getParticipants()
       },
 
-      // Facturación
-      billing: getBilling()
+      billing: getBilling(),
+
+      payment_proof: STATE.payment_proof
     };
   }
 
   function renderPreview(payload){
-    const pretty = JSON.stringify(payload, null, 2);
-    previewJsonEl.textContent = pretty;
+    previewJsonEl.textContent = JSON.stringify(payload, null, 2);
     previewJsonEl.style.display = "block";
   }
 
@@ -604,37 +659,38 @@
     qtyEl.value = String(qty);
 
     btnPreview.disabled = !isFormValid();
-    btnConfirm.disabled = true;
-    STATE.last_preview_payload = null;
-    previewJsonEl.style.display = "none";
-    setMsg("", "");
     setSendMsg("", "");
+    resetPreview();
   });
 
   billDocTypeEl.addEventListener("change", refreshBillingDocUI);
   [billNameEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
     el.addEventListener("input", ()=>{
       btnPreview.disabled = !isFormValid();
-      btnConfirm.disabled = true;
-      STATE.last_preview_payload = null;
-      previewJsonEl.style.display = "none";
       setSendMsg("", "");
+      resetPreview();
     });
+  });
+
+  payFileEl.addEventListener("change", async (ev)=>{
+    const file = ev.target.files && ev.target.files[0] ? ev.target.files[0] : null;
+    await handlePaymentFile(file);
+    btnPreview.disabled = !isFormValid();
+    setSendMsg("", "");
+    resetPreview();
   });
 
   btnPreview.addEventListener("click", () => {
     if (!isFormValid()){
-      setMsg("Faltan datos obligatorios o la cantidad excede los cupos disponibles del horario.", "err");
+      setMsg("Faltan datos obligatorios o la cantidad excede cupos disponibles o falta comprobante.", "err");
       btnConfirm.disabled = true;
       return;
     }
-
     const payload = buildPayload();
     STATE.last_preview_payload = payload;
-
     renderPreview(payload);
     setMsg("", "");
-    setSendMsg("<span class='ok'>Vista previa generada. Verificá los datos y luego confirmá.</span>", "");
+    setSendMsg("<span class='ok'>Vista previa generada. Verificá y luego confirmá.</span>", "");
     btnConfirm.disabled = false;
   });
 
@@ -643,10 +699,8 @@
       setSendMsg("<span class='err'>Primero generá la vista previa.</span>", "");
       return;
     }
-
-    // Revalidar justo antes de enviar
     if (!isFormValid()){
-      setSendMsg("<span class='err'>Los datos ya no son válidos. Revisa y vuelve a generar la vista previa.</span>", "");
+      setSendMsg("<span class='err'>Los datos ya no son válidos. Volvé a generar la vista previa.</span>", "");
       btnConfirm.disabled = true;
       return;
     }
@@ -658,25 +712,24 @@
     setSendMsg("<span class='muted'>Enviando al webhook…</span>", "");
 
     try{
-      const res = await postWebhookJson(ZOHO_FLOW_WEBHOOK_URL, payload);
+      const res = await postWebhookJson(payload);
 
-      // Mostrar respuesta cruda por si Flow devuelve algo útil
       if (res.ok){
         setSendMsg(`<span class='ok'>Enviado OK (HTTP ${res.status}).</span>`, "");
       } else {
         setSendMsg(`<span class='err'>Falló el envío (HTTP ${res.status}).</span>`, "");
       }
 
-      // Debug de respuesta (texto completo)
       debugEl.textContent =
         `WEBHOOK POST ${res.status}\n` +
-        `URL: ${res.url}\n\n` +
-        `${res.text}`;
+        `URL: ${WEBHOOK_URL}\n\n` +
+        `${res.text}\n\n` +
+        `PAYLOAD ENVIADO:\n${JSON.stringify(payload, null, 2)}`;
 
     } catch (e){
       setSendMsg(`<span class='err'>Error de red: ${htmlEscape(e?.message || String(e))}</span>`, "");
     } finally {
-      // Rehabilitar preview; confirm queda habilitado solo si volvés a generar preview
+      // Confirmación se invalida si cambia algo
       btnPreview.disabled = !isFormValid();
       btnConfirm.disabled = true;
       STATE.last_preview_payload = null;
@@ -684,7 +737,7 @@
   });
 
   // =====================
-  // Bootstrap / Refresh polling (tu lógica)
+  // Bootstrap / Refresh polling
   // =====================
   async function loadBootstrap(courseId){
     const res = await apiGet(`${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`);
@@ -693,11 +746,7 @@
     if (res.json.ok !== true) return res.json;
 
     STATE.course_id = courseId;
-
-    // Importante: guardamos el objeto course completo
     STATE.course = res.json.course || null;
-
-    // slots
     STATE.slots = res.json.slots || [];
 
     renderCourse(STATE.course);
@@ -706,6 +755,8 @@
     setStatus(`OK: horarios=${(STATE.slots||[]).length}`);
     refreshBillingDocUI();
 
+    // Al inicio, comprobante vacío => form no válido
+    btnPreview.disabled = !isFormValid();
     return res.json;
   }
 
@@ -753,8 +804,8 @@
 
     const boot = await loadBootstrap(courseId);
 
-    const shouldForce = (boot?.ok !== true); // solo si missing
-    // const shouldForce = true; // <-- si querés SIEMPRE forzar
+    const shouldForce = (boot?.ok !== true);
+    // const shouldForce = true;
 
     if (shouldForce){
       const updated = await forceRefreshAndWait(courseId);
