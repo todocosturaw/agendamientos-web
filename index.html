@@ -3,150 +3,240 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Reservas - test (Final)</title>
+  <title>Agenda de Cursos | Todo Costura</title>
+  <meta name="description" content="Reservá tu curso. Seleccioná fecha, horario y confirmá en segundos.">
+  <meta name="theme-color" content="#ffffff">
   <style>
-    body{font-family:system-ui,Segoe UI,Arial,sans-serif;padding:16px}
-    .card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    label{display:block;margin:6px 0}
-    input[type="number"], input[type="text"], input[type="email"], input[type="file"]{
-      padding:8px;border:1px solid #ccc;border-radius:8px;width:100%
+    :root{
+      --brand:#a52b64;
+      --brand2:#c94b86;
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --txt:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --shadow:0 10px 30px rgba(17,24,39,.08);
+      --r:16px;
     }
-    select{padding:8px;border:1px solid #ccc;border-radius:8px}
-    button{padding:10px 12px;border:0;border-radius:10px;cursor:pointer}
-    button:disabled{opacity:.5;cursor:not-allowed}
-    .muted{color:#666}
-    .err{color:#b00020;font-weight:600}
-    .ok{color:#0a7a2f;font-weight:600}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
-    pre{background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px}
-    .pbox{border:1px solid #eee;border-radius:10px;padding:10px;margin-top:10px}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px}
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--txt);
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px}
+    .top{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    h1{margin:0;font-size:22px;letter-spacing:.2px}
+    .sub{margin:6px 0 0 0;color:var(--muted);font-size:14px}
+    .badge{
+      padding:6px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);
+      color:var(--muted);font-size:12px
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+    }
+    @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .card h2{margin:0 0 10px 0;font-size:16px}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .field{flex:1 1 220px}
+    label{display:block;margin:8px 0 6px 0;font-size:13px;color:var(--muted)}
+    input[type="text"], input[type="email"], input[type="number"], select, textarea{
+      width:100%;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      outline:none;
+      background:#fff;
+      color:var(--txt);
+      font-size:14px;
+    }
+    textarea{min-height:84px;resize:vertical}
+    input:focus, select:focus, textarea:focus{
+      border-color:rgba(165,43,100,.55);
+      box-shadow:0 0 0 4px rgba(165,43,100,.12);
+    }
+    .slot{
+      display:flex;gap:10px;align-items:flex-start;
+      padding:10px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;
+      margin:8px 0;
+    }
+    .slot label{margin:0;color:var(--txt)}
+    .slot .meta{font-size:12px;color:var(--muted);margin-top:2px}
+    .pill{
+      display:inline-block;padding:4px 8px;border-radius:999px;
+      border:1px solid var(--line);color:var(--muted);font-size:12px;background:#fff;
+    }
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    button{
+      border:0;border-radius:12px;cursor:pointer;
+      padding:11px 14px;font-weight:700;font-size:14px;
+    }
+    .primary{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+    }
+    .ghost{
+      background:#fff;border:1px solid var(--line);color:var(--txt);
+      font-weight:600;
+    }
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .err{color:#b00020;font-weight:650}
+    .ok{color:#0a7a2f;font-weight:650}
+    .pbox{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:#fff}
+    pre{
+      margin:12px 0 0 0;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+      white-space:pre-wrap;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      font-size:12px;
+      color:#111827;
+    }
+    .tiny{font-size:12px}
+    .divider{height:1px;background:var(--line);margin:12px 0}
   </style>
 </head>
 <body>
-  <h1>Reservas (test) - Final</h1>
-
-  <div id="status"></div>
-
-  <div class="card">
-    <h2>Curso</h2>
-    <div id="courseBox" class="muted">Cargando…</div>
-  </div>
-
-  <div class="card">
-    <h2>Horarios</h2>
-    <div id="slots"></div>
-    <div id="slotsHelp" class="muted"></div>
-  </div>
-
-  <div class="card">
-    <h2>Registro</h2>
-
-    <div class="row">
+  <div class="wrap">
+    <div class="top">
       <div>
-        <label for="qty">Cantidad de personas</label>
-        <input id="qty" type="number" min="1" step="1" value="1" disabled>
-        <div id="qtyHint" class="muted"></div>
+        <h1>Agenda de Cursos</h1>
+        <p class="sub">Seleccioná un horario disponible y completá los datos para confirmar tu reserva.</p>
       </div>
-      <div>
-        <label>&nbsp;</label>
-        <button id="btnBuild" disabled>Generar participantes</button>
-      </div>
+      <div class="badge" id="status">Inicializando…</div>
     </div>
 
-    <div id="namesWrap"></div>
+    <div class="grid">
+      <div class="card">
+        <h2>Curso</h2>
+        <div id="courseBox" class="muted">Cargando…</div>
 
-    <div class="card" style="margin-top:14px">
-      <h2>Datos de facturación (obligatorio)</h2>
+        <div class="divider"></div>
 
-      <div class="grid">
-        <div>
-          <label for="billName">Razón social / Nombre *</label>
-          <input id="billName" type="text" placeholder="Ej: Juan Pérez / Todo Costura S.A.">
-        </div>
-
-        <div>
-          <label for="billDocType">Tipo de documento *</label>
-          <select id="billDocType">
-            <option value="personal" selected>Documento personal (Cédula)</option>
-            <option value="fiscal">Documento fiscal (RUC)</option>
-          </select>
-        </div>
-
-        <div>
-          <label id="billDocLabel" for="billDocNumber">Documento personal (Cédula) *</label>
-          <input id="billDocNumber" type="text" placeholder="Ej: 1234567">
-        </div>
-
-        <div>
-          <label for="billEmail">Correo de facturación *</label>
-          <input id="billEmail" type="email" placeholder="facturacion@dominio.com">
-        </div>
-
-        <div>
-          <label for="billPhone">Teléfono (opcional)</label>
-          <input id="billPhone" type="text" placeholder="+595...">
-        </div>
-
-        <div>
-          <label for="billAddress">Dirección *</label>
-          <input id="billAddress" type="text" placeholder="Calle, número, barrio">
-        </div>
-
-        <div>
-          <label for="billCity">Ciudad *</label>
-          <input id="billCity" type="text" placeholder="Ej: Asunción">
-        </div>
+        <h2>Horarios</h2>
+        <div id="slots"></div>
+        <div id="slotsHelp" class="muted tiny"></div>
       </div>
 
-      <div class="muted" style="margin-top:8px">
-        * Campos obligatorios para emitir factura.
+      <div class="card">
+        <h2>Reserva</h2>
+
+        <div class="row">
+          <div class="field">
+            <label for="qty">Cantidad de personas</label>
+            <input id="qty" type="number" min="1" step="1" value="1" disabled>
+            <div id="qtyHint" class="muted tiny"></div>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="btnBuild" class="ghost" disabled>Generar participantes</button>
+          </div>
+        </div>
+
+        <div id="namesWrap"></div>
+
+        <div class="divider"></div>
+
+        <h2>Facturación</h2>
+        <div class="row">
+          <div class="field">
+            <label for="billName">Razón social / Nombre *</label>
+            <input id="billName" type="text" placeholder="Ej: Juan Pérez / Todo Costura S.A.">
+          </div>
+          <div class="field">
+            <label for="billDocType">Tipo de documento *</label>
+            <select id="billDocType">
+              <option value="personal" selected>Documento personal (Cédula)</option>
+              <option value="fiscal">Documento fiscal (RUC)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label id="billDocLabel" for="billDocNumber">Documento personal (Cédula) *</label>
+            <input id="billDocNumber" type="text" placeholder="Ej: 1234567">
+          </div>
+          <div class="field">
+            <label for="billEmail">Correo de facturación *</label>
+            <input id="billEmail" type="email" placeholder="facturacion@dominio.com">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="billPhone">Teléfono (opcional)</label>
+            <input id="billPhone" type="text" placeholder="+595...">
+          </div>
+          <div class="field">
+            <label for="billAddress">Dirección *</label>
+            <input id="billAddress" type="text" placeholder="Calle, número, barrio">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="billCity">Ciudad *</label>
+            <input id="billCity" type="text" placeholder="Ej: Asunción">
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h2>Comprobante de pago</h2>
+        <div class="row">
+          <div class="field">
+            <label for="payFile">Adjuntar comprobante (JPG/PNG/PDF) *</label>
+            <input id="payFile" type="file" accept="image/*,application/pdf">
+            <div class="muted tiny">Máximo 5 MB.</div>
+          </div>
+          <div class="field">
+            <label>Estado</label>
+            <div id="payFileStatus" class="muted tiny">Sin archivo</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h2>Confirmación</h2>
+        <div class="btns">
+          <button id="btnPreview" class="ghost" disabled>Vista previa</button>
+          <button id="btnConfirm" class="primary" disabled>Confirmar y enviar</button>
+        </div>
+        <div id="formMsg" style="margin-top:10px"></div>
+        <div id="sendMsg" style="margin-top:10px"></div>
+        <pre id="previewJson" style="display:none;"></pre>
+
+        <pre id="debug" style="display:none;"></pre>
       </div>
     </div>
-
-    <div class="card" style="margin-top:14px">
-      <h2>Comprobante de pago (obligatorio)</h2>
-      <div class="grid">
-        <div>
-          <label for="payFile">Adjuntar comprobante *</label>
-          <input id="payFile" type="file" accept="image/*,application/pdf">
-          <div id="payFileHint" class="muted">Formatos: JPG/PNG/PDF. Máx: 5 MB.</div>
-        </div>
-        <div>
-          <label>Estado</label>
-          <div id="payFileStatus" class="muted">Sin archivo</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:14px">
-      <h2>Confirmación</h2>
-      <div class="row">
-        <button id="btnPreview" disabled>Generar vista previa</button>
-        <button id="btnConfirm" disabled>Confirmar y enviar</button>
-      </div>
-      <div id="sendMsg" style="margin-top:8px"></div>
-      <pre id="previewJson" class="mono" style="white-space:pre-wrap;margin-top:10px;display:none;"></pre>
-    </div>
-
-    <div id="formMsg" style="margin-top:8px"></div>
   </div>
-
-  <pre id="debug" style="white-space:pre-wrap;"></pre>
 
 <script>
   // =====================
   // Config
   // =====================
   const API_BASE = "https://api.taller2.workers.dev";
+  const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
+
   const POLL_DELAY_MS = 1500;
   const POLL_MAX_TRIES = 120;
-
-  // ✅ IMPORTANTE: el frontend NO debe llamar a flow.zoho.com (CORS + exposición de zapikey)
-  // En su lugar, llama al Worker: /api/reserva, que reenvía server-side a Flow.
-  const WEBHOOK_URL = `${API_BASE}/api/reserva`;
 
   const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
 
@@ -163,7 +253,10 @@
   const qtyHintEl = document.getElementById("qtyHint");
   const btnBuild = document.getElementById("btnBuild");
   const namesWrap = document.getElementById("namesWrap");
+
   const formMsg = document.getElementById("formMsg");
+  const sendMsg = document.getElementById("sendMsg");
+  const previewJsonEl = document.getElementById("previewJson");
 
   // Billing
   const billNameEl = document.getElementById("billName");
@@ -182,8 +275,6 @@
   // Confirm
   const btnPreview = document.getElementById("btnPreview");
   const btnConfirm = document.getElementById("btnConfirm");
-  const sendMsg = document.getElementById("sendMsg");
-  const previewJsonEl = document.getElementById("previewJson");
 
   // =====================
   // State
@@ -228,14 +319,15 @@
     return {ok:r.ok, status:r.status, text:t, json:j, url};
   }
 
-  async function postWebhookJson(payload){
-    const r = await fetch(WEBHOOK_URL, {
+  async function postReserva(payload){
+    const r = await fetch(RESERVA_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type":"application/json" },
       body: JSON.stringify(payload)
     });
     const t = await r.text();
-    return {ok:r.ok, status:r.status, text:t};
+    let j=null; try{ j=JSON.parse(t);}catch{}
+    return {ok:r.ok, status:r.status, text:t, json:j};
   }
 
   function normalizeInt(x){
@@ -273,21 +365,23 @@
       courseBoxEl.innerHTML = "<em>Sin datos de curso</em>";
       return;
     }
-    const name = htmlEscape(course.name || "Curso");
-    const category = htmlEscape(course.category || "");
-    const price = course.price ?? null;
+
+    // Ajusta a tu estructura de bootstrap (si tu course viene con nombre_curso, etc.)
+    const name = htmlEscape(course.name || course.nombre_curso || "Curso");
+    const category = htmlEscape(course.category || course.categoria || "");
+    const price = course.price ?? course.precio ?? null;
     const type = htmlEscape(course.type || "");
-    const platform = htmlEscape(course.platform || "");
-    const learning = htmlEscape(course.learning_type || "");
-    const audience = htmlEscape(course.audience || "");
-    const mode = htmlEscape(course.participants_mode || "");
+    const platform = htmlEscape(course.platform || course.plataforma || "");
+    const learning = htmlEscape(course.learning_type || course.tipo_aprendizaje || "");
+    const audience = htmlEscape(course.audience || course.alumnado || "");
+    const mode = htmlEscape(course.participants_mode || course.participantes || "");
     const tutor = htmlEscape(course.tutor || "");
 
     courseBoxEl.innerHTML =
       `<div><strong>${name}</strong></div>` +
-      `<div class="muted">Categoría: ${category || "-"} · Tipo: ${type || "-"} · Precio: ${price ?? "-"}</div>` +
-      `<div class="muted">Plataforma: ${platform || "-"} · Modalidad: ${learning || "-"} · Audiencia: ${audience || "-"}</div>` +
-      `<div class="muted">Modo participantes: ${mode || "-"} · Tutor: ${tutor || "-"}</div>`;
+      `<div class="muted tiny">Categoría: ${category || "-"} · Tipo: ${type || "-"} · Precio: ${price ?? "-"}</div>` +
+      `<div class="muted tiny">Plataforma: ${platform || "-"} · Modalidad: ${learning || "-"} · Audiencia: ${audience || "-"}</div>` +
+      `<div class="muted tiny">Participantes: ${mode || "-"} ${tutor ? "· Tutor: "+tutor : ""}</div>`;
   }
 
   // =====================
@@ -300,7 +394,7 @@
     btnConfirm.disabled = true;
     qtyHintEl.textContent = reason || "";
     namesWrap.innerHTML = "";
-    setMsg(reason ? `<span class="muted">${reason}</span>` : "", "");
+    setMsg(reason ? `<span class="muted">${htmlEscape(reason)}</span>` : "", "");
     setSendMsg("", "");
     resetPreview();
   }
@@ -311,15 +405,15 @@
     STATE.selected_slot = null;
 
     if (!Array.isArray(slots) || slots.length === 0){
-      slotsEl.innerHTML = "<em>Sin horarios</em>";
+      slotsEl.innerHTML = "<em class='muted'>Sin horarios</em>";
       return disableForm("No hay horarios disponibles.");
     }
 
     slots.forEach((s, idx) => {
       const id = `slot_${idx}`;
-      const div = document.createElement("div");
-      div.className = "row";
-      div.style.padding = "6px 0";
+
+      const box = document.createElement("div");
+      box.className = "slot";
 
       const input = document.createElement("input");
       input.type = "radio";
@@ -332,14 +426,23 @@
         onSlotSelected();
       });
 
-      const label = document.createElement("label");
-      label.htmlFor = id;
-      label.style.margin = "0";
-      label.textContent = `${s.fecha} ${s.hora} — disponibles: ${s.cupos_disponibles} — slot: ${s.slot_id}`;
+      const right = document.createElement("div");
 
-      div.appendChild(input);
-      div.appendChild(label);
-      slotsEl.appendChild(div);
+      const lab = document.createElement("label");
+      lab.htmlFor = id;
+      lab.textContent = `${s.fecha} ${s.hora}`;
+      right.appendChild(lab);
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.innerHTML =
+        `Disponibles: <strong>${htmlEscape(s.cupos_disponibles)}</strong> · ` +
+        `<span class="pill">slot: ${htmlEscape(s.slot_id)}</span>`;
+      right.appendChild(meta);
+
+      box.appendChild(input);
+      box.appendChild(right);
+      slotsEl.appendChild(box);
     });
 
     slotsHelpEl.textContent = "Seleccioná un horario para habilitar la cantidad de personas.";
@@ -380,6 +483,7 @@
   // =====================
   function makeField(i, key, labelText, type, required, placeholder){
     const wrap = document.createElement("div");
+    wrap.className = "field";
 
     const lab = document.createElement("label");
     lab.htmlFor = `p${i}_${key}`;
@@ -393,7 +497,7 @@
 
     inp.addEventListener("input", () => {
       btnPreview.disabled = !isFormValid();
-      setSendMsg("", "");
+      setSendMsg("");
       resetPreview();
     });
 
@@ -430,7 +534,7 @@
     }
 
     const title = document.createElement("div");
-    title.className = "muted";
+    title.className = "muted tiny";
     title.style.marginTop = "10px";
     title.textContent = "Datos de participantes (obligatorios: nombres, apellidos, cédula, email; opcional: contacto)";
     namesWrap.appendChild(title);
@@ -441,21 +545,23 @@
       box.setAttribute("data-pblock","1");
 
       const h = document.createElement("div");
-      h.className = "muted";
+      h.className = "muted tiny";
       h.style.marginBottom = "8px";
       h.textContent = `Participante ${i}`;
       box.appendChild(h);
 
-      const grid = document.createElement("div");
-      grid.className = "grid";
+      const row = document.createElement("div");
+      row.className = "row";
 
-      grid.appendChild(makeField(i, "nombres", "Nombres", "text", true, "Ej: Juan Carlos"));
-      grid.appendChild(makeField(i, "apellidos", "Apellidos", "text", true, "Ej: Gómez López"));
-      grid.appendChild(makeField(i, "cedula", "Cédula", "text", true, "Ej: 1234567"));
-      grid.appendChild(makeField(i, "email", "Correo electrónico", "email", true, "Ej: correo@dominio.com"));
-      grid.appendChild(makeField(i, "contacto", "Contacto (opcional)", "text", false, "Ej: +595..."));
+      row.appendChild(makeField(i, "nombres", "Nombres", "text", true, "Ej: Juan Carlos"));
+      row.appendChild(makeField(i, "apellidos", "Apellidos", "text", true, "Ej: Gómez López"));
+      row.appendChild(makeField(i, "cedula", "Cédula", "text", true, "Ej: 1234567"));
+      row.appendChild(makeField(i, "email", "Correo electrónico", "email", true, "Ej: correo@dominio.com"));
 
-      box.appendChild(grid);
+      const contacto = makeField(i, "contacto", "Contacto (opcional)", "text", false, "Ej: +595...");
+      row.appendChild(contacto);
+
+      box.appendChild(row);
       namesWrap.appendChild(box);
     }
 
@@ -534,7 +640,6 @@
       reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
       reader.onload = () => {
         const result = String(reader.result || "");
-        // result es "data:mime/type;base64,XXXXX"
         const idx = result.indexOf("base64,");
         if (idx === -1) return reject(new Error("Formato Base64 inválido"));
         const base64 = result.substring(idx + 7);
@@ -660,7 +765,7 @@
     qtyEl.value = String(qty);
 
     btnPreview.disabled = !isFormValid();
-    setSendMsg("", "");
+    setSendMsg("");
     resetPreview();
   });
 
@@ -668,7 +773,7 @@
   [billNameEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
     el.addEventListener("input", ()=>{
       btnPreview.disabled = !isFormValid();
-      setSendMsg("", "");
+      setSendMsg("");
       resetPreview();
     });
   });
@@ -677,31 +782,31 @@
     const file = ev.target.files && ev.target.files[0] ? ev.target.files[0] : null;
     await handlePaymentFile(file);
     btnPreview.disabled = !isFormValid();
-    setSendMsg("", "");
+    setSendMsg("");
     resetPreview();
   });
 
   btnPreview.addEventListener("click", () => {
     if (!isFormValid()){
-      setMsg("Faltan datos obligatorios o la cantidad excede cupos disponibles o falta comprobante.", "err");
+      setMsg("<span class='err'>Faltan datos obligatorios o la cantidad excede cupos disponibles o falta comprobante.</span>");
       btnConfirm.disabled = true;
       return;
     }
     const payload = buildPayload();
     STATE.last_preview_payload = payload;
     renderPreview(payload);
-    setMsg("", "");
-    setSendMsg("<span class='ok'>Vista previa generada. Verificá y luego confirmá.</span>", "");
+    setMsg("");
+    setSendMsg("<span class='ok'>Vista previa generada. Verificá y luego confirmá.</span>");
     btnConfirm.disabled = false;
   });
 
   btnConfirm.addEventListener("click", async () => {
     if (!STATE.last_preview_payload){
-      setSendMsg("<span class='err'>Primero generá la vista previa.</span>", "");
+      setSendMsg("<span class='err'>Primero generá la vista previa.</span>");
       return;
     }
     if (!isFormValid()){
-      setSendMsg("<span class='err'>Los datos ya no son válidos. Volvé a generar la vista previa.</span>", "");
+      setSendMsg("<span class='err'>Los datos ya no son válidos. Volvé a generar la vista previa.</span>");
       btnConfirm.disabled = true;
       return;
     }
@@ -710,25 +815,27 @@
 
     btnConfirm.disabled = true;
     btnPreview.disabled = true;
-    setSendMsg("<span class='muted'>Enviando…</span>", "");
+    setSendMsg("<span class='muted'>Enviando…</span>");
 
     try{
-      const res = await postWebhookJson(payload);
+      const res = await postReserva(payload);
 
-      if (res.ok){
-        setSendMsg(`<span class='ok'>Enviado OK (HTTP ${res.status}).</span>`, "");
+      if (res.ok && res.json?.ok !== false){
+        setSendMsg(`<span class='ok'>Enviado OK (HTTP ${res.status}).</span>`);
       } else {
-        setSendMsg(`<span class='err'>Falló el envío (HTTP ${res.status}).</span>`, "");
+        setSendMsg(`<span class='err'>Falló el envío (HTTP ${res.status}).</span>`);
       }
 
+      // debug oculto; habilitalo si lo necesitás
+      debugEl.style.display = "none";
       debugEl.textContent =
-        `WEBHOOK POST ${res.status}\n` +
-        `URL: ${WEBHOOK_URL}\n\n` +
+        `POST ${res.status}\n` +
+        `URL: ${RESERVA_ENDPOINT}\n\n` +
         `${res.text}\n\n` +
-        `PAYLOAD ENVIADO:\n${JSON.stringify(payload, null, 2)}`;
+        `PAYLOAD:\n${JSON.stringify(payload, null, 2)}`;
 
     } catch (e){
-      setSendMsg(`<span class='err'>Error de red: ${htmlEscape(e?.message || String(e))}</span>`, "");
+      setSendMsg(`<span class='err'>Error de red: ${htmlEscape(e?.message || String(e))}</span>`);
     } finally {
       btnPreview.disabled = !isFormValid();
       btnConfirm.disabled = true;
@@ -741,7 +848,6 @@
   // =====================
   async function loadBootstrap(courseId){
     const res = await apiGet(`${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`);
-    debugEl.textContent = `BOOTSTRAP ${res.status}\n${res.text}`;
     if (!res.ok || !res.json) return null;
     if (res.json.ok !== true) return res.json;
 
@@ -752,7 +858,7 @@
     renderCourse(STATE.course);
     renderSlots(STATE.slots);
 
-    setStatus(`OK: horarios=${(STATE.slots||[]).length}`);
+    setStatus(`Listo · horarios: ${(STATE.slots||[]).length}`);
     refreshBillingDocUI();
 
     btnPreview.disabled = !isFormValid();
@@ -767,9 +873,8 @@
     const before = await getDebugKV(courseId);
     const beforeTs = before?.json?.last_ingest_for_course?.ts || null;
 
-    setStatus("Disparando refresh…");
+    setStatus("Actualizando horarios…");
     const r = await apiPost(`${API_BASE}/api/refresh`, { course_id: courseId });
-    debugEl.textContent = `REFRESH ${r.status}\n${r.text}`;
 
     if (!r.ok) {
       setStatus(`Refresh falló HTTP ${r.status}`);
@@ -781,8 +886,6 @@
       const d = await getDebugKV(courseId);
       const nowTs = d?.json?.last_ingest_for_course?.ts || null;
       const exists = Boolean(d?.json?.exists);
-
-      setStatus(`Esperando actualización… (${i}/${POLL_MAX_TRIES}) ts=${nowTs||"null"} exists=${exists}`);
 
       if (exists && nowTs && nowTs !== beforeTs) return true;
     }
@@ -801,6 +904,7 @@
       return;
     }
 
+    setStatus("Cargando curso…");
     const boot = await loadBootstrap(courseId);
 
     const shouldForce = (boot?.ok !== true);
