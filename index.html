@@ -3,227 +3,464 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Agenda de Cursos | Todo Costura</title>
-  <meta name="description" content="Reservá tu curso. Seleccioná fecha, horario y confirmá en segundos.">
+  <title>Reservas | Todo Costura</title>
+  <meta name="description" content="Seleccioná un horario y completá los datos para confirmar tu reserva.">
   <meta name="theme-color" content="#ffffff">
   <style>
     :root{
       --brand:#a52b64;
       --brand2:#c94b86;
+
       --bg:#f6f7fb;
       --card:#ffffff;
       --txt:#111827;
       --muted:#6b7280;
-      --line:#e5e7eb;
-      --shadow:0 10px 30px rgba(17,24,39,.08);
-      --r:16px;
+      --muted2:#9aa3b2;
+
+      --line:#e6e8ef;
+      --soft:#f2f4f9;
+
+      --shadow: 0 18px 50px rgba(17,24,39,.10);
+      --shadow2: 0 10px 24px rgba(17,24,39,.08);
+      --r: 18px;
+
+      --focus: 0 0 0 4px rgba(165,43,100,.14);
     }
+
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
-      background:var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
       color:var(--txt);
+      background:
+        radial-gradient(1000px 500px at 10% -10%, rgba(165,43,100,.10), transparent 55%),
+        radial-gradient(900px 450px at 95% 0%, rgba(201,75,134,.09), transparent 55%),
+        linear-gradient(180deg, #fbfbfd 0%, var(--bg) 45%, #f7f8fc 100%);
     }
-    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px}
-    .top{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;
-      margin-bottom:14px;
+
+    a{color:inherit}
+    .wrap{max-width:1160px;margin:0 auto;padding:28px 18px 44px}
+    .shell{
+      border-radius:24px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(230,232,239,.9);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow:hidden;
     }
-    h1{margin:0;font-size:22px;letter-spacing:.2px}
-    .sub{margin:6px 0 0 0;color:var(--muted);font-size:14px}
-    .badge{
-      padding:6px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);
-      color:var(--muted);font-size:12px
+
+    /* Header */
+    .header{
+      display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+      padding:22px 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.55));
+      border-bottom:1px solid var(--line);
+    }
+    .brandline{
+      display:flex;align-items:center;gap:12px;min-width:260px;
+    }
+    .mark{
+      width:40px;height:40px;border-radius:14px;
+      background: linear-gradient(135deg, rgba(165,43,100,.18), rgba(201,75,134,.14));
+      border:1px solid rgba(165,43,100,.22);
+      box-shadow: var(--shadow2);
+      position:relative;
+      flex:0 0 auto;
+    }
+    .mark:after{
+      content:"";
+      position:absolute;inset:11px;
+      border-radius:10px;
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      opacity:.92;
+    }
+    .title h1{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.2px;
+      font-weight:800;
+      line-height:1.15;
+    }
+    .title p{
+      margin:6px 0 0 0;
+      color:var(--muted);
+      font-size:13.5px;
+      line-height:1.35;
+    }
+
+    .status{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 12px;border-radius:999px;
+      background: rgba(255,255,255,.9);
+      border:1px solid var(--line);
+      box-shadow: 0 8px 18px rgba(17,24,39,.06);
+      font-size:12.5px;color:var(--muted);
+      white-space:nowrap;
+    }
+    .dot{
+      width:9px;height:9px;border-radius:99px;
+      background: rgba(165,43,100,.35);
+      box-shadow: 0 0 0 4px rgba(165,43,100,.10);
+    }
+
+    /* Layout */
+    .content{
+      padding:18px 18px 22px;
     }
     .grid{
       display:grid;
-      grid-template-columns: 1.1fr .9fr;
+      grid-template-columns: 1.05fr .95fr;
       gap:14px;
     }
-    @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+    @media (max-width:980px){ .grid{grid-template-columns:1fr} .header{padding:18px} .content{padding:14px} }
+
     .card{
-      background:var(--card);
+      background: var(--card);
       border:1px solid var(--line);
-      border-radius:var(--r);
-      box-shadow:var(--shadow);
+      border-radius: var(--r);
+      box-shadow: var(--shadow2);
       padding:16px;
+      overflow:hidden;
     }
-    .card h2{margin:0 0 10px 0;font-size:16px}
+
+    .cardHead{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+      margin-bottom:10px;
+    }
+    .cardHead h2{
+      margin:0;
+      font-size:13px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: #3b4253;
+      font-weight:900;
+    }
+    .hint{
+      color:var(--muted2);
+      font-size:12px;
+      line-height:1.3;
+      text-align:right;
+      max-width:260px;
+    }
+
+    .divider{height:1px;background:var(--line);margin:14px 0}
+
     .muted{color:var(--muted)}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .field{flex:1 1 220px}
-    label{display:block;margin:8px 0 6px 0;font-size:13px;color:var(--muted)}
+    .tiny{font-size:12px}
+
+    /* Fields */
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+    .field{flex:1 1 220px;min-width:210px}
+    label{
+      display:block;
+      margin:10px 0 6px 0;
+      font-size:12.5px;
+      color: #4b5568;
+      font-weight:650;
+    }
+
     input[type="text"], input[type="email"], input[type="number"], select, textarea{
       width:100%;
-      padding:10px 12px;
+      padding:11px 12px;
       border:1px solid var(--line);
-      border-radius:12px;
+      border-radius:14px;
       outline:none;
-      background:#fff;
+      background: linear-gradient(180deg, #ffffff, #fcfcff);
       color:var(--txt);
       font-size:14px;
+      transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
     }
-    textarea{min-height:84px;resize:vertical}
+    textarea{min-height:86px;resize:vertical}
     input:focus, select:focus, textarea:focus{
-      border-color:rgba(165,43,100,.55);
-      box-shadow:0 0 0 4px rgba(165,43,100,.12);
+      border-color: rgba(165,43,100,.55);
+      box-shadow: var(--focus);
+    }
+    input:disabled, select:disabled, textarea:disabled{
+      background: #f7f8fd;
+      color: #9aa3b2;
+      cursor:not-allowed;
+    }
+
+    /* Slots */
+    .slots{
+      display:flex;flex-direction:column;gap:10px;
+      margin-top:8px;
     }
     .slot{
-      display:flex;gap:10px;align-items:flex-start;
-      padding:10px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;
-      margin:8px 0;
+      display:flex;align-items:flex-start;gap:10px;
+      padding:12px 12px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: linear-gradient(180deg, #ffffff, #fbfbff);
+      box-shadow: 0 10px 20px rgba(17,24,39,.05);
+      transition: transform .08s ease, box-shadow .15s ease, border-color .15s ease;
     }
-    .slot label{margin:0;color:var(--txt)}
-    .slot .meta{font-size:12px;color:var(--muted);margin-top:2px}
+    .slot:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 14px 26px rgba(17,24,39,.07);
+      border-color: rgba(165,43,100,.22);
+    }
+    .slot input{margin-top:2px}
+    .slot label{margin:0;color:var(--txt);font-weight:800;font-size:13.5px}
+    .meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35}
     .pill{
-      display:inline-block;padding:4px 8px;border-radius:999px;
-      border:1px solid var(--line);color:var(--muted);font-size:12px;background:#fff;
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px;border-radius:999px;
+      border:1px solid var(--line);
+      color: #667085;
+      background: rgba(255,255,255,.9);
+      font-size:12px;
+      margin-left:6px;
     }
+    .kpi{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px;border-radius:999px;
+      border:1px solid rgba(165,43,100,.22);
+      background: rgba(165,43,100,.06);
+      color: #7a1f4a;
+      font-weight:800;
+      font-size:12px;
+      margin-left:6px;
+    }
+
+    /* Buttons */
     .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     button{
-      border:0;border-radius:12px;cursor:pointer;
-      padding:11px 14px;font-weight:700;font-size:14px;
+      border:0;border-radius:14px;cursor:pointer;
+      padding:11px 14px;
+      font-weight:850;font-size:13.5px;
+      transition: transform .08s ease, box-shadow .15s ease, opacity .15s ease;
     }
+    button:active{transform: translateY(1px)}
+    button:disabled{opacity:.55;cursor:not-allowed;transform:none}
     .primary{
-      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      background: linear-gradient(135deg,var(--brand),var(--brand2));
       color:#fff;
+      box-shadow: 0 14px 30px rgba(165,43,100,.22);
     }
+    .primary:hover{box-shadow: 0 18px 38px rgba(165,43,100,.26)}
     .ghost{
-      background:#fff;border:1px solid var(--line);color:var(--txt);
-      font-weight:600;
-    }
-    button:disabled{opacity:.55;cursor:not-allowed}
-    .err{color:#b00020;font-weight:650}
-    .ok{color:#0a7a2f;font-weight:650}
-    .pbox{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:#fff}
-    pre{
-      margin:12px 0 0 0;
       background:#fff;
       border:1px solid var(--line);
-      border-radius:12px;
+      color:var(--txt);
+      font-weight:800;
+      box-shadow: 0 10px 22px rgba(17,24,39,.06);
+    }
+
+    /* Participant blocks */
+    .pbox{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      margin-top:10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(251,251,255,.92));
+      box-shadow: 0 10px 22px rgba(17,24,39,.05);
+    }
+    .pboxTitle{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      margin-bottom:8px;
+    }
+    .pboxTitle .left{
+      display:flex;align-items:center;gap:8px;
+      font-weight:900;
+      font-size:13px;
+      color:#3b4253;
+    }
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:5px 10px;border-radius:999px;
+      background: rgba(17,24,39,.04);
+      border:1px solid var(--line);
+      color:#596175;
+      font-size:12px;
+      font-weight:800;
+    }
+    .chip b{color:#111827}
+
+    /* Messages */
+    .msg{margin-top:10px;font-size:13px;line-height:1.35}
+    .err{color:#b00020;font-weight:750}
+    .ok{color:#0a7a2f;font-weight:750}
+
+    /* Preview / Debug */
+    pre{
+      margin:12px 0 0 0;
+      background: linear-gradient(180deg,#ffffff,#fbfbff);
+      border:1px solid var(--line);
+      border-radius:16px;
       padding:12px;
       white-space:pre-wrap;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size:12px;
       color:#111827;
+      box-shadow: 0 10px 22px rgba(17,24,39,.05);
     }
-    .tiny{font-size:12px}
-    .divider{height:1px;background:var(--line);margin:12px 0}
+
+    /* Footer note */
+    .foot{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.72);
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.35;
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
-    <div class="top">
-      <div>
-        <h1>Agenda de Cursos</h1>
-        <p class="sub">Seleccioná un horario disponible y completá los datos para confirmar tu reserva.</p>
-      </div>
-      <div class="badge" id="status">Inicializando…</div>
-    </div>
+    <div class="shell">
+      <div class="header">
+        <div class="brandline">
+          <div class="mark" aria-hidden="true"></div>
+          <div class="title">
+            <h1>Reservas de cursos</h1>
+            <p>Elegí un turno disponible y completá la información para confirmar la inscripción.</p>
+          </div>
+        </div>
 
-    <div class="grid">
-      <div class="card">
-        <h2>Curso</h2>
-        <div id="courseBox" class="muted">Cargando…</div>
-
-        <div class="divider"></div>
-
-        <h2>Horarios</h2>
-        <div id="slots"></div>
-        <div id="slotsHelp" class="muted tiny"></div>
+        <div class="status" id="status">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Inicializando…</span>
+        </div>
       </div>
 
-      <div class="card">
-        <h2>Reserva</h2>
+      <div class="content">
+        <div class="grid">
+          <div class="card">
+            <div class="cardHead">
+              <h2>Detalle del curso</h2>
+              <div class="hint" id="courseHint">Información en tiempo real desde Zoho Creator.</div>
+            </div>
 
-        <div class="row">
-          <div class="field">
-            <label for="qty">Cantidad de personas</label>
-            <input id="qty" type="number" min="1" step="1" value="1" disabled>
-            <div id="qtyHint" class="muted tiny"></div>
+            <div id="courseBox" class="muted">Cargando…</div>
+
+            <div class="divider"></div>
+
+            <div class="cardHead">
+              <h2>Turnos disponibles</h2>
+              <div class="hint" id="slotsHelp">Seleccioná un turno para habilitar la inscripción.</div>
+            </div>
+
+            <div id="slots" class="slots"></div>
+
+            <div class="foot">
+              Si un turno se queda sin cupos mientras completás el formulario, la validación lo va a bloquear para evitar sobre-reservas.
+            </div>
           </div>
-          <div>
-            <label>&nbsp;</label>
-            <button id="btnBuild" class="ghost" disabled>Generar participantes</button>
+
+          <div class="card">
+            <div class="cardHead">
+              <h2>Inscripción</h2>
+              <div class="hint">Campos obligatorios marcados con *</div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="qty">Cantidad de participantes</label>
+                <input id="qty" type="number" min="1" step="1" value="1" disabled>
+                <div id="qtyHint" class="muted tiny"></div>
+              </div>
+              <div style="min-width:180px">
+                <label>&nbsp;</label>
+                <button id="btnBuild" class="ghost" disabled>Generar formulario</button>
+              </div>
+            </div>
+
+            <div id="namesWrap"></div>
+
+            <div class="divider"></div>
+
+            <div class="cardHead">
+              <h2>Datos de facturación</h2>
+              <div class="hint">Usados para emitir comprobantes.</div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="billName">Razón social / Nombre *</label>
+                <input id="billName" type="text" placeholder="Ej: Juan Pérez / Todo Costura S.A.">
+              </div>
+              <div class="field">
+                <label for="billDocType">Tipo de documento *</label>
+                <select id="billDocType">
+                  <option value="personal" selected>Documento personal (Cédula)</option>
+                  <option value="fiscal">Documento fiscal (RUC)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label id="billDocLabel" for="billDocNumber">Documento personal (Cédula) *</label>
+                <input id="billDocNumber" type="text" placeholder="Ej: 1234567">
+              </div>
+              <div class="field">
+                <label for="billEmail">Correo de facturación *</label>
+                <input id="billEmail" type="email" placeholder="facturacion@dominio.com">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="billPhone">Teléfono (opcional)</label>
+                <input id="billPhone" type="text" placeholder="+595…">
+              </div>
+              <div class="field">
+                <label for="billAddress">Dirección *</label>
+                <input id="billAddress" type="text" placeholder="Calle, número, barrio">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="billCity">Ciudad *</label>
+                <input id="billCity" type="text" placeholder="Ej: Asunción">
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="cardHead">
+              <h2>Comprobante de pago</h2>
+              <div class="hint">JPG/PNG/PDF · máx. 5 MB</div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="payFile">Adjuntar comprobante *</label>
+                <input id="payFile" type="file" accept="image/*,application/pdf">
+              </div>
+              <div class="field">
+                <label>Estado</label>
+                <div id="payFileStatus" class="muted tiny" style="padding:11px 12px;border:1px dashed var(--line);border-radius:14px;background:rgba(17,24,39,.02)">Sin archivo</div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="cardHead">
+              <h2>Confirmación</h2>
+              <div class="hint">Generá vista previa antes de enviar.</div>
+            </div>
+
+            <div class="btns">
+              <button id="btnPreview" class="ghost" disabled>Generar vista previa</button>
+              <button id="btnConfirm" class="primary" disabled>Confirmar inscripción</button>
+            </div>
+
+            <div id="formMsg" class="msg"></div>
+            <div id="sendMsg" class="msg"></div>
+
+            <pre id="previewJson" style="display:none;"></pre>
+            <pre id="debug" style="display:none;"></pre>
           </div>
         </div>
-
-        <div id="namesWrap"></div>
-
-        <div class="divider"></div>
-
-        <h2>Facturación</h2>
-        <div class="row">
-          <div class="field">
-            <label for="billName">Razón social / Nombre *</label>
-            <input id="billName" type="text" placeholder="Ej: Juan Pérez / Todo Costura S.A.">
-          </div>
-          <div class="field">
-            <label for="billDocType">Tipo de documento *</label>
-            <select id="billDocType">
-              <option value="personal" selected>Documento personal (Cédula)</option>
-              <option value="fiscal">Documento fiscal (RUC)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label id="billDocLabel" for="billDocNumber">Documento personal (Cédula) *</label>
-            <input id="billDocNumber" type="text" placeholder="Ej: 1234567">
-          </div>
-          <div class="field">
-            <label for="billEmail">Correo de facturación *</label>
-            <input id="billEmail" type="email" placeholder="facturacion@dominio.com">
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label for="billPhone">Teléfono (opcional)</label>
-            <input id="billPhone" type="text" placeholder="+595...">
-          </div>
-          <div class="field">
-            <label for="billAddress">Dirección *</label>
-            <input id="billAddress" type="text" placeholder="Calle, número, barrio">
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label for="billCity">Ciudad *</label>
-            <input id="billCity" type="text" placeholder="Ej: Asunción">
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <h2>Comprobante de pago</h2>
-        <div class="row">
-          <div class="field">
-            <label for="payFile">Adjuntar comprobante (JPG/PNG/PDF) *</label>
-            <input id="payFile" type="file" accept="image/*,application/pdf">
-            <div class="muted tiny">Máximo 5 MB.</div>
-          </div>
-          <div class="field">
-            <label>Estado</label>
-            <div id="payFileStatus" class="muted tiny">Sin archivo</div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <h2>Confirmación</h2>
-        <div class="btns">
-          <button id="btnPreview" class="ghost" disabled>Vista previa</button>
-          <button id="btnConfirm" class="primary" disabled>Confirmar y enviar</button>
-        </div>
-        <div id="formMsg" style="margin-top:10px"></div>
-        <div id="sendMsg" style="margin-top:10px"></div>
-        <pre id="previewJson" style="display:none;"></pre>
-
-        <pre id="debug" style="display:none;"></pre>
       </div>
     </div>
   </div>
@@ -291,9 +528,20 @@
   // =====================
   // Helpers
   // =====================
-  function setStatus(t){ statusEl.textContent = t; }
-  function setMsg(html, cls){ formMsg.className = cls || ""; formMsg.innerHTML = html || ""; }
-  function setSendMsg(html, cls){ sendMsg.className = cls || ""; sendMsg.innerHTML = html || ""; }
+  function setStatus(text){
+    const dot = `<span class="dot" aria-hidden="true"></span>`;
+    statusEl.innerHTML = `${dot}<span>${htmlEscape(text)}</span>`;
+  }
+
+  function setMsg(html, cls){
+    formMsg.className = "msg " + (cls || "");
+    formMsg.innerHTML = html || "";
+  }
+
+  function setSendMsg(html, cls){
+    sendMsg.className = "msg " + (cls || "");
+    sendMsg.innerHTML = html || "";
+  }
 
   function getCourseIdFromHash(){
     const h = (location.hash || "").replace(/^#/, "");
@@ -362,11 +610,10 @@
   // =====================
   function renderCourse(course){
     if (!course){
-      courseBoxEl.innerHTML = "<em>Sin datos de curso</em>";
+      courseBoxEl.innerHTML = "<em>Sin datos del curso</em>";
       return;
     }
 
-    // Ajusta a tu estructura de bootstrap (si tu course viene con nombre_curso, etc.)
     const name = htmlEscape(course.name || course.nombre_curso || "Curso");
     const category = htmlEscape(course.category || course.categoria || "");
     const price = course.price ?? course.precio ?? null;
@@ -378,10 +625,10 @@
     const tutor = htmlEscape(course.tutor || "");
 
     courseBoxEl.innerHTML =
-      `<div><strong>${name}</strong></div>` +
+      `<div style="font-weight:900;font-size:16px;margin-bottom:6px">${name}</div>` +
       `<div class="muted tiny">Categoría: ${category || "-"} · Tipo: ${type || "-"} · Precio: ${price ?? "-"}</div>` +
-      `<div class="muted tiny">Plataforma: ${platform || "-"} · Modalidad: ${learning || "-"} · Audiencia: ${audience || "-"}</div>` +
-      `<div class="muted tiny">Participantes: ${mode || "-"} ${tutor ? "· Tutor: "+tutor : ""}</div>`;
+      `<div class="muted tiny">Modalidad: ${learning || "-"} · Plataforma: ${platform || "-"}</div>` +
+      `<div class="muted tiny">Participantes: ${mode || "-"}${tutor ? " · Tutor: "+tutor : ""}</div>`;
   }
 
   // =====================
@@ -401,12 +648,12 @@
 
   function renderSlots(slots){
     slotsEl.innerHTML = "";
-    slotsHelpEl.textContent = "";
     STATE.selected_slot = null;
 
     if (!Array.isArray(slots) || slots.length === 0){
-      slotsEl.innerHTML = "<em class='muted'>Sin horarios</em>";
-      return disableForm("No hay horarios disponibles.");
+      slotsEl.innerHTML = "<em class='muted'>No hay turnos disponibles.</em>";
+      slotsHelpEl.textContent = "";
+      return disableForm("No hay turnos disponibles.");
     }
 
     slots.forEach((s, idx) => {
@@ -427,17 +674,19 @@
       });
 
       const right = document.createElement("div");
+      right.style.flex = "1 1 auto";
 
       const lab = document.createElement("label");
       lab.htmlFor = id;
-      lab.textContent = `${s.fecha} ${s.hora}`;
+      lab.textContent = `${s.fecha} · ${s.hora}`;
       right.appendChild(lab);
 
+      const disp = normalizeInt(s.cupos_disponibles);
       const meta = document.createElement("div");
       meta.className = "meta";
       meta.innerHTML =
-        `Disponibles: <strong>${htmlEscape(s.cupos_disponibles)}</strong> · ` +
-        `<span class="pill">slot: ${htmlEscape(s.slot_id)}</span>`;
+        `Cupos disponibles: <span class="kpi">${htmlEscape(disp)}</span>` +
+        `<span class="pill">ID: ${htmlEscape(s.slot_id)}</span>`;
       right.appendChild(meta);
 
       box.appendChild(input);
@@ -445,16 +694,16 @@
       slotsEl.appendChild(box);
     });
 
-    slotsHelpEl.textContent = "Seleccioná un horario para habilitar la cantidad de personas.";
-    disableForm("Seleccioná un horario.");
+    slotsHelpEl.textContent = "Seleccioná un turno para habilitar la cantidad de participantes.";
+    disableForm("Seleccioná un turno.");
   }
 
   function onSlotSelected(){
     const s = STATE.selected_slot;
-    if (!s) return disableForm("Seleccioná un horario.");
+    if (!s) return disableForm("Seleccioná un turno.");
 
     const disp = normalizeInt(s.cupos_disponibles);
-    if (!Number.isFinite(disp) || disp <= 0) return disableForm("Este horario no tiene cupos disponibles.");
+    if (!Number.isFinite(disp) || disp <= 0) return disableForm("Este turno no tiene cupos disponibles.");
 
     qtyEl.disabled = false;
     qtyEl.min = "1";
@@ -521,34 +770,33 @@
       return;
     }
     if (!Number.isFinite(disp) || disp < 1){
-      setMsg("Disponibilidad inválida para este horario.", "err");
+      setMsg("Disponibilidad inválida para este turno.", "err");
       btnPreview.disabled = true;
       resetPreview();
       return;
     }
     if (qty > disp){
-      setMsg(`No podés registrar ${qty}. Cupos disponibles: ${disp}.`, "err");
+      setMsg(`No se pueden registrar ${qty} participantes. Cupos disponibles: ${disp}.`, "err");
       btnPreview.disabled = true;
       resetPreview();
       return;
     }
 
-    const title = document.createElement("div");
-    title.className = "muted tiny";
-    title.style.marginTop = "10px";
-    title.textContent = "Datos de participantes (obligatorios: nombres, apellidos, cédula, email; opcional: contacto)";
-    namesWrap.appendChild(title);
+    const note = document.createElement("div");
+    note.className = "muted tiny";
+    note.style.marginTop = "10px";
+    note.textContent = "Completar datos de participantes (campos obligatorios: nombres, apellidos, cédula, email).";
+    namesWrap.appendChild(note);
 
     for (let i=1;i<=qty;i++){
       const box = document.createElement("div");
       box.className = "pbox";
       box.setAttribute("data-pblock","1");
 
-      const h = document.createElement("div");
-      h.className = "muted tiny";
-      h.style.marginBottom = "8px";
-      h.textContent = `Participante ${i}`;
-      box.appendChild(h);
+      const head = document.createElement("div");
+      head.className = "pboxTitle";
+      head.innerHTML = `<div class="left"><span class="chip"><b>${i}</b></span> Participante</div>`;
+      box.appendChild(head);
 
       const row = document.createElement("div");
       row.className = "row";
@@ -557,9 +805,7 @@
       row.appendChild(makeField(i, "apellidos", "Apellidos", "text", true, "Ej: Gómez López"));
       row.appendChild(makeField(i, "cedula", "Cédula", "text", true, "Ej: 1234567"));
       row.appendChild(makeField(i, "email", "Correo electrónico", "email", true, "Ej: correo@dominio.com"));
-
-      const contacto = makeField(i, "contacto", "Contacto (opcional)", "text", false, "Ej: +595...");
-      row.appendChild(contacto);
+      row.appendChild(makeField(i, "contacto", "Teléfono de contacto", "text", false, "Ej: +595…"));
 
       box.appendChild(row);
       namesWrap.appendChild(box);
@@ -661,7 +907,7 @@
     }
 
     if (file.size > MAX_FILE_BYTES){
-      payFileStatusEl.textContent = "Archivo demasiado grande (máx 5 MB)";
+      payFileStatusEl.textContent = "Archivo demasiado grande (máx. 5 MB)";
       btnPreview.disabled = true;
       return;
     }
@@ -717,7 +963,7 @@
   function buildPayload(){
     return {
       meta: {
-        source: "web_agendamiento",
+        source: "web_reservas",
         sent_at_iso: new Date().toISOString()
       },
       course_id: STATE.course_id,
@@ -731,7 +977,7 @@
       },
 
       reservation: {
-        cantidad_personas: normalizeInt(qtyEl.value),
+        cantidad_participantes: normalizeInt(qtyEl.value),
         participantes: getParticipants()
       },
 
@@ -788,7 +1034,7 @@
 
   btnPreview.addEventListener("click", () => {
     if (!isFormValid()){
-      setMsg("<span class='err'>Faltan datos obligatorios o la cantidad excede cupos disponibles o falta comprobante.</span>");
+      setMsg("<span class='err'>Faltan datos obligatorios o la cantidad excede cupos disponibles o falta el comprobante.</span>");
       btnConfirm.disabled = true;
       return;
     }
@@ -796,7 +1042,7 @@
     STATE.last_preview_payload = payload;
     renderPreview(payload);
     setMsg("");
-    setSendMsg("<span class='ok'>Vista previa generada. Verificá y luego confirmá.</span>");
+    setSendMsg("<span class='ok'>Vista previa generada. Revisá el detalle y confirmá el envío.</span>");
     btnConfirm.disabled = false;
   });
 
@@ -806,7 +1052,7 @@
       return;
     }
     if (!isFormValid()){
-      setSendMsg("<span class='err'>Los datos ya no son válidos. Volvé a generar la vista previa.</span>");
+      setSendMsg("<span class='err'>Los datos ya no son válidos. Generá nuevamente la vista previa.</span>");
       btnConfirm.disabled = true;
       return;
     }
@@ -821,12 +1067,11 @@
       const res = await postReserva(payload);
 
       if (res.ok && res.json?.ok !== false){
-        setSendMsg(`<span class='ok'>Enviado OK (HTTP ${res.status}).</span>`);
+        setSendMsg(`<span class='ok'>Enviado correctamente (HTTP ${res.status}).</span>`);
       } else {
-        setSendMsg(`<span class='err'>Falló el envío (HTTP ${res.status}).</span>`);
+        setSendMsg(`<span class='err'>No se pudo completar el envío (HTTP ${res.status}).</span>`);
       }
 
-      // debug oculto; habilitalo si lo necesitás
       debugEl.style.display = "none";
       debugEl.textContent =
         `POST ${res.status}\n` +
@@ -858,7 +1103,7 @@
     renderCourse(STATE.course);
     renderSlots(STATE.slots);
 
-    setStatus(`Listo · horarios: ${(STATE.slots||[]).length}`);
+    setStatus(`Listo · ${((STATE.slots||[]).length)} turnos`);
     refreshBillingDocUI();
 
     btnPreview.disabled = !isFormValid();
@@ -873,11 +1118,11 @@
     const before = await getDebugKV(courseId);
     const beforeTs = before?.json?.last_ingest_for_course?.ts || null;
 
-    setStatus("Actualizando horarios…");
+    setStatus("Actualizando turnos…");
     const r = await apiPost(`${API_BASE}/api/refresh`, { course_id: courseId });
 
     if (!r.ok) {
-      setStatus(`Refresh falló HTTP ${r.status}`);
+      setStatus(`Refresh falló (HTTP ${r.status})`);
       return false;
     }
 
@@ -890,7 +1135,7 @@
       if (exists && nowTs && nowTs !== beforeTs) return true;
     }
 
-    setStatus("No se detectó actualización (Zoho no ejecutó ingest a tiempo).");
+    setStatus("No se detectó actualización a tiempo.");
     return false;
   }
 
@@ -900,11 +1145,12 @@
   (async function init(){
     const courseId = getCourseIdFromHash();
     if (!courseId){
-      setStatus("Falta #ID=...");
+      setStatus("Falta #ID=…");
+      setMsg("<span class='err'>Abrí esta página con un hash válido, por ejemplo: <b>#ID=4537469...</b></span>");
       return;
     }
 
-    setStatus("Cargando curso…");
+    setStatus("Cargando…");
     const boot = await loadBootstrap(courseId);
 
     const shouldForce = (boot?.ok !== true);
