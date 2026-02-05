@@ -20,12 +20,18 @@
     @media (max-width:720px){ .grid{grid-template-columns:1fr} }
     pre{background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px}
     .pbox{border:1px solid #eee;border-radius:10px;padding:10px;margin-top:10px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px}
   </style>
 </head>
 <body>
   <h1>Reservas (test)</h1>
 
   <div id="status"></div>
+
+  <div class="card">
+    <h2>Curso</h2>
+    <div id="courseBox" class="muted">Cargando…</div>
+  </div>
 
   <div class="card">
     <h2>Horarios</h2>
@@ -98,29 +104,49 @@
       </div>
     </div>
 
-    <div style="margin-top:10px">
-      <button id="btnSubmit" disabled>Continuar (validar)</button>
-      <div id="formMsg" style="margin-top:8px"></div>
+    <div class="card" style="margin-top:14px">
+      <h2>Confirmación</h2>
+      <div class="row">
+        <button id="btnPreview" disabled>Generar vista previa</button>
+        <button id="btnConfirm" disabled>Confirmar y enviar</button>
+      </div>
+      <div id="sendMsg" style="margin-top:8px"></div>
+      <pre id="previewJson" class="mono" style="white-space:pre-wrap;margin-top:10px;display:none;"></pre>
     </div>
+
+    <div id="formMsg" style="margin-top:8px"></div>
   </div>
 
   <pre id="debug" style="white-space:pre-wrap;"></pre>
 
 <script>
+  // =====================
+  // Config
+  // =====================
   const API_BASE = "https://api.taller2.workers.dev";
   const POLL_DELAY_MS = 1500;
   const POLL_MAX_TRIES = 120; // 3 min
 
+  // Webhook Zoho Flow (como pediste)
+  const ZOHO_FLOW_WEBHOOK_URL =
+    "https://flow.zoho.com/871021303/flow/webhook/incoming?zapikey=1001.71e42fa6e10f917d8d7575a01f962607.6b966cbe0089d194f3349e44e44cd04b&isdebug=false";
+
+  // Nota operativa: este zapikey queda expuesto en HTML público. Funciona, pero no es seguro.
+  // Lo ideal: enviar a tu Worker y que el Worker reenvíe al webhook (con una clave interna).
+
+  // =====================
+  // DOM
+  // =====================
   const statusEl = document.getElementById("status");
   const slotsEl = document.getElementById("slots");
   const slotsHelpEl = document.getElementById("slotsHelp");
   const debugEl = document.getElementById("debug");
+  const courseBoxEl = document.getElementById("courseBox");
 
   const qtyEl = document.getElementById("qty");
   const qtyHintEl = document.getElementById("qtyHint");
   const btnBuild = document.getElementById("btnBuild");
   const namesWrap = document.getElementById("namesWrap");
-  const btnSubmit = document.getElementById("btnSubmit");
   const formMsg = document.getElementById("formMsg");
 
   // Billing
@@ -133,10 +159,29 @@
   const billAddressEl = document.getElementById("billAddress");
   const billCityEl = document.getElementById("billCity");
 
-  let STATE = { course_id:null, slots:[], selected_slot:null };
+  // Confirm
+  const btnPreview = document.getElementById("btnPreview");
+  const btnConfirm = document.getElementById("btnConfirm");
+  const sendMsg = document.getElementById("sendMsg");
+  const previewJsonEl = document.getElementById("previewJson");
 
+  // =====================
+  // State
+  // =====================
+  let STATE = {
+    course_id: null,
+    course: null,      // objeto course desde /api/bootstrap
+    slots: [],
+    selected_slot: null,
+    last_preview_payload: null
+  };
+
+  // =====================
+  // Helpers
+  // =====================
   function setStatus(t){ statusEl.textContent = t; }
   function setMsg(html, cls){ formMsg.className = cls || ""; formMsg.innerHTML = html || ""; }
+  function setSendMsg(html, cls){ sendMsg.className = cls || ""; sendMsg.innerHTML = html || ""; }
 
   function getCourseIdFromHash(){
     const h = (location.hash || "").replace(/^#/, "");
@@ -162,6 +207,18 @@
     return {ok:r.ok, status:r.status, text:t, json:j, url};
   }
 
+  async function postWebhookJson(url, payload){
+    // Enviar JSON “tal cual” al webhook
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+    const t = await r.text();
+    let j=null; try{ j=JSON.parse(t);}catch{}
+    return {ok:r.ok, status:r.status, text:t, json:j, url};
+  }
+
   function normalizeInt(x){
     const n = Number(x);
     return Number.isFinite(n) ? Math.trunc(n) : NaN;
@@ -171,13 +228,63 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
   }
 
+  function htmlEscape(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function safeCourse(course){
+    // Enviamos “todo lo que venga” del worker, pero normalizamos nulls.
+    // Si mañana agregás campos, no hay que tocar nada.
+    if (!course || typeof course !== "object") return null;
+    return JSON.parse(JSON.stringify(course));
+  }
+
+  // =====================
+  // Render Curso
+  // =====================
+  function renderCourse(course){
+    if (!course){
+      courseBoxEl.innerHTML = "<em>Sin datos de curso</em>";
+      return;
+    }
+    const name = htmlEscape(course.name || course.nombre || "Curso");
+    const category = htmlEscape(course.category || course.categoria || "");
+    const price = course.price ?? course.precio ?? null;
+    const type = htmlEscape(course.type || course.tipo || "");
+    const platform = htmlEscape(course.platform || "");
+    const learning = htmlEscape(course.learning_type || "");
+    const audience = htmlEscape(course.audience || "");
+    const mode = htmlEscape(course.participants_mode || "");
+    const tutor = htmlEscape(course.tutor || "");
+
+    const line1 = `<div><strong>${name}</strong></div>`;
+    const line2 = `<div class="muted">Categoría: ${category || "-" } · Tipo: ${type || "-"} · Precio: ${price ?? "-"}</div>`;
+    const line3 = `<div class="muted">Plataforma: ${platform || "-"} · Modalidad: ${learning || "-"} · Audiencia: ${audience || "-"}</div>`;
+    const line4 = `<div class="muted">Modo participantes: ${mode || "-"} · Tutor: ${tutor || "-"}</div>`;
+
+    courseBoxEl.innerHTML = line1 + line2 + line3 + line4;
+  }
+
+  // =====================
+  // Slots
+  // =====================
   function disableForm(reason){
     qtyEl.disabled = true;
     btnBuild.disabled = true;
-    btnSubmit.disabled = true;
+    btnPreview.disabled = true;
+    btnConfirm.disabled = true;
     qtyHintEl.textContent = reason || "";
     namesWrap.innerHTML = "";
+    previewJsonEl.style.display = "none";
+    previewJsonEl.textContent = "";
+    STATE.last_preview_payload = null;
     setMsg(reason ? `<span class="muted">${reason}</span>` : "", "");
+    setSendMsg("", "");
   }
 
   function renderSlots(slots){
@@ -244,10 +351,16 @@
     const qty = normalizeInt(qtyEl.value);
     if (existingBlocks && existingBlocks !== qty) buildParticipants();
 
-    btnSubmit.disabled = !isFormValid();
+    // Revalida
+    btnPreview.disabled = !isFormValid();
+    btnConfirm.disabled = true;
     setMsg("", "");
+    setSendMsg("", "");
   }
 
+  // =====================
+  // Participants
+  // =====================
   function makeField(i, key, labelText, type, required, placeholder){
     const wrap = document.createElement("div");
 
@@ -263,8 +376,12 @@
     if (required) inp.setAttribute("data-req","1");
 
     inp.addEventListener("input", () => {
-      btnSubmit.disabled = !isFormValid();
+      btnPreview.disabled = !isFormValid();
+      btnConfirm.disabled = true;
+      STATE.last_preview_payload = null;
+      previewJsonEl.style.display = "none";
       setMsg("", "");
+      setSendMsg("", "");
     });
 
     wrap.appendChild(inp);
@@ -282,17 +399,20 @@
 
     if (!Number.isFinite(qty) || qty < 1){
       setMsg("Cantidad inválida.", "err");
-      btnSubmit.disabled = true;
+      btnPreview.disabled = true;
+      btnConfirm.disabled = true;
       return;
     }
     if (!Number.isFinite(disp) || disp < 1){
       setMsg("Disponibilidad inválida para este horario.", "err");
-      btnSubmit.disabled = true;
+      btnPreview.disabled = true;
+      btnConfirm.disabled = true;
       return;
     }
     if (qty > disp){
       setMsg(`No podés registrar ${qty}. Cupos disponibles: ${disp}.`, "err");
-      btnSubmit.disabled = true;
+      btnPreview.disabled = true;
+      btnConfirm.disabled = true;
       return;
     }
 
@@ -326,8 +446,10 @@
       namesWrap.appendChild(box);
     }
 
-    btnSubmit.disabled = !isFormValid();
+    btnPreview.disabled = !isFormValid();
+    btnConfirm.disabled = true;
     setMsg("", "");
+    setSendMsg("", "");
   }
 
   function getParticipants(){
@@ -349,6 +471,9 @@
     return out;
   }
 
+  // =====================
+  // Billing
+  // =====================
   function refreshBillingDocUI(){
     const type = billDocTypeEl.value;
     if (type === "fiscal"){
@@ -358,8 +483,11 @@
       billDocLabelEl.textContent = "Documento personal (Cédula) *";
       billDocNumberEl.placeholder = "Ej: 1234567";
     }
-    btnSubmit.disabled = !isFormValid();
-    setMsg("", "");
+    btnPreview.disabled = !isFormValid();
+    btnConfirm.disabled = true;
+    STATE.last_preview_payload = null;
+    previewJsonEl.style.display = "none";
+    setSendMsg("", "");
   }
 
   function getBilling(){
@@ -385,6 +513,9 @@
     return true;
   }
 
+  // =====================
+  // Validation
+  // =====================
   function isFormValid(){
     const s = STATE.selected_slot;
     if (!s) return false;
@@ -409,15 +540,54 @@
     return true;
   }
 
-  // Revalidate on billing inputs
-  [billNameEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
-    el.addEventListener("input", ()=>{
-      btnSubmit.disabled = !isFormValid();
-      setMsg("", "");
-    });
-  });
-  billDocTypeEl.addEventListener("change", refreshBillingDocUI);
+  // =====================
+  // Payload (FULL)
+  // =====================
+  function buildPayload(){
+    const cantidad = normalizeInt(qtyEl.value);
 
+    // Enviar el objeto course completo tal como viene del worker,
+    // para que en Flow/Deluge tengas "todo" sin rearmar.
+    const courseObj = safeCourse(STATE.course);
+
+    return {
+      meta: {
+        source: "web_agendamiento",
+        sent_at_iso: new Date().toISOString()
+      },
+      course_id: STATE.course_id,
+
+      // Curso completo (nombre, precio, tipo, categoria, etc.)
+      course: courseObj,
+
+      // Slot seleccionado
+      slot: {
+        slot_id: STATE.selected_slot?.slot_id || null,
+        fecha: STATE.selected_slot?.fecha || null,
+        hora: STATE.selected_slot?.hora || null,
+        cupos_disponibles_snapshot: STATE.selected_slot?.cupos_disponibles ?? null
+      },
+
+      // Reserva
+      reservation: {
+        cantidad_personas: cantidad,
+        participantes: getParticipants()
+      },
+
+      // Facturación
+      billing: getBilling()
+    };
+  }
+
+  function renderPreview(payload){
+    const pretty = JSON.stringify(payload, null, 2);
+    previewJsonEl.textContent = pretty;
+    previewJsonEl.style.display = "block";
+  }
+
+  // =====================
+  // Events
+  // =====================
   btnBuild.addEventListener("click", () => buildParticipants());
 
   qtyEl.addEventListener("input", () => {
@@ -433,35 +603,89 @@
 
     qtyEl.value = String(qty);
 
-    btnSubmit.disabled = !isFormValid();
+    btnPreview.disabled = !isFormValid();
+    btnConfirm.disabled = true;
+    STATE.last_preview_payload = null;
+    previewJsonEl.style.display = "none";
     setMsg("", "");
+    setSendMsg("", "");
   });
 
-  btnSubmit.addEventListener("click", () => {
+  billDocTypeEl.addEventListener("change", refreshBillingDocUI);
+  [billNameEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
+    el.addEventListener("input", ()=>{
+      btnPreview.disabled = !isFormValid();
+      btnConfirm.disabled = true;
+      STATE.last_preview_payload = null;
+      previewJsonEl.style.display = "none";
+      setSendMsg("", "");
+    });
+  });
+
+  btnPreview.addEventListener("click", () => {
     if (!isFormValid()){
       setMsg("Faltan datos obligatorios o la cantidad excede los cupos disponibles del horario.", "err");
+      btnConfirm.disabled = true;
       return;
     }
 
-    const payload = {
-      course_id: STATE.course_id,
-      slot_id: STATE.selected_slot.slot_id,
-      cantidad_personas: normalizeInt(qtyEl.value),
-      participantes: getParticipants(),
-      facturacion: getBilling(),
-      slot_snapshot: {
-        fecha: STATE.selected_slot.fecha,
-        hora: STATE.selected_slot.hora,
-        cupos_disponibles: STATE.selected_slot.cupos_disponibles
-      }
-    };
+    const payload = buildPayload();
+    STATE.last_preview_payload = payload;
 
-    setMsg("Validación OK. Payload listo (mirá consola).", "ok");
-    console.log("RESERVA_PAYLOAD", payload);
-
-    // apiPost(`${API_BASE}/api/reservar`, payload).then(res=>console.log(res));
+    renderPreview(payload);
+    setMsg("", "");
+    setSendMsg("<span class='ok'>Vista previa generada. Verificá los datos y luego confirmá.</span>", "");
+    btnConfirm.disabled = false;
   });
 
+  btnConfirm.addEventListener("click", async () => {
+    if (!STATE.last_preview_payload){
+      setSendMsg("<span class='err'>Primero generá la vista previa.</span>", "");
+      return;
+    }
+
+    // Revalidar justo antes de enviar
+    if (!isFormValid()){
+      setSendMsg("<span class='err'>Los datos ya no son válidos. Revisa y vuelve a generar la vista previa.</span>", "");
+      btnConfirm.disabled = true;
+      return;
+    }
+
+    const payload = STATE.last_preview_payload;
+
+    btnConfirm.disabled = true;
+    btnPreview.disabled = true;
+    setSendMsg("<span class='muted'>Enviando al webhook…</span>", "");
+
+    try{
+      const res = await postWebhookJson(ZOHO_FLOW_WEBHOOK_URL, payload);
+
+      // Mostrar respuesta cruda por si Flow devuelve algo útil
+      if (res.ok){
+        setSendMsg(`<span class='ok'>Enviado OK (HTTP ${res.status}).</span>`, "");
+      } else {
+        setSendMsg(`<span class='err'>Falló el envío (HTTP ${res.status}).</span>`, "");
+      }
+
+      // Debug de respuesta (texto completo)
+      debugEl.textContent =
+        `WEBHOOK POST ${res.status}\n` +
+        `URL: ${res.url}\n\n` +
+        `${res.text}`;
+
+    } catch (e){
+      setSendMsg(`<span class='err'>Error de red: ${htmlEscape(e?.message || String(e))}</span>`, "");
+    } finally {
+      // Rehabilitar preview; confirm queda habilitado solo si volvés a generar preview
+      btnPreview.disabled = !isFormValid();
+      btnConfirm.disabled = true;
+      STATE.last_preview_payload = null;
+    }
+  });
+
+  // =====================
+  // Bootstrap / Refresh polling (tu lógica)
+  // =====================
   async function loadBootstrap(courseId){
     const res = await apiGet(`${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`);
     debugEl.textContent = `BOOTSTRAP ${res.status}\n${res.text}`;
@@ -469,12 +693,19 @@
     if (res.json.ok !== true) return res.json;
 
     STATE.course_id = courseId;
+
+    // Importante: guardamos el objeto course completo
+    STATE.course = res.json.course || null;
+
+    // slots
     STATE.slots = res.json.slots || [];
 
+    renderCourse(STATE.course);
     renderSlots(STATE.slots);
-    setStatus(`OK: horarios=${(STATE.slots||[]).length}`);
 
+    setStatus(`OK: horarios=${(STATE.slots||[]).length}`);
     refreshBillingDocUI();
+
     return res.json;
   }
 
@@ -510,6 +741,9 @@
     return false;
   }
 
+  // =====================
+  // Init
+  // =====================
   (async function init(){
     const courseId = getCourseIdFromHash();
     if (!courseId){
@@ -519,8 +753,8 @@
 
     const boot = await loadBootstrap(courseId);
 
-    const shouldForce = (boot?.ok !== true);
-    // const shouldForce = true;
+    const shouldForce = (boot?.ok !== true); // solo si missing
+    // const shouldForce = true; // <-- si querés SIEMPRE forzar
 
     if (shouldForce){
       const updated = await forceRefreshAndWait(courseId);
