@@ -9,13 +9,16 @@
     .card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     label{display:block;margin:6px 0}
-    input[type="number"], input[type="text"]{padding:8px;border:1px solid #ccc;border-radius:8px}
+    input[type="number"], input[type="text"], input[type="email"]{padding:8px;border:1px solid #ccc;border-radius:8px;width:100%}
     button{padding:10px 12px;border:0;border-radius:10px;cursor:pointer}
     button:disabled{opacity:.5;cursor:not-allowed}
     .muted{color:#666}
     .err{color:#b00020;font-weight:600}
     .ok{color:#0a7a2f;font-weight:600}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
     pre{background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px}
+    .pbox{border:1px solid #eee;border-radius:10px;padding:10px;margin-top:10px}
   </style>
 </head>
 <body>
@@ -112,6 +115,11 @@
     return Number.isFinite(n) ? Math.trunc(n) : NaN;
   }
 
+  function isEmailBasic(v){
+    // validación simple (suficiente para UI; servidor revalida)
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
+  }
+
   function renderSlots(slots){
     slotsEl.innerHTML = "";
     slotsHelpEl.textContent = "";
@@ -119,11 +127,9 @@
 
     if (!Array.isArray(slots) || slots.length === 0){
       slotsEl.innerHTML = "<em>Sin horarios</em>";
-      disableForm("No hay horarios disponibles.");
-      return;
+      return disableForm("No hay horarios disponibles.");
     }
 
-    // Render radios
     slots.forEach((s, idx) => {
       const id = `slot_${idx}`;
       const div = document.createElement("div");
@@ -167,25 +173,15 @@
 
   function onSlotSelected(){
     const s = STATE.selected_slot;
-    if (!s){
-      disableForm("Seleccioná un horario.");
-      return;
-    }
+    if (!s) return disableForm("Seleccioná un horario.");
 
     const disp = normalizeInt(s.cupos_disponibles);
+    if (!Number.isFinite(disp) || disp <= 0) return disableForm("Este horario no tiene cupos disponibles.");
 
-    if (!Number.isFinite(disp) || disp <= 0){
-      // si hay 0 disponibles, no se debe poder registrar nada
-      disableForm("Este horario no tiene cupos disponibles.");
-      return;
-    }
-
-    // habilitar qty con max = cupos_disponibles (NO totales)
     qtyEl.disabled = false;
     qtyEl.min = "1";
     qtyEl.max = String(disp);
 
-    // ajustar value si quedó fuera de rango
     let v = normalizeInt(qtyEl.value);
     if (!Number.isFinite(v) || v < 1) v = 1;
     if (v > disp) v = disp;
@@ -194,24 +190,16 @@
     qtyHintEl.textContent = `Máximo permitido por disponibilidad: ${disp}.`;
     btnBuild.disabled = false;
 
-    // si ya había nombres generados, regenerar si cambió el max y el qty actual queda inválido
-    rebuildNamesIfNeeded();
-
-    // habilitar submit solo si validación OK
+    rebuildIfNeeded();
     btnSubmit.disabled = !isFormValid();
     setMsg("", "");
   }
 
-  function rebuildNamesIfNeeded(){
-    // si ya hay inputs de nombres, verificar que el qty coincida
-    const existing = namesWrap.querySelectorAll('input[data-participant="1"]').length > 0
-      ? namesWrap.querySelectorAll('input[type="text"]').length
-      : 0;
-
+  function rebuildIfNeeded(){
+    const existingBlocks = namesWrap.querySelectorAll('[data-pblock="1"]').length;
     const qty = normalizeInt(qtyEl.value);
-
-    if (existing && existing !== qty){
-      buildParticipants(); // mantiene consistencia qty <-> inputs
+    if (existingBlocks && existingBlocks !== qty){
+      buildParticipants();
     }
   }
 
@@ -219,7 +207,7 @@
     namesWrap.innerHTML = "";
 
     const s = STATE.selected_slot;
-    if (!s){ return; }
+    if (!s) return;
 
     const disp = normalizeInt(s.cupos_disponibles);
     const qty = normalizeInt(qtyEl.value);
@@ -234,8 +222,6 @@
       btnSubmit.disabled = true;
       return;
     }
-
-    // Validación clave: qty <= cupos_disponibles (NO cupos_totales)
     if (qty > disp){
       setMsg(`No podés registrar ${qty}. Cupos disponibles: ${disp}.`, "err");
       btnSubmit.disabled = true;
@@ -245,41 +231,81 @@
     const title = document.createElement("div");
     title.className = "muted";
     title.style.marginTop = "10px";
-    title.textContent = "Nombres de participantes";
+    title.textContent = "Datos de participantes (obligatorios: nombres, apellidos, cédula, email; opcional: contacto)";
     namesWrap.appendChild(title);
 
     for (let i=1;i<=qty;i++){
-      const wrap = document.createElement("div");
-      wrap.style.margin = "8px 0";
+      const box = document.createElement("div");
+      box.className = "pbox";
+      box.setAttribute("data-pblock","1");
 
-      const lab = document.createElement("label");
-      lab.textContent = `Participante ${i}`;
-      lab.htmlFor = `p_${i}`;
+      const h = document.createElement("div");
+      h.className = "muted";
+      h.style.marginBottom = "8px";
+      h.textContent = `Participante ${i}`;
+      box.appendChild(h);
 
-      const inp = document.createElement("input");
-      inp.type = "text";
-      inp.id = `p_${i}`;
-      inp.placeholder = "Nombre y apellido";
-      inp.style.width = "100%";
-      inp.setAttribute("data-participant","1");
+      const grid = document.createElement("div");
+      grid.className = "grid";
 
-      inp.addEventListener("input", () => {
-        btnSubmit.disabled = !isFormValid();
-        setMsg("", "");
-      });
+      grid.appendChild(makeField(i, "nombres", "Nombres", "text", true, "Ej: Juan Carlos"));
+      grid.appendChild(makeField(i, "apellidos", "Apellidos", "text", true, "Ej: Gómez López"));
+      grid.appendChild(makeField(i, "cedula", "Cédula", "text", true, "Ej: 1234567"));
+      grid.appendChild(makeField(i, "email", "Correo electrónico", "email", true, "Ej: correo@dominio.com"));
+      grid.appendChild(makeField(i, "contacto", "Contacto (opcional)", "text", false, "Ej: +595..."));
 
-      wrap.appendChild(lab);
-      wrap.appendChild(inp);
-      namesWrap.appendChild(wrap);
+      box.appendChild(grid);
+      namesWrap.appendChild(box);
     }
 
     btnSubmit.disabled = !isFormValid();
     setMsg("", "");
   }
 
-  function getParticipantNames(){
-    const inputs = Array.from(namesWrap.querySelectorAll('input[type="text"]'));
-    return inputs.map(i => (i.value || "").trim()).filter(Boolean);
+  function makeField(i, key, labelText, type, required, placeholder){
+    const wrap = document.createElement("div");
+
+    const lab = document.createElement("label");
+    lab.htmlFor = `p${i}_${key}`;
+    lab.textContent = labelText + (required ? " *" : "");
+    wrap.appendChild(lab);
+
+    const inp = document.createElement("input");
+    inp.type = type;
+    inp.id = `p${i}_${key}`;
+    inp.placeholder = placeholder || "";
+    inp.setAttribute("data-p","1");
+    inp.setAttribute("data-i", String(i));
+    inp.setAttribute("data-k", key);
+    if (required) inp.setAttribute("data-req","1");
+
+    inp.addEventListener("input", () => {
+      btnSubmit.disabled = !isFormValid();
+      setMsg("", "");
+    });
+
+    wrap.appendChild(inp);
+    return wrap;
+  }
+
+  function getParticipants(){
+    const blocks = Array.from(namesWrap.querySelectorAll('[data-pblock="1"]'));
+    const out = [];
+
+    for (let idx=0; idx<blocks.length; idx++){
+      const i = idx + 1;
+      const q = (k) => (namesWrap.querySelector(`#p${i}_${k}`)?.value || "").trim();
+
+      const p = {
+        nombres: q("nombres"),
+        apellidos: q("apellidos"),
+        cedula: q("cedula"),
+        email: q("email"),
+        contacto: q("contacto") || ""
+      };
+      out.push(p);
+    }
+    return out;
   }
 
   function isFormValid(){
@@ -291,16 +317,21 @@
     if (!Number.isFinite(disp) || disp < 1) return false;
     if (!Number.isFinite(qty) || qty < 1 || qty > disp) return false;
 
-    const names = getParticipantNames();
-    // exige que existan exactamente qty nombres no vacíos
-    if (names.length !== qty) return false;
+    const participants = getParticipants();
+    if (participants.length !== qty) return false;
+
+    for (const p of participants){
+      if (!p.nombres) return false;
+      if (!p.apellidos) return false;
+      if (!p.cedula) return false;
+      if (!p.email || !isEmailBasic(p.email)) return false;
+      // contacto opcional => no valida
+    }
 
     return true;
   }
 
-  btnBuild.addEventListener("click", () => {
-    buildParticipants();
-  });
+  btnBuild.addEventListener("click", () => buildParticipants());
 
   qtyEl.addEventListener("input", () => {
     const s = STATE.selected_slot;
@@ -311,21 +342,17 @@
 
     if (!Number.isFinite(qty)) qty = 1;
     if (qty < 1) qty = 1;
-
-    // clamp al máximo por disponibilidad
     if (Number.isFinite(disp) && disp > 0 && qty > disp) qty = disp;
 
     qtyEl.value = String(qty);
 
-    // no regenero automático para no molestar; se regenera con "Generar participantes"
     btnSubmit.disabled = !isFormValid();
     setMsg("", "");
   });
 
   btnSubmit.addEventListener("click", () => {
-    const ok = isFormValid();
-    if (!ok){
-      setMsg("Faltan datos o la cantidad excede los cupos disponibles del horario.", "err");
+    if (!isFormValid()){
+      setMsg("Faltan datos obligatorios o la cantidad excede los cupos disponibles del horario.", "err");
       return;
     }
 
@@ -333,8 +360,7 @@
       course_id: STATE.course_id,
       slot_id: STATE.selected_slot.slot_id,
       cantidad_personas: normalizeInt(qtyEl.value),
-      participantes: getParticipantNames(),
-      // opcional si lo querés mostrar/guardar en logs:
+      participantes: getParticipants(),
       slot_snapshot: {
         fecha: STATE.selected_slot.fecha,
         hora: STATE.selected_slot.hora,
