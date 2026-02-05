@@ -1,28 +1,30 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Reservas | Todo Costura</title>
-  <meta name="description" content="Seleccioná un horario y completá los datos para confirmar tu reserva.">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Seleccioná un turno y completá los datos para confirmar tu inscripción." />
+  <meta name="theme-color" content="#ffffff" />
+
   <style>
     :root{
       --brand:#a52b64;
-      --brand2:#c94b86;
 
-      --bg:#f6f7fb;
-      --card:#ffffff;
+      --bg:#ffffff;
+      --surface:#ffffff;
       --txt:#111827;
       --muted:#6b7280;
-      --muted2:#9aa3b2;
+      --line:#e5e7eb;
 
-      --line:#e6e8ef;
-      --soft:#f2f4f9;
+      --soft:#f6f7fb;
+      --soft2:#f3f4f6;
 
-      --shadow: 0 18px 50px rgba(17,24,39,.10);
-      --shadow2: 0 10px 24px rgba(17,24,39,.08);
-      --r: 18px;
+      --r:18px;
+      --r2:22px;
+
+      --shadow: 0 18px 55px rgba(17,24,39,.10);
+      --shadow2: 0 10px 25px rgba(17,24,39,.08);
 
       --focus: 0 0 0 4px rgba(165,43,100,.14);
     }
@@ -32,145 +34,170 @@
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-      color:var(--txt);
-      background:
-        radial-gradient(1000px 500px at 10% -10%, rgba(165,43,100,.10), transparent 55%),
-        radial-gradient(900px 450px at 95% 0%, rgba(201,75,134,.09), transparent 55%),
-        linear-gradient(180deg, #fbfbfd 0%, var(--bg) 45%, #f7f8fc 100%);
+      background: linear-gradient(180deg, #ffffff 0%, #ffffff 60%, #fbfbfd 100%);
+      color: var(--txt);
     }
 
-    a{color:inherit}
-    .wrap{max-width:1160px;margin:0 auto;padding:28px 18px 44px}
-    .shell{
-      border-radius:24px;
-      background: rgba(255,255,255,.55);
-      border: 1px solid rgba(230,232,239,.9);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      overflow:hidden;
-    }
+    .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 40px}
 
     /* Header */
-    .header{
-      display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
-      padding:22px 22px;
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.55));
-      border-bottom:1px solid var(--line);
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:22px;
     }
-    .brandline{
-      display:flex;align-items:center;gap:12px;min-width:260px;
+    .brand{
+      display:flex;align-items:center;gap:12px;min-width:240px;
     }
-    .mark{
-      width:40px;height:40px;border-radius:14px;
-      background: linear-gradient(135deg, rgba(165,43,100,.18), rgba(201,75,134,.14));
-      border:1px solid rgba(165,43,100,.22);
-      box-shadow: var(--shadow2);
-      position:relative;
-      flex:0 0 auto;
+    .logoBox{
+      width:44px;height:44px;border-radius:14px;
+      border:1px solid rgba(165,43,100,.18);
+      background: rgba(165,43,100,.06);
+      display:grid;place-items:center;
+      overflow:hidden;
     }
-    .mark:after{
-      content:"";
-      position:absolute;inset:11px;
-      border-radius:10px;
-      background: linear-gradient(135deg, var(--brand), var(--brand2));
-      opacity:.92;
+    .logoBox img{width:100%;height:100%;object-fit:cover;display:block}
+    .brandText{
+      display:flex;flex-direction:column;line-height:1.2;
     }
-    .title h1{
-      margin:0;
-      font-size:18px;
+    .brandText .name{
+      font-weight:900;
       letter-spacing:.2px;
-      font-weight:800;
-      line-height:1.15;
+      font-size:14px;
     }
-    .title p{
-      margin:6px 0 0 0;
+    .brandText .tag{
       color:var(--muted);
-      font-size:13.5px;
-      line-height:1.35;
+      font-size:12.5px;
+      margin-top:4px;
     }
 
-    .status{
-      display:flex;align-items:center;gap:10px;
-      padding:10px 12px;border-radius:999px;
-      background: rgba(255,255,255,.9);
+    .statusPill{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:9px 12px;border-radius:999px;
       border:1px solid var(--line);
-      box-shadow: 0 8px 18px rgba(17,24,39,.06);
-      font-size:12.5px;color:var(--muted);
+      background:#fff;
+      box-shadow: 0 10px 18px rgba(17,24,39,.06);
+      color:var(--muted);
+      font-size:12.5px;
       white-space:nowrap;
     }
-    .dot{
-      width:9px;height:9px;border-radius:99px;
-      background: rgba(165,43,100,.35);
-      box-shadow: 0 0 0 4px rgba(165,43,100,.10);
-    }
+    .dot{width:9px;height:9px;border-radius:99px;background:rgba(165,43,100,.40);box-shadow: 0 0 0 4px rgba(165,43,100,.10)}
 
     /* Layout */
-    .content{
-      padding:18px 18px 22px;
-    }
     .grid{
       display:grid;
       grid-template-columns: 1.05fr .95fr;
-      gap:14px;
+      gap:26px;
+      align-items:start;
     }
-    @media (max-width:980px){ .grid{grid-template-columns:1fr} .header{padding:18px} .content{padding:14px} }
+    @media (max-width:980px){
+      .grid{grid-template-columns:1fr;gap:18px}
+    }
 
-    .card{
-      background: var(--card);
+    /* Left: hero */
+    .hero{
+      padding:12px 0;
+    }
+    .hero h1{
+      margin:8px 0 10px 0;
+      font-size:44px;
+      line-height:1.05;
+      letter-spacing:-.6px;
+      font-weight:950;
+    }
+    .hero h1 .accent{color:var(--brand)}
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      font-size:15.5px;
+      line-height:1.6;
+      max-width:54ch;
+    }
+    .heroNote{
+      margin-top:18px;
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+      color:var(--muted);
+      font-size:12.5px;
+    }
+    .chip{
+      display:inline-flex;align-items:center;
+      padding:7px 10px;border-radius:999px;
       border:1px solid var(--line);
-      border-radius: var(--r);
-      box-shadow: var(--shadow2);
-      padding:16px;
+      background:#fff;
+      box-shadow: 0 10px 18px rgba(17,24,39,.05);
+      gap:8px;
+    }
+    .chip .miniDot{
+      width:7px;height:7px;border-radius:99px;background:rgba(165,43,100,.45);
+      box-shadow: 0 0 0 4px rgba(165,43,100,.10);
+    }
+
+    /* Right: card */
+    .card{
+      background: var(--surface);
+      border:1px solid var(--line);
+      border-radius: var(--r2);
+      box-shadow: var(--shadow);
       overflow:hidden;
     }
-
     .cardHead{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
-      margin-bottom:10px;
+      padding:18px 18px 14px 18px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #fbfbfd);
     }
-    .cardHead h2{
+    .cardHead .title{
       margin:0;
-      font-size:13px;
+      font-size:14px;
       letter-spacing:.14em;
       text-transform:uppercase;
-      color: #3b4253;
+      color:#374151;
+      font-weight:950;
+    }
+    .cardHead .sub{
+      margin:8px 0 0 0;
+      color:var(--muted);
+      font-size:13.5px;
+      line-height:1.45;
+    }
+
+    .cardBody{padding:16px 18px 18px}
+
+    .section{
+      margin-top:14px;
+    }
+    .section:first-child{margin-top:0}
+    .section h3{
+      margin:0 0 10px 0;
+      font-size:13px;
+      color:#374151;
       font-weight:900;
     }
-    .hint{
-      color:var(--muted2);
-      font-size:12px;
-      line-height:1.3;
-      text-align:right;
-      max-width:260px;
-    }
-
-    .divider{height:1px;background:var(--line);margin:14px 0}
 
     .muted{color:var(--muted)}
-    .tiny{font-size:12px}
+    .tiny{font-size:12.5px}
 
     /* Fields */
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
     .field{flex:1 1 220px;min-width:210px}
     label{
       display:block;
       margin:10px 0 6px 0;
       font-size:12.5px;
-      color: #4b5568;
-      font-weight:650;
+      color:#4b5563;
+      font-weight:700;
     }
-
     input[type="text"], input[type="email"], input[type="number"], select, textarea{
       width:100%;
       padding:11px 12px;
       border:1px solid var(--line);
       border-radius:14px;
       outline:none;
-      background: linear-gradient(180deg, #ffffff, #fcfcff);
+      background:#fff;
       color:var(--txt);
       font-size:14px;
-      transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
+      transition: box-shadow .15s ease, border-color .15s ease;
     }
     textarea{min-height:86px;resize:vertical}
     input:focus, select:focus, textarea:focus{
@@ -178,75 +205,38 @@
       box-shadow: var(--focus);
     }
     input:disabled, select:disabled, textarea:disabled{
-      background: #f7f8fd;
-      color: #9aa3b2;
+      background: #f8fafc;
+      color:#9ca3af;
       cursor:not-allowed;
     }
 
-    /* Slots */
-    .slots{
-      display:flex;flex-direction:column;gap:10px;
-      margin-top:8px;
-    }
+    /* Slots list */
+    .slots{display:flex;flex-direction:column;gap:10px}
     .slot{
-      display:flex;align-items:flex-start;gap:10px;
+      display:flex;gap:10px;align-items:flex-start;
       padding:12px 12px;
       border:1px solid var(--line);
       border-radius:16px;
-      background: linear-gradient(180deg, #ffffff, #fbfbff);
-      box-shadow: 0 10px 20px rgba(17,24,39,.05);
-      transition: transform .08s ease, box-shadow .15s ease, border-color .15s ease;
+      background:#fff;
+      transition: border-color .15s ease, box-shadow .15s ease, transform .08s ease;
     }
     .slot:hover{
-      transform: translateY(-1px);
-      box-shadow: 0 14px 26px rgba(17,24,39,.07);
       border-color: rgba(165,43,100,.22);
+      box-shadow: var(--shadow2);
+      transform: translateY(-1px);
     }
     .slot input{margin-top:2px}
-    .slot label{margin:0;color:var(--txt);font-weight:800;font-size:13.5px}
-    .meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35}
-    .pill{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:4px 10px;border-radius:999px;
-      border:1px solid var(--line);
-      color: #667085;
-      background: rgba(255,255,255,.9);
-      font-size:12px;
-      margin-left:6px;
-    }
+    .slot label{margin:0;color:var(--txt);font-weight:900;font-size:13.5px}
+    .slot .meta{margin-top:4px;color:var(--muted);font-size:12.5px;line-height:1.35}
     .kpi{
-      display:inline-flex;align-items:center;gap:6px;
+      display:inline-flex;align-items:center;
       padding:4px 10px;border-radius:999px;
-      border:1px solid rgba(165,43,100,.22);
+      border:1px solid rgba(165,43,100,.20);
       background: rgba(165,43,100,.06);
-      color: #7a1f4a;
-      font-weight:800;
+      color:#7a1f4a;
+      font-weight:900;
       font-size:12px;
       margin-left:6px;
-    }
-
-    /* Buttons */
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    button{
-      border:0;border-radius:14px;cursor:pointer;
-      padding:11px 14px;
-      font-weight:850;font-size:13.5px;
-      transition: transform .08s ease, box-shadow .15s ease, opacity .15s ease;
-    }
-    button:active{transform: translateY(1px)}
-    button:disabled{opacity:.55;cursor:not-allowed;transform:none}
-    .primary{
-      background: linear-gradient(135deg,var(--brand),var(--brand2));
-      color:#fff;
-      box-shadow: 0 14px 30px rgba(165,43,100,.22);
-    }
-    .primary:hover{box-shadow: 0 18px 38px rgba(165,43,100,.26)}
-    .ghost{
-      background:#fff;
-      border:1px solid var(--line);
-      color:var(--txt);
-      font-weight:800;
-      box-shadow: 0 10px 22px rgba(17,24,39,.06);
     }
 
     /* Participant blocks */
@@ -254,9 +244,8 @@
       border:1px solid var(--line);
       border-radius:16px;
       padding:12px;
+      background: #fff;
       margin-top:10px;
-      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(251,251,255,.92));
-      box-shadow: 0 10px 22px rgba(17,24,39,.05);
     }
     .pboxTitle{
       display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -264,30 +253,46 @@
     }
     .pboxTitle .left{
       display:flex;align-items:center;gap:8px;
-      font-weight:900;
-      font-size:13px;
-      color:#3b4253;
+      font-weight:900;color:#374151;font-size:13px;
     }
-    .chip{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:5px 10px;border-radius:999px;
-      background: rgba(17,24,39,.04);
-      border:1px solid var(--line);
-      color:#596175;
+    .idx{
+      width:26px;height:26px;border-radius:10px;
+      display:grid;place-items:center;
+      background: rgba(165,43,100,.08);
+      border:1px solid rgba(165,43,100,.18);
+      color:#7a1f4a;
+      font-weight:950;
       font-size:12px;
-      font-weight:800;
     }
-    .chip b{color:#111827}
 
-    /* Messages */
+    /* Buttons */
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    button{
+      border:0;border-radius:14px;cursor:pointer;
+      padding:11px 14px;font-weight:950;font-size:13.5px;
+      transition: transform .08s ease, box-shadow .15s ease, opacity .15s ease;
+    }
+    button:active{transform: translateY(1px)}
+    button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+    .primary{
+      background: var(--brand);
+      color:#fff;
+      box-shadow: 0 16px 35px rgba(165,43,100,.20);
+    }
+    .primary:hover{box-shadow: 0 18px 40px rgba(165,43,100,.24)}
+    .ghost{
+      background:#fff;border:1px solid var(--line);color:var(--txt);
+      box-shadow: 0 12px 22px rgba(17,24,39,.06);
+    }
+
+    /* Messages / preview */
     .msg{margin-top:10px;font-size:13px;line-height:1.35}
-    .err{color:#b00020;font-weight:750}
-    .ok{color:#0a7a2f;font-weight:750}
+    .err{color:#b00020;font-weight:800}
+    .ok{color:#0a7a2f;font-weight:800}
 
-    /* Preview / Debug */
     pre{
       margin:12px 0 0 0;
-      background: linear-gradient(180deg,#ffffff,#fbfbff);
+      background:#fff;
       border:1px solid var(--line);
       border-radius:16px;
       padding:12px;
@@ -295,92 +300,182 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size:12px;
       color:#111827;
-      box-shadow: 0 10px 22px rgba(17,24,39,.05);
     }
 
-    /* Footer note */
-    .foot{
-      margin-top:12px;
-      padding:12px 14px;
-      border-radius:16px;
+    /* Loading overlay */
+    .loading{
+      position:fixed;inset:0;
+      background: rgba(255,255,255,.92);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      z-index:9999;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .loadCard{
+      width:min(640px, 92vw);
+      background:#fff;
       border:1px solid var(--line);
-      background: rgba(255,255,255,.72);
-      color:var(--muted);
-      font-size:12.5px;
-      line-height:1.35;
+      border-radius:24px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .loadTop{
+      padding:18px 18px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      background: linear-gradient(180deg, #ffffff, #fbfbfd);
+    }
+    .loadTop .left{display:flex;align-items:center;gap:12px}
+    .spinner{
+      width:36px;height:36px;border-radius:99px;
+      border:3px solid rgba(165,43,100,.15);
+      border-top-color: rgba(165,43,100,.85);
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loadTitle{
+      display:flex;flex-direction:column;gap:4px;
+    }
+    .loadTitle strong{font-weight:950;font-size:14px;color:#111827}
+    .loadTitle span{font-size:12.5px;color:var(--muted)}
+    .progressWrap{padding:16px 18px 18px}
+    .bar{
+      height:10px;border-radius:999px;background: var(--soft2);
+      overflow:hidden;border:1px solid var(--line);
+    }
+    .bar > div{
+      height:100%;
+      width:30%;
+      background: linear-gradient(90deg, rgba(165,43,100,.20), rgba(165,43,100,.75));
+      border-radius:999px;
+      transition: width .25s ease;
+    }
+    .skel{
+      margin-top:14px;
+      display:grid;gap:10px;
+    }
+    .skel .line{
+      height:12px;border-radius:999px;
+      background: linear-gradient(90deg, #f3f4f6 0%, #eceef3 45%, #f3f4f6 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s ease-in-out infinite;
+      border:1px solid #eef0f5;
+    }
+    .skel .line.w60{width:60%}
+    .skel .line.w80{width:80%}
+    .skel .line.w95{width:95%}
+    @keyframes shimmer{
+      0%{background-position: 200% 0}
+      100%{background-position: -200% 0}
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="shell">
-      <div class="header">
-        <div class="brandline">
-          <div class="mark" aria-hidden="true"></div>
-          <div class="title">
-            <h1>Reservas de cursos</h1>
-            <p>Elegí un turno disponible y completá la información para confirmar la inscripción.</p>
+  <!-- Pantalla de carga -->
+  <div class="loading" id="loading">
+    <div class="loadCard" role="status" aria-live="polite">
+      <div class="loadTop">
+        <div class="left">
+          <div class="spinner" aria-hidden="true"></div>
+          <div class="loadTitle">
+            <strong id="loadTitle">Cargando información del curso…</strong>
+            <span id="loadSub">Conectando con el sistema.</span>
           </div>
         </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="logoBox" style="width:40px;height:40px;border-radius:14px">
+            <!-- Reemplazá src por tu logo real -->
+            <img id="logoImg2" alt="Todo Costura" src="" style="display:none">
+            <div id="logoFallback2" style="font-weight:950;color:var(--brand);font-size:12px">TC</div>
+          </div>
+        </div>
+      </div>
+      <div class="progressWrap">
+        <div class="bar" aria-hidden="true"><div id="loadBar"></div></div>
+        <div class="skel" aria-hidden="true">
+          <div class="line w80"></div>
+          <div class="line w95"></div>
+          <div class="line w60"></div>
+          <div class="line w95" style="height:40px;border-radius:18px"></div>
+          <div class="line w80" style="height:40px;border-radius:18px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        <div class="status" id="status">
-          <span class="dot" aria-hidden="true"></span>
-          <span>Inicializando…</span>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logoBox">
+          <!-- Reemplazá src por tu logo real (PNG/SVG) -->
+          <img id="logoImg" alt="Todo Costura" src="" style="display:none">
+          <div id="logoFallback" style="font-weight:950;color:var(--brand);font-size:12px">TC</div>
+        </div>
+        <div class="brandText">
+          <div class="name">Todo Costura</div>
+          <div class="tag">Agenda · Inscripción</div>
         </div>
       </div>
 
-      <div class="content">
-        <div class="grid">
-          <div class="card">
-            <div class="cardHead">
-              <h2>Detalle del curso</h2>
-              <div class="hint" id="courseHint">Información en tiempo real desde Zoho Creator.</div>
-            </div>
+      <div class="statusPill" id="status">
+        <span class="dot" aria-hidden="true"></span>
+        <span>Inicializando…</span>
+      </div>
+    </div>
 
+    <div class="grid">
+      <div class="hero">
+        <h1>Reservá tu <span class="accent">turno</span> en segundos.</h1>
+        <p>Seleccioná un horario disponible y completá los datos de participantes, facturación y comprobante de pago. El sistema valida cupos en tiempo real para evitar sobre-reservas.</p>
+
+        <div class="heroNote">
+          <span class="chip"><span class="miniDot"></span> Validación de cupos</span>
+          <span class="chip"><span class="miniDot"></span> Datos de facturación</span>
+          <span class="chip"><span class="miniDot"></span> Adjuntar comprobante</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead">
+          <div class="title">Formulario de inscripción</div>
+          <div class="sub">Primero seleccioná un turno. Luego completá participantes y datos de facturación.</div>
+        </div>
+
+        <div class="cardBody">
+          <div class="section">
+            <h3>Curso</h3>
             <div id="courseBox" class="muted">Cargando…</div>
-
-            <div class="divider"></div>
-
-            <div class="cardHead">
-              <h2>Turnos disponibles</h2>
-              <div class="hint" id="slotsHelp">Seleccioná un turno para habilitar la inscripción.</div>
-            </div>
-
-            <div id="slots" class="slots"></div>
-
-            <div class="foot">
-              Si un turno se queda sin cupos mientras completás el formulario, la validación lo va a bloquear para evitar sobre-reservas.
-            </div>
           </div>
 
-          <div class="card">
-            <div class="cardHead">
-              <h2>Inscripción</h2>
-              <div class="hint">Campos obligatorios marcados con *</div>
-            </div>
+          <div class="section">
+            <h3>Turnos disponibles</h3>
+            <div id="slots" class="slots"></div>
+            <div id="slotsHelp" class="muted tiny" style="margin-top:8px"></div>
+          </div>
 
+          <div class="section">
+            <h3>Participantes</h3>
             <div class="row">
               <div class="field">
                 <label for="qty">Cantidad de participantes</label>
                 <input id="qty" type="number" min="1" step="1" value="1" disabled>
                 <div id="qtyHint" class="muted tiny"></div>
               </div>
-              <div style="min-width:180px">
+              <div style="min-width:190px;flex:0 0 auto">
                 <label>&nbsp;</label>
-                <button id="btnBuild" class="ghost" disabled>Generar formulario</button>
+                <button id="btnBuild" class="ghost" disabled>Generar participantes</button>
               </div>
             </div>
 
             <div id="namesWrap"></div>
+          </div>
 
-            <div class="divider"></div>
-
-            <div class="cardHead">
-              <h2>Datos de facturación</h2>
-              <div class="hint">Usados para emitir comprobantes.</div>
-            </div>
-
+          <div class="section">
+            <h3>Facturación</h3>
             <div class="row">
               <div class="field">
                 <label for="billName">Razón social / Nombre *</label>
@@ -423,35 +518,27 @@
                 <input id="billCity" type="text" placeholder="Ej: Asunción">
               </div>
             </div>
+          </div>
 
-            <div class="divider"></div>
-
-            <div class="cardHead">
-              <h2>Comprobante de pago</h2>
-              <div class="hint">JPG/PNG/PDF · máx. 5 MB</div>
-            </div>
-
+          <div class="section">
+            <h3>Comprobante de pago</h3>
             <div class="row">
               <div class="field">
-                <label for="payFile">Adjuntar comprobante *</label>
+                <label for="payFile">Adjuntar comprobante (JPG/PNG/PDF) *</label>
                 <input id="payFile" type="file" accept="image/*,application/pdf">
               </div>
               <div class="field">
                 <label>Estado</label>
-                <div id="payFileStatus" class="muted tiny" style="padding:11px 12px;border:1px dashed var(--line);border-radius:14px;background:rgba(17,24,39,.02)">Sin archivo</div>
+                <div id="payFileStatus" class="muted tiny" style="padding:11px 12px;border:1px dashed var(--line);border-radius:14px;background:#fff">Sin archivo</div>
               </div>
             </div>
+          </div>
 
-            <div class="divider"></div>
-
-            <div class="cardHead">
-              <h2>Confirmación</h2>
-              <div class="hint">Generá vista previa antes de enviar.</div>
-            </div>
-
+          <div class="section">
+            <h3>Confirmación</h3>
             <div class="btns">
-              <button id="btnPreview" class="ghost" disabled>Generar vista previa</button>
-              <button id="btnConfirm" class="primary" disabled>Confirmar inscripción</button>
+              <button id="btnPreview" class="ghost" disabled>Vista previa</button>
+              <button id="btnConfirm" class="primary" disabled>Confirmar y enviar</button>
             </div>
 
             <div id="formMsg" class="msg"></div>
@@ -476,6 +563,9 @@
   const POLL_MAX_TRIES = 120;
 
   const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
+
+  // Logo (opcional): poné una URL absoluta o relativa (ej: "./logo-todocostura.png")
+  const LOGO_URL = ""; // <- completá si querés usar imagen
 
   // =====================
   // DOM
@@ -513,6 +603,18 @@
   const btnPreview = document.getElementById("btnPreview");
   const btnConfirm = document.getElementById("btnConfirm");
 
+  // Loading
+  const loadingEl = document.getElementById("loading");
+  const loadTitleEl = document.getElementById("loadTitle");
+  const loadSubEl = document.getElementById("loadSub");
+  const loadBarEl = document.getElementById("loadBar");
+
+  // Logos
+  const logoImg = document.getElementById("logoImg");
+  const logoFallback = document.getElementById("logoFallback");
+  const logoImg2 = document.getElementById("logoImg2");
+  const logoFallback2 = document.getElementById("logoFallback2");
+
   // =====================
   // State
   // =====================
@@ -528,9 +630,14 @@
   // =====================
   // Helpers
   // =====================
+  function htmlEscape(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
   function setStatus(text){
-    const dot = `<span class="dot" aria-hidden="true"></span>`;
-    statusEl.innerHTML = `${dot}<span>${htmlEscape(text)}</span>`;
+    statusEl.innerHTML = `<span class="dot" aria-hidden="true"></span><span>${htmlEscape(text)}</span>`;
   }
 
   function setMsg(html, cls){
@@ -541,6 +648,20 @@
   function setSendMsg(html, cls){
     sendMsg.className = "msg " + (cls || "");
     sendMsg.innerHTML = html || "";
+  }
+
+  function normalizeInt(x){
+    const n = Number(x);
+    return Number.isFinite(n) ? Math.trunc(n) : NaN;
+  }
+
+  function isEmailBasic(v){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
+  }
+
+  function safeCourse(course){
+    if (!course || typeof course !== "object") return null;
+    return JSON.parse(JSON.stringify(course));
   }
 
   function getCourseIdFromHash(){
@@ -578,31 +699,49 @@
     return {ok:r.ok, status:r.status, text:t, json:j};
   }
 
-  function normalizeInt(x){
-    const n = Number(x);
-    return Number.isFinite(n) ? Math.trunc(n) : NaN;
-  }
-
-  function isEmailBasic(v){
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
-  }
-
-  function htmlEscape(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-  }
-
-  function safeCourse(course){
-    if (!course || typeof course !== "object") return null;
-    return JSON.parse(JSON.stringify(course));
-  }
-
   function resetPreview(){
     STATE.last_preview_payload = null;
     previewJsonEl.style.display = "none";
     previewJsonEl.textContent = "";
     btnConfirm.disabled = true;
+  }
+
+  // =====================
+  // Loading UI
+  // =====================
+  function showLoading(title, sub, progress01){
+    loadTitleEl.textContent = title || "Cargando…";
+    loadSubEl.textContent = sub || "";
+    const p = Math.max(0, Math.min(1, Number(progress01 ?? 0.1)));
+    loadBarEl.style.width = Math.round(p * 100) + "%";
+    loadingEl.style.display = "flex";
+  }
+
+  function hideLoading(){
+    loadingEl.style.display = "none";
+  }
+
+  // =====================
+  // Logo (optional)
+  // =====================
+  function setupLogo(){
+    if (!LOGO_URL) return;
+
+    [logoImg, logoImg2].forEach((img) => {
+      img.src = LOGO_URL;
+      img.style.display = "block";
+    });
+    [logoFallback, logoFallback2].forEach((el) => el.style.display = "none");
+
+    // Si falla la carga, vuelve al fallback
+    logoImg.onerror = () => {
+      logoImg.style.display = "none";
+      logoFallback.style.display = "block";
+    };
+    logoImg2.onerror = () => {
+      logoImg2.style.display = "none";
+      logoFallback2.style.display = "block";
+    };
   }
 
   // =====================
@@ -617,18 +756,13 @@
     const name = htmlEscape(course.name || course.nombre_curso || "Curso");
     const category = htmlEscape(course.category || course.categoria || "");
     const price = course.price ?? course.precio ?? null;
-    const type = htmlEscape(course.type || "");
     const platform = htmlEscape(course.platform || course.plataforma || "");
     const learning = htmlEscape(course.learning_type || course.tipo_aprendizaje || "");
-    const audience = htmlEscape(course.audience || course.alumnado || "");
-    const mode = htmlEscape(course.participants_mode || course.participantes || "");
-    const tutor = htmlEscape(course.tutor || "");
 
     courseBoxEl.innerHTML =
-      `<div style="font-weight:900;font-size:16px;margin-bottom:6px">${name}</div>` +
-      `<div class="muted tiny">Categoría: ${category || "-"} · Tipo: ${type || "-"} · Precio: ${price ?? "-"}</div>` +
-      `<div class="muted tiny">Modalidad: ${learning || "-"} · Plataforma: ${platform || "-"}</div>` +
-      `<div class="muted tiny">Participantes: ${mode || "-"}${tutor ? " · Tutor: "+tutor : ""}</div>`;
+      `<div style="font-weight:950;font-size:16px;margin-bottom:6px">${name}</div>` +
+      `<div class="muted tiny">Categoría: ${category || "-"} · Modalidad: ${learning || "-"} · Plataforma: ${platform || "-"}</div>` +
+      `<div class="muted tiny">Precio: ${price ?? "-"}</div>`;
   }
 
   // =====================
@@ -684,9 +818,7 @@
       const disp = normalizeInt(s.cupos_disponibles);
       const meta = document.createElement("div");
       meta.className = "meta";
-      meta.innerHTML =
-        `Cupos disponibles: <span class="kpi">${htmlEscape(disp)}</span>` +
-        `<span class="pill">ID: ${htmlEscape(s.slot_id)}</span>`;
+      meta.innerHTML = `Cupos: <span class="kpi">${htmlEscape(disp)}</span>`;
       right.appendChild(meta);
 
       box.appendChild(input);
@@ -714,7 +846,7 @@
     if (v > disp) v = disp;
     qtyEl.value = String(v);
 
-    qtyHintEl.textContent = `Máximo permitido por disponibilidad: ${disp}.`;
+    qtyHintEl.textContent = `Máximo permitido: ${disp}.`;
     btnBuild.disabled = false;
 
     const existingBlocks = namesWrap.querySelectorAll('[data-pblock="1"]').length;
@@ -785,7 +917,7 @@
     const note = document.createElement("div");
     note.className = "muted tiny";
     note.style.marginTop = "10px";
-    note.textContent = "Completar datos de participantes (campos obligatorios: nombres, apellidos, cédula, email).";
+    note.textContent = "Completá los datos de cada participante (campos obligatorios: nombres, apellidos, cédula, email).";
     namesWrap.appendChild(note);
 
     for (let i=1;i<=qty;i++){
@@ -795,7 +927,7 @@
 
       const head = document.createElement("div");
       head.className = "pboxTitle";
-      head.innerHTML = `<div class="left"><span class="chip"><b>${i}</b></span> Participante</div>`;
+      head.innerHTML = `<div class="left"><span class="idx">${i}</span> Participante</div>`;
       box.appendChild(head);
 
       const row = document.createElement("div");
@@ -804,8 +936,8 @@
       row.appendChild(makeField(i, "nombres", "Nombres", "text", true, "Ej: Juan Carlos"));
       row.appendChild(makeField(i, "apellidos", "Apellidos", "text", true, "Ej: Gómez López"));
       row.appendChild(makeField(i, "cedula", "Cédula", "text", true, "Ej: 1234567"));
-      row.appendChild(makeField(i, "email", "Correo electrónico", "email", true, "Ej: correo@dominio.com"));
-      row.appendChild(makeField(i, "contacto", "Teléfono de contacto", "text", false, "Ej: +595…"));
+      row.appendChild(makeField(i, "email", "Correo", "email", true, "Ej: correo@dominio.com"));
+      row.appendChild(makeField(i, "contacto", "Contacto", "text", false, "Ej: +595…"));
 
       box.appendChild(row);
       namesWrap.appendChild(box);
@@ -1034,7 +1166,7 @@
 
   btnPreview.addEventListener("click", () => {
     if (!isFormValid()){
-      setMsg("<span class='err'>Faltan datos obligatorios o la cantidad excede cupos disponibles o falta el comprobante.</span>");
+      setMsg("<span class='err'>Faltan datos obligatorios, la cantidad excede cupos o falta el comprobante.</span>");
       btnConfirm.disabled = true;
       return;
     }
@@ -1042,7 +1174,7 @@
     STATE.last_preview_payload = payload;
     renderPreview(payload);
     setMsg("");
-    setSendMsg("<span class='ok'>Vista previa generada. Revisá el detalle y confirmá el envío.</span>");
+    setSendMsg("<span class='ok'>Vista previa generada. Revisá y confirmá el envío.</span>");
     btnConfirm.disabled = false;
   });
 
@@ -1092,9 +1224,13 @@
   // Bootstrap / Refresh polling
   // =====================
   async function loadBootstrap(courseId){
+    showLoading("Cargando información del curso…", "Recuperando datos desde Zoho Creator.", 0.25);
+
     const res = await apiGet(`${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`);
     if (!res.ok || !res.json) return null;
     if (res.json.ok !== true) return res.json;
+
+    showLoading("Preparando turnos…", "Aplicando validaciones y disponibilidad.", 0.60);
 
     STATE.course_id = courseId;
     STATE.course = res.json.course || null;
@@ -1103,10 +1239,14 @@
     renderCourse(STATE.course);
     renderSlots(STATE.slots);
 
-    setStatus(`Listo · ${((STATE.slots||[]).length)} turnos`);
+    setStatus(`Listo · ${(STATE.slots||[]).length} turnos`);
     refreshBillingDocUI();
 
     btnPreview.disabled = !isFormValid();
+
+    showLoading("Listo", "Podés continuar con la inscripción.", 1.0);
+    setTimeout(hideLoading, 180);
+
     return res.json;
   }
 
@@ -1115,18 +1255,24 @@
   }
 
   async function forceRefreshAndWait(courseId){
+    showLoading("Actualizando turnos…", "Sincronizando disponibilidad. Esto puede tardar unos segundos.", 0.35);
+
     const before = await getDebugKV(courseId);
     const beforeTs = before?.json?.last_ingest_for_course?.ts || null;
 
-    setStatus("Actualizando turnos…");
     const r = await apiPost(`${API_BASE}/api/refresh`, { course_id: courseId });
-
     if (!r.ok) {
       setStatus(`Refresh falló (HTTP ${r.status})`);
+      showLoading("No se pudo actualizar", "Intentá recargar la página.", 0.2);
+      setTimeout(hideLoading, 600);
       return false;
     }
 
     for (let i=1;i<=POLL_MAX_TRIES;i++){
+      // progreso "suave" mientras espera
+      const p = Math.min(0.90, 0.40 + (i / POLL_MAX_TRIES) * 0.50);
+      loadBarEl.style.width = Math.round(p*100) + "%";
+
       await new Promise(res=>setTimeout(res, POLL_DELAY_MS));
       const d = await getDebugKV(courseId);
       const nowTs = d?.json?.last_ingest_for_course?.ts || null;
@@ -1136,6 +1282,8 @@
     }
 
     setStatus("No se detectó actualización a tiempo.");
+    showLoading("Demora en sincronización", "Podés recargar para reintentar.", 0.75);
+    setTimeout(hideLoading, 900);
     return false;
   }
 
@@ -1143,20 +1291,27 @@
   // Init
   // =====================
   (async function init(){
+    setupLogo();
+
     const courseId = getCourseIdFromHash();
     if (!courseId){
+      hideLoading();
       setStatus("Falta #ID=…");
       setMsg("<span class='err'>Abrí esta página con un hash válido, por ejemplo: <b>#ID=4537469...</b></span>");
+      slotsEl.innerHTML = "";
       return;
     }
 
     setStatus("Cargando…");
+    showLoading("Cargando información del curso…", "Conectando con el sistema.", 0.10);
+
     const boot = await loadBootstrap(courseId);
 
     const shouldForce = (boot?.ok !== true);
     if (shouldForce){
       const updated = await forceRefreshAndWait(courseId);
       if (updated) await loadBootstrap(courseId);
+      else hideLoading();
     }
   })();
 </script>
