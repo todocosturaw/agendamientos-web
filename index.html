@@ -20,7 +20,6 @@
     @media (max-width:720px){ .grid{grid-template-columns:1fr} }
     pre{background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px}
     .pbox{border:1px solid #eee;border-radius:10px;padding:10px;margin-top:10px}
-    .hidden{display:none !important}
   </style>
 </head>
 <body>
@@ -54,44 +53,48 @@
     <div class="card" style="margin-top:14px">
       <h2>Datos de facturación</h2>
 
-      <div class="row">
+      <div class="grid">
         <div>
-          <label for="needInvoice">¿Requiere factura?</label>
-          <select id="needInvoice">
-            <option value="no" selected>No</option>
-            <option value="si">Sí</option>
+          <label for="billName">Razón social / Nombre *</label>
+          <input id="billName" type="text" placeholder="Ej: Juan Pérez / Todo Costura S.A.">
+        </div>
+
+        <div>
+          <label for="billDocType">Tipo de documento *</label>
+          <select id="billDocType">
+            <option value="personal" selected>Documento personal (Cédula)</option>
+            <option value="fiscal">Documento fiscal (RUC)</option>
           </select>
+        </div>
+
+        <div>
+          <label id="billDocLabel" for="billDocNumber">Documento personal (Cédula) *</label>
+          <input id="billDocNumber" type="text" placeholder="Ej: 1234567">
+        </div>
+
+        <div>
+          <label for="billEmail">Correo de facturación *</label>
+          <input id="billEmail" type="email" placeholder="facturacion@dominio.com">
+        </div>
+
+        <div>
+          <label for="billPhone">Teléfono (opcional)</label>
+          <input id="billPhone" type="text" placeholder="+595...">
+        </div>
+
+        <div>
+          <label for="billAddress">Dirección *</label>
+          <input id="billAddress" type="text" placeholder="Calle, número, barrio">
+        </div>
+
+        <div>
+          <label for="billCity">Ciudad *</label>
+          <input id="billCity" type="text" placeholder="Ej: Asunción">
         </div>
       </div>
 
-      <div id="billingWrap" class="hidden" style="margin-top:10px">
-        <div class="grid">
-          <div>
-            <label for="billName">Razón social / Nombre *</label>
-            <input id="billName" type="text" placeholder="Ej: Todo Costura S.A.">
-          </div>
-          <div>
-            <label for="billRuc">RUC / Nro. documento *</label>
-            <input id="billRuc" type="text" placeholder="Ej: 80012345-6">
-          </div>
-          <div>
-            <label for="billEmail">Correo de facturación *</label>
-            <input id="billEmail" type="email" placeholder="facturacion@dominio.com">
-          </div>
-          <div>
-            <label for="billPhone">Teléfono (opcional)</label>
-            <input id="billPhone" type="text" placeholder="+595...">
-          </div>
-          <div>
-            <label for="billAddress">Dirección *</label>
-            <input id="billAddress" type="text" placeholder="Calle, número, barrio">
-          </div>
-          <div>
-            <label for="billCity">Ciudad *</label>
-            <input id="billCity" type="text" placeholder="Ej: Asunción">
-          </div>
-        </div>
-        <div class="muted" style="margin-top:8px">Los campos marcados con * son obligatorios si requiere factura.</div>
+      <div class="muted" style="margin-top:8px">
+        * Campos obligatorios para emitir factura. “Tipo de documento” define si se usa Cédula o RUC.
       </div>
     </div>
 
@@ -120,10 +123,11 @@
   const btnSubmit = document.getElementById("btnSubmit");
   const formMsg = document.getElementById("formMsg");
 
-  const needInvoiceEl = document.getElementById("needInvoice");
-  const billingWrapEl = document.getElementById("billingWrap");
+  // Billing
   const billNameEl = document.getElementById("billName");
-  const billRucEl = document.getElementById("billRuc");
+  const billDocTypeEl = document.getElementById("billDocType");
+  const billDocLabelEl = document.getElementById("billDocLabel");
+  const billDocNumberEl = document.getElementById("billDocNumber");
   const billEmailEl = document.getElementById("billEmail");
   const billPhoneEl = document.getElementById("billPhone");
   const billAddressEl = document.getElementById("billAddress");
@@ -256,8 +260,6 @@
     inp.type = type;
     inp.id = `p${i}_${key}`;
     inp.placeholder = placeholder || "";
-    inp.setAttribute("data-i", String(i));
-    inp.setAttribute("data-k", key);
     if (required) inp.setAttribute("data-req","1");
 
     inp.addEventListener("input", () => {
@@ -347,15 +349,24 @@
     return out;
   }
 
-  function getBilling(){
-    const need = needInvoiceEl.value === "si";
-    if (!need){
-      return { requiere_factura:false };
+  function refreshBillingDocUI(){
+    const type = billDocTypeEl.value;
+    if (type === "fiscal"){
+      billDocLabelEl.textContent = "Documento fiscal (RUC) *";
+      billDocNumberEl.placeholder = "Ej: 80012345-6";
+    } else {
+      billDocLabelEl.textContent = "Documento personal (Cédula) *";
+      billDocNumberEl.placeholder = "Ej: 1234567";
     }
+    btnSubmit.disabled = !isFormValid();
+    setMsg("", "");
+  }
+
+  function getBilling(){
     return {
-      requiere_factura: true,
       razon_social: (billNameEl.value||"").trim(),
-      ruc: (billRucEl.value||"").trim(),
+      tipo_documento: billDocTypeEl.value, // "personal" | "fiscal"
+      documento: (billDocNumberEl.value||"").trim(),
       email: (billEmailEl.value||"").trim(),
       telefono: (billPhoneEl.value||"").trim(),
       direccion: (billAddressEl.value||"").trim(),
@@ -365,14 +376,12 @@
 
   function isBillingValid(){
     const b = getBilling();
-    if (!b.requiere_factura) return true;
-
     if (!b.razon_social) return false;
-    if (!b.ruc) return false;
+    if (!b.tipo_documento) return false;
+    if (!b.documento) return false;
     if (!b.email || !isEmailBasic(b.email)) return false;
     if (!b.direccion) return false;
     if (!b.ciudad) return false;
-
     return true;
   }
 
@@ -400,21 +409,14 @@
     return true;
   }
 
-  // Billing toggle + revalidate
-  function refreshBillingUI(){
-    const need = needInvoiceEl.value === "si";
-    billingWrapEl.classList.toggle("hidden", !need);
-    btnSubmit.disabled = !isFormValid();
-    setMsg("", "");
-  }
-
-  needInvoiceEl.addEventListener("change", refreshBillingUI);
-  [billNameEl, billRucEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
+  // Revalidate on billing inputs
+  [billNameEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
     el.addEventListener("input", ()=>{
       btnSubmit.disabled = !isFormValid();
       setMsg("", "");
     });
   });
+  billDocTypeEl.addEventListener("change", refreshBillingDocUI);
 
   btnBuild.addEventListener("click", () => buildParticipants());
 
@@ -457,7 +459,6 @@
     setMsg("Validación OK. Payload listo (mirá consola).", "ok");
     console.log("RESERVA_PAYLOAD", payload);
 
-    // Cuando tengas tu endpoint:
     // apiPost(`${API_BASE}/api/reservar`, payload).then(res=>console.log(res));
   });
 
@@ -473,7 +474,7 @@
     renderSlots(STATE.slots);
     setStatus(`OK: horarios=${(STATE.slots||[]).length}`);
 
-    refreshBillingUI();
+    refreshBillingDocUI();
     return res.json;
   }
 
@@ -518,8 +519,8 @@
 
     const boot = await loadBootstrap(courseId);
 
-    const shouldForce = (boot?.ok !== true); // solo si missing
-    // const shouldForce = true; // <-- si querés SIEMPRE forzar
+    const shouldForce = (boot?.ok !== true);
+    // const shouldForce = true;
 
     if (shouldForce){
       const updated = await forceRefreshAndWait(courseId);
