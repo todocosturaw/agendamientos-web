@@ -1,174 +1,126 @@
 <!doctype html>
 <html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Test Horarios (Worker)</title>
-</head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reservas - test</title></head>
 <body>
-  <h1>Test: Ver horarios desde Worker</h1>
-
-  <p>
-    Course ID:
-    <input id="courseId" style="width:360px" value="4537469000000223003" />
-  </p>
-
-  <p>
-    <button id="btnVer">Ver horarios</button>
-    <button id="btnBootstrap">Abrir bootstrap (JSON)</button>
-  </p>
-
+  <h1>Reservas (test)</h1>
   <div id="status"></div>
-  <hr />
-
-  <h2>Curso</h2>
-  <div id="curso"></div>
-
   <h2>Horarios</h2>
-  <form id="formSlots">
-    <div id="slots"></div>
-  </form>
-
-  <p>
-    <button id="btnContinuar" disabled>Continuar con horario seleccionado</button>
-  </p>
-
+  <div id="slots"></div>
   <pre id="debug" style="white-space:pre-wrap;"></pre>
 
-  <script>
-    const API_BASE = "https://api.taller2.workers.dev";
+<script>
+  const API_BASE = "https://api.taller2.workers.dev";
+  const POLL_DELAY_MS = 1500;
+  const POLL_MAX_TRIES = 120; // 3 min
 
-    const $ = (id) => document.getElementById(id);
-    const courseIdEl = $("courseId");
-    const btnVer = $("btnVer");
-    const btnBootstrap = $("btnBootstrap");
-    const btnContinuar = $("btnContinuar");
+  const statusEl = document.getElementById("status");
+  const slotsEl = document.getElementById("slots");
+  const debugEl = document.getElementById("debug");
 
-    const statusEl = $("status");
-    const cursoEl = $("curso");
-    const slotsEl = $("slots");
-    const debugEl = $("debug");
+  function setStatus(t){ statusEl.textContent = t; }
 
-    let selectedSlot = null;
-    let lastJson = null;
+  function getCourseIdFromHash(){
+    const h = (location.hash || "").replace(/^#/, "");
+    const p = new URLSearchParams(h);
+    return p.get("ID") || p.get("course_id");
+  }
 
-    function setStatus(t){ statusEl.textContent = t; }
-    function escapeHtml(s){
-      return String(s)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
+  async function apiGet(url){
+    const r = await fetch(url, { method:"GET" });
+    const t = await r.text();
+    let j=null; try{ j=JSON.parse(t);}catch{}
+    return {ok:r.ok, status:r.status, text:t, json:j, url};
+  }
 
-    async function getBootstrap(courseId){
-      const url = `${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`;
-      const r = await fetch(url, { method: "GET" });
-      const text = await r.text();
-      let json = null;
-      try { json = JSON.parse(text); } catch {}
-      return { ok: r.ok, status: r.status, text, json, url };
-    }
-
-    function renderCurso(course){
-      if (!course) { cursoEl.innerHTML = "<em>Sin datos</em>"; return; }
-      cursoEl.innerHTML = `
-        <div><strong>${escapeHtml(course.nombre_curso || "Curso")}</strong></div>
-        <div>Plataforma: ${escapeHtml(course.plataforma || "")}</div>
-        <div>Alumnado: ${escapeHtml(course.alumnado || "")}</div>
-        <div>Aprendizaje: ${escapeHtml(course.tipo_aprendizaje || "")}</div>
-        <div>Categoría: ${escapeHtml(course.categoria || "")}</div>
-        <div>Precio: ${escapeHtml(course.precio || "")}</div>
-      `;
-    }
-
-    function renderSlots(slots){
-      selectedSlot = null;
-      btnContinuar.disabled = true;
-      slotsEl.innerHTML = "";
-
-      if (!Array.isArray(slots) || slots.length === 0){
-        slotsEl.innerHTML = "<em>No hay horarios (o todavía no está cacheado en KV).</em>";
-        return;
-      }
-
-      slots.forEach((s, i) => {
-        const available = Number(s.cupos_disponibles || 0) > 0;
-        const disabled = available ? "" : "disabled";
-        const label = `${s.fecha} ${s.hora} — cupos: ${s.cupos_disponibles} — slot_id: ${s.slot_id}`;
-
-        const row = document.createElement("div");
-        row.style.margin = "6px 0";
-        row.innerHTML = `
-          <label>
-            <input type="radio" name="slot" value="${escapeHtml(s.slot_id)}" ${disabled} />
-            ${escapeHtml(label)} ${available ? "" : "(AGOTADO)"}
-          </label>
-        `;
-
-        const input = row.querySelector("input");
-        input.addEventListener("change", () => {
-          selectedSlot = s;
-          btnContinuar.disabled = false;
-          setStatus(`Seleccionado: ${s.fecha} ${s.hora} (slot_id ${s.slot_id})`);
-        });
-
-        slotsEl.appendChild(row);
-      });
-    }
-
-    async function verHorarios(){
-      const courseId = courseIdEl.value.trim();
-      if (!courseId){ setStatus("Falta course_id"); return; }
-
-      setStatus("Cargando...");
-      const res = await getBootstrap(courseId);
-
-      debugEl.textContent = `GET ${res.url}\nHTTP ${res.status}\n\n${res.text}`;
-
-      if (!res.ok || !res.json){
-        setStatus(`Error leyendo bootstrap (HTTP ${res.status})`);
-        return;
-      }
-
-      lastJson = res.json;
-
-      if (res.json.ok !== true){
-        if (res.json.status === "missing"){
-          setStatus("Todavía no hay datos cacheados (status=missing). Ejecutá el ingest desde Zoho/Flow o manual.");
-        } else {
-          setStatus("Respuesta inválida");
-        }
-        renderCurso(null);
-        renderSlots([]);
-        return;
-      }
-
-      renderCurso(res.json.course);
-      renderSlots(res.json.slots || []);
-      setStatus(`Listo. Horarios: ${(res.json.slots || []).length}`);
-    }
-
-    btnVer.addEventListener("click", verHorarios);
-
-    btnBootstrap.addEventListener("click", () => {
-      const courseId = courseIdEl.value.trim();
-      if (!courseId) return;
-      const url = `${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`;
-      window.open(url, "_blank");
+  async function apiPost(url, body){
+    const r = await fetch(url, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(body||{})
     });
+    const t = await r.text();
+    let j=null; try{ j=JSON.parse(t);}catch{}
+    return {ok:r.ok, status:r.status, text:t, json:j, url};
+  }
 
-    btnContinuar.addEventListener("click", () => {
-      if (!selectedSlot){
-        setStatus("Seleccioná un horario primero.");
-        return;
-      }
-      alert(`OK: horario seleccionado\n\ncourse_id=${courseIdEl.value.trim()}\nslot_id=${selectedSlot.slot_id}\nfecha=${selectedSlot.fecha}\nhora=${selectedSlot.hora}`);
+  function renderSlots(slots){
+    slotsEl.innerHTML = "";
+    if (!Array.isArray(slots) || slots.length === 0){
+      slotsEl.innerHTML = "<em>Sin horarios</em>";
+      return;
+    }
+    slots.forEach(s=>{
+      const div=document.createElement("div");
+      div.textContent = `${s.fecha} ${s.hora} - cupos ${s.cupos_disponibles} - slot ${s.slot_id}`;
+      slotsEl.appendChild(div);
     });
+  }
 
-    // auto-carga al abrir
-    verHorarios();
-  </script>
+  async function loadBootstrap(courseId){
+    const res = await apiGet(`${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`);
+    debugEl.textContent = `BOOTSTRAP ${res.status}\n${res.text}`;
+    if (!res.ok || !res.json) return null;
+    if (res.json.ok !== true) return res.json; // missing u otro
+    renderSlots(res.json.slots || []);
+    setStatus(`OK: horarios=${(res.json.slots||[]).length}`);
+    return res.json;
+  }
+
+  async function getDebugKV(courseId){
+    return apiGet(`${API_BASE}/api/debug-kv?course_id=${encodeURIComponent(courseId)}`);
+  }
+
+  async function forceRefreshAndWait(courseId){
+    // antes
+    const before = await getDebugKV(courseId);
+    const beforeTs = before?.json?.last_ingest_for_course?.ts || null;
+
+    setStatus("Disparando refresh…");
+    const r = await apiPost(`${API_BASE}/api/refresh`, { course_id: courseId });
+    debugEl.textContent = `REFRESH ${r.status}\n${r.text}`;
+
+    if (!r.ok) {
+      setStatus(`Refresh falló HTTP ${r.status}`);
+      return false;
+    }
+
+    // polling hasta que cambie el ingest
+    for (let i=1;i<=POLL_MAX_TRIES;i++){
+      await new Promise(res=>setTimeout(res, POLL_DELAY_MS));
+      const d = await getDebugKV(courseId);
+      const nowTs = d?.json?.last_ingest_for_course?.ts || null;
+      const exists = Boolean(d?.json?.exists);
+
+      setStatus(`Esperando actualización… (${i}/${POLL_MAX_TRIES}) ts=${nowTs||"null"} exists=${exists}`);
+
+      if (exists && nowTs && nowTs !== beforeTs) return true;
+    }
+
+    setStatus("No se detectó actualización (Zoho no ejecutó ingest a tiempo).");
+    return false;
+  }
+
+  (async function init(){
+    const courseId = getCourseIdFromHash();
+    if (!courseId){
+      setStatus("Falta #ID=...");
+      return;
+    }
+
+    // 1) intento cargar lo que haya
+    const boot = await loadBootstrap(courseId);
+
+    // 2) si falta o querés siempre “último estado”, forzar refresh
+    // si querés que siempre actualice, dejá esta condición como TRUE.
+    const shouldForce = (boot?.ok !== true); // solo si missing
+    // const shouldForce = true; // <-- si querés SIEMPRE forzar
+
+    if (shouldForce){
+      const updated = await forceRefreshAndWait(courseId);
+      if (updated) await loadBootstrap(courseId);
+    }
+  })();
+</script>
 </body>
 </html>
