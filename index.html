@@ -3,28 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Reservas | Todo Costura</title>
-  <meta name="description" content="Seleccioná un turno y completá los datos para confirmar tu inscripción." />
+  <title>Agendamiento | Todo Costura</title>
+  <meta name="description" content="Elegí fecha y horario, completá tus datos y confirmá tu reserva." />
   <meta name="theme-color" content="#ffffff" />
 
   <style>
     :root{
       --brand:#a52b64;
 
-      --bg:#ffffff;
+      --bg:#f7f7fb;
       --surface:#ffffff;
-      --txt:#111827;
-      --muted:#6b7280;
-      --line:#e5e7eb;
+      --txt:#0f172a;
+      --muted:#64748b;
 
-      --soft:#f6f7fb;
-      --soft2:#f3f4f6;
+      --line:#e6e8ef;
+      --soft:#f3f4f7;
 
       --r:18px;
-      --r2:22px;
+      --r2:24px;
 
-      --shadow: 0 18px 55px rgba(17,24,39,.10);
-      --shadow2: 0 10px 25px rgba(17,24,39,.08);
+      --shadow: 0 18px 60px rgba(15,23,42,.10);
+      --shadow2: 0 10px 26px rgba(15,23,42,.08);
 
       --focus: 0 0 0 4px rgba(165,43,100,.14);
     }
@@ -34,159 +33,256 @@
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-      background: linear-gradient(180deg, #ffffff 0%, #ffffff 60%, #fbfbfd 100%);
-      color: var(--txt);
+      color:var(--txt);
+      background:
+        radial-gradient(1200px 600px at 18% -12%, rgba(165,43,100,.10), transparent 60%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 70%);
     }
 
-    .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 40px}
+    .wrap{max-width:1240px;margin:0 auto;padding:28px 18px 44px}
 
-    /* Header */
+    /* Top */
     .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      margin-bottom:22px;
+      display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+      margin-bottom:18px;
     }
     .brand{
-      display:flex;align-items:center;gap:12px;min-width:240px;
+      display:flex;align-items:center;gap:12px;min-width:260px;
     }
     .logoBox{
-      width:44px;height:44px;border-radius:14px;
+      width:50px;height:50px;border-radius:16px;
       border:1px solid rgba(165,43,100,.18);
       background: rgba(165,43,100,.06);
       display:grid;place-items:center;
       overflow:hidden;
+      flex:0 0 auto;
     }
     .logoBox img{width:100%;height:100%;object-fit:cover;display:block}
-    .brandText{
-      display:flex;flex-direction:column;line-height:1.2;
-    }
-    .brandText .name{
-      font-weight:900;
-      letter-spacing:.2px;
-      font-size:14px;
-    }
-    .brandText .tag{
-      color:var(--muted);
-      font-size:12.5px;
-      margin-top:4px;
-    }
+    .brandText{display:flex;flex-direction:column;line-height:1.15}
+    .brandText .name{font-weight:950;font-size:14px;letter-spacing:.2px}
+    .brandText .tag{margin-top:5px;color:var(--muted);font-size:12.5px}
 
     .statusPill{
       display:inline-flex;align-items:center;gap:10px;
       padding:9px 12px;border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
-      box-shadow: 0 10px 18px rgba(17,24,39,.06);
+      box-shadow: 0 10px 18px rgba(15,23,42,.06);
       color:var(--muted);
       font-size:12.5px;
       white-space:nowrap;
     }
     .dot{width:9px;height:9px;border-radius:99px;background:rgba(165,43,100,.40);box-shadow: 0 0 0 4px rgba(165,43,100,.10)}
 
-    /* Layout */
-    .grid{
-      display:grid;
-      grid-template-columns: 1.05fr .95fr;
-      gap:26px;
-      align-items:start;
-    }
-    @media (max-width:980px){
-      .grid{grid-template-columns:1fr;gap:18px}
-    }
-
-    /* Left: hero */
-    .hero{
-      padding:12px 0;
-    }
-    .hero h1{
-      margin:8px 0 10px 0;
-      font-size:44px;
-      line-height:1.05;
-      letter-spacing:-.6px;
-      font-weight:950;
-    }
-    .hero h1 .accent{color:var(--brand)}
-    .hero p{
-      margin:0;
-      color:var(--muted);
-      font-size:15.5px;
-      line-height:1.6;
-      max-width:54ch;
-    }
-    .heroNote{
-      margin-top:18px;
-      display:flex;gap:10px;flex-wrap:wrap;align-items:center;
-      color:var(--muted);
-      font-size:12.5px;
-    }
-    .chip{
-      display:inline-flex;align-items:center;
-      padding:7px 10px;border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      box-shadow: 0 10px 18px rgba(17,24,39,.05);
-      gap:8px;
-    }
-    .chip .miniDot{
-      width:7px;height:7px;border-radius:99px;background:rgba(165,43,100,.45);
-      box-shadow: 0 0 0 4px rgba(165,43,100,.10);
-    }
-
-    /* Right: card */
-    .card{
-      background: var(--surface);
-      border:1px solid var(--line);
+    /* Main shell */
+    .shell{
+      background: rgba(255,255,255,.74);
+      border:1px solid rgba(230,232,239,.9);
       border-radius: var(--r2);
       box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       overflow:hidden;
     }
-    .cardHead{
-      padding:18px 18px 14px 18px;
+
+    .header{
+      padding:20px 22px;
       border-bottom:1px solid var(--line);
       background: linear-gradient(180deg, #ffffff, #fbfbfd);
     }
-    .cardHead .title{
+    .header h1{
       margin:0;
-      font-size:14px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#374151;
+      font-size:18px;
       font-weight:950;
+      letter-spacing:.2px;
     }
-    .cardHead .sub{
+    .header p{
       margin:8px 0 0 0;
       color:var(--muted);
       font-size:13.5px;
       line-height:1.45;
+      max-width:90ch;
     }
 
-    .cardBody{padding:16px 18px 18px}
-
-    .section{
-      margin-top:14px;
+    /* Booking layout (Zoho Bookings-like): left = picker, right = details */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:18px;
+      padding:18px;
     }
-    .section:first-child{margin-top:0}
-    .section h3{
-      margin:0 0 10px 0;
+    @media (max-width:980px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .panel{
+      background: var(--surface);
+      border:1px solid var(--line);
+      border-radius: var(--r);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .panelHead{
+      padding:16px 18px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+      background: linear-gradient(180deg, #ffffff, #fbfbfd);
+    }
+    .panelHead .title{
+      margin:0;
       font-size:13px;
-      color:#374151;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#334155;
+      font-weight:950;
+    }
+    .panelHead .sub{
+      margin:8px 0 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+    .panelBody{padding:16px 18px 18px}
+
+    /* Steps */
+    .steps{
+      display:flex;gap:10px;flex-wrap:wrap;
+      padding:12px 18px;
+      border-bottom:1px solid var(--line);
+      background:#fff;
+    }
+    .step{
+      display:flex;align-items:center;gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: #fff;
+      color:#475569;
+      font-size:12.5px;
+      font-weight:800;
+    }
+    .step .n{
+      width:22px;height:22px;border-radius:9px;
+      display:grid;place-items:center;
+      border:1px solid rgba(165,43,100,.20);
+      background: rgba(165,43,100,.07);
+      color:#7a1f4a;
+      font-weight:950;
+      font-size:12px;
+    }
+    .step.active{
+      border-color: rgba(165,43,100,.28);
+      box-shadow: 0 10px 18px rgba(165,43,100,.10);
+    }
+
+    /* Calendar (simple / lightweight) */
+    .calTop{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      margin-bottom:10px;
+    }
+    .calTop .month{
+      font-weight:950;color:#0f172a;
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .calNav{
+      display:flex;gap:8px;
+    }
+    .iconBtn{
+      width:38px;height:38px;border-radius:12px;
+      border:1px solid var(--line);
+      background:#fff;
+      cursor:pointer;
+      display:grid;place-items:center;
+      box-shadow: 0 10px 18px rgba(15,23,42,.05);
+    }
+    .iconBtn:active{transform: translateY(1px)}
+    .iconBtn svg{width:18px;height:18px;opacity:.85}
+
+    .calGrid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:8px;
+    }
+    .dow{
+      text-align:center;
+      font-size:11px;
+      color:var(--muted);
+      font-weight:800;
+      padding:6px 0;
+    }
+    .day{
+      height:42px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      cursor:pointer;
+      display:grid;place-items:center;
+      font-weight:900;
+      color:#0f172a;
+      box-shadow: 0 8px 16px rgba(15,23,42,.04);
+      user-select:none;
+    }
+    .day.muted{
+      color:#cbd5e1;
+      background:#fcfcfe;
+      box-shadow:none;
+    }
+    .day:hover{border-color: rgba(165,43,100,.22)}
+    .day.selected{
+      border-color: rgba(165,43,100,.35);
+      background: rgba(165,43,100,.08);
+      box-shadow: 0 14px 22px rgba(165,43,100,.12);
+      color:#7a1f4a;
+    }
+
+    /* Time slots */
+    .slotsWrap{
+      margin-top:16px;
+    }
+    .slotsGrid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+    }
+    @media (max-width:420px){ .slotsGrid{grid-template-columns:1fr} }
+
+    .timeBtn{
+      width:100%;
+      text-align:left;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      cursor:pointer;
+      box-shadow: 0 10px 18px rgba(15,23,42,.05);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
       font-weight:900;
     }
+    .timeBtn:hover{border-color: rgba(165,43,100,.22)}
+    .timeBtn.selected{
+      border-color: rgba(165,43,100,.35);
+      background: rgba(165,43,100,.08);
+      box-shadow: 0 14px 22px rgba(165,43,100,.12);
+      color:#7a1f4a;
+    }
+    .badge{
+      font-weight:950;
+      font-size:12px;
+      color:#7a1f4a;
+      background: rgba(165,43,100,.10);
+      border:1px solid rgba(165,43,100,.20);
+      padding:4px 9px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
 
-    .muted{color:var(--muted)}
-    .tiny{font-size:12.5px}
-
-    /* Fields */
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .field{flex:1 1 220px;min-width:210px}
+    /* Form */
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .field{flex:1 1 240px;min-width:220px}
     label{
-      display:block;
-      margin:10px 0 6px 0;
-      font-size:12.5px;
-      color:#4b5563;
-      font-weight:700;
+      display:block;margin:12px 0 6px;
+      font-size:12.5px;color:#475569;font-weight:800;
     }
     input[type="text"], input[type="email"], input[type="number"], select, textarea{
       width:100%;
@@ -199,7 +295,7 @@
       font-size:14px;
       transition: box-shadow .15s ease, border-color .15s ease;
     }
-    textarea{min-height:86px;resize:vertical}
+    textarea{min-height:88px;resize:vertical}
     input:focus, select:focus, textarea:focus{
       border-color: rgba(165,43,100,.55);
       box-shadow: var(--focus);
@@ -210,50 +306,20 @@
       cursor:not-allowed;
     }
 
-    /* Slots list */
-    .slots{display:flex;flex-direction:column;gap:10px}
-    .slot{
-      display:flex;gap:10px;align-items:flex-start;
-      padding:12px 12px;
+    .pbox{
+      margin-top:12px;
+      padding:12px;
       border:1px solid var(--line);
       border-radius:16px;
       background:#fff;
-      transition: border-color .15s ease, box-shadow .15s ease, transform .08s ease;
     }
-    .slot:hover{
-      border-color: rgba(165,43,100,.22);
-      box-shadow: var(--shadow2);
-      transform: translateY(-1px);
-    }
-    .slot input{margin-top:2px}
-    .slot label{margin:0;color:var(--txt);font-weight:900;font-size:13.5px}
-    .slot .meta{margin-top:4px;color:var(--muted);font-size:12.5px;line-height:1.35}
-    .kpi{
-      display:inline-flex;align-items:center;
-      padding:4px 10px;border-radius:999px;
-      border:1px solid rgba(165,43,100,.20);
-      background: rgba(165,43,100,.06);
-      color:#7a1f4a;
-      font-weight:900;
-      font-size:12px;
-      margin-left:6px;
-    }
-
-    /* Participant blocks */
-    .pbox{
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-      background: #fff;
-      margin-top:10px;
-    }
-    .pboxTitle{
+    .pboxHead{
       display:flex;align-items:center;justify-content:space-between;gap:10px;
       margin-bottom:8px;
     }
-    .pboxTitle .left{
+    .pboxHead .left{
       display:flex;align-items:center;gap:8px;
-      font-weight:900;color:#374151;font-size:13px;
+      font-weight:950;color:#0f172a;font-size:13px;
     }
     .idx{
       width:26px;height:26px;border-radius:10px;
@@ -265,8 +331,9 @@
       font-size:12px;
     }
 
-    /* Buttons */
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .actions{
+      display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;
+    }
     button{
       border:0;border-radius:14px;cursor:pointer;
       padding:11px 14px;font-weight:950;font-size:13.5px;
@@ -279,17 +346,14 @@
       color:#fff;
       box-shadow: 0 16px 35px rgba(165,43,100,.20);
     }
-    .primary:hover{box-shadow: 0 18px 40px rgba(165,43,100,.24)}
     .ghost{
       background:#fff;border:1px solid var(--line);color:var(--txt);
-      box-shadow: 0 12px 22px rgba(17,24,39,.06);
+      box-shadow: 0 12px 22px rgba(15,23,42,.06);
     }
 
-    /* Messages / preview */
     .msg{margin-top:10px;font-size:13px;line-height:1.35}
-    .err{color:#b00020;font-weight:800}
-    .ok{color:#0a7a2f;font-weight:800}
-
+    .err{color:#b00020;font-weight:900}
+    .ok{color:#0a7a2f;font-weight:900}
     pre{
       margin:12px 0 0 0;
       background:#fff;
@@ -315,10 +379,10 @@
       -webkit-backdrop-filter: blur(6px);
     }
     .loadCard{
-      width:min(640px, 92vw);
+      width:min(680px, 92vw);
       background:#fff;
       border:1px solid var(--line);
-      border-radius:24px;
+      border-radius:26px;
       box-shadow: var(--shadow);
       overflow:hidden;
     }
@@ -330,7 +394,7 @@
     }
     .loadTop .left{display:flex;align-items:center;gap:12px}
     .spinner{
-      width:36px;height:36px;border-radius:99px;
+      width:36px;height:36px;border-radius:999px;
       border:3px solid rgba(165,43,100,.15);
       border-top-color: rgba(165,43,100,.85);
       animation: spin 1s linear infinite;
@@ -343,12 +407,12 @@
     .loadTitle span{font-size:12.5px;color:var(--muted)}
     .progressWrap{padding:16px 18px 18px}
     .bar{
-      height:10px;border-radius:999px;background: var(--soft2);
+      height:10px;border-radius:999px;background: #f0f1f6;
       overflow:hidden;border:1px solid var(--line);
     }
     .bar > div{
       height:100%;
-      width:30%;
+      width:20%;
       background: linear-gradient(90deg, rgba(165,43,100,.20), rgba(165,43,100,.75));
       border-radius:999px;
       transition: width .25s ease;
@@ -382,16 +446,13 @@
         <div class="left">
           <div class="spinner" aria-hidden="true"></div>
           <div class="loadTitle">
-            <strong id="loadTitle">Cargando información del curso…</strong>
-            <span id="loadSub">Conectando con el sistema.</span>
+            <strong id="loadTitle">Cargando agendamiento…</strong>
+            <span id="loadSub">Recuperando disponibilidad.</span>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="logoBox" style="width:40px;height:40px;border-radius:14px">
-            <!-- Reemplazá src por tu logo real -->
-            <img id="logoImg2" alt="Todo Costura" src="" style="display:none">
-            <div id="logoFallback2" style="font-weight:950;color:var(--brand);font-size:12px">TC</div>
-          </div>
+        <div class="logoBox" style="width:44px;height:44px;border-radius:16px">
+          <img id="logoImg2" alt="Todo Costura" src="" style="display:none">
+          <div id="logoFallback2" style="font-weight:950;color:var(--brand);font-size:12px">TC</div>
         </div>
       </div>
       <div class="progressWrap">
@@ -411,13 +472,13 @@
     <div class="topbar">
       <div class="brand">
         <div class="logoBox">
-          <!-- Reemplazá src por tu logo real (PNG/SVG) -->
+          <!-- Logo: poné una URL o ruta local -->
           <img id="logoImg" alt="Todo Costura" src="" style="display:none">
           <div id="logoFallback" style="font-weight:950;color:var(--brand);font-size:12px">TC</div>
         </div>
         <div class="brandText">
           <div class="name">Todo Costura</div>
-          <div class="tag">Agenda · Inscripción</div>
+          <div class="tag">Agendamiento</div>
         </div>
       </div>
 
@@ -427,125 +488,181 @@
       </div>
     </div>
 
-    <div class="grid">
-      <div class="hero">
-        <h1>Reservá tu <span class="accent">turno</span> en segundos.</h1>
-        <p>Seleccioná un horario disponible y completá los datos de participantes, facturación y comprobante de pago. El sistema valida cupos en tiempo real para evitar sobre-reservas.</p>
-
-        <div class="heroNote">
-          <span class="chip"><span class="miniDot"></span> Validación de cupos</span>
-          <span class="chip"><span class="miniDot"></span> Datos de facturación</span>
-          <span class="chip"><span class="miniDot"></span> Adjuntar comprobante</span>
-        </div>
+    <div class="shell">
+      <div class="header">
+        <h1>Agendá tu curso</h1>
+        <p>Elegí una fecha y un horario disponible. Luego completá participantes, facturación y comprobante para confirmar la reserva.</p>
       </div>
 
-      <div class="card">
-        <div class="cardHead">
-          <div class="title">Formulario de inscripción</div>
-          <div class="sub">Primero seleccioná un turno. Luego completá participantes y datos de facturación.</div>
+      <div class="grid">
+        <!-- LEFT: Date + time -->
+        <div class="panel">
+          <div class="panelHead">
+            <div style="min-width:240px">
+              <div class="title">Seleccionar fecha y horario</div>
+              <p class="sub">Primero elegí una fecha. Luego seleccioná un horario disponible para esa fecha.</p>
+            </div>
+            <div class="muted" style="font-size:12.5px;text-align:right">
+              Disponibilidad en tiempo real
+            </div>
+          </div>
+
+          <div class="steps">
+            <div class="step active" id="step1"><span class="n">1</span> Fecha</div>
+            <div class="step" id="step2"><span class="n">2</span> Horario</div>
+            <div class="step" id="step3"><span class="n">3</span> Datos</div>
+          </div>
+
+          <div class="panelBody">
+            <!-- Calendar -->
+            <div class="calTop">
+              <div class="month" id="calMonth">—</div>
+              <div class="calNav">
+                <button class="iconBtn" id="btnPrevMonth" aria-label="Mes anterior">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"></path>
+                  </svg>
+                </button>
+                <button class="iconBtn" id="btnNextMonth" aria-label="Mes siguiente">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="calGrid" id="calDow"></div>
+            <div class="calGrid" id="calDays" style="margin-top:6px"></div>
+
+            <!-- Time slots -->
+            <div class="slotsWrap">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
+                <div style="font-weight:950;color:#0f172a;font-size:13px">Horarios disponibles</div>
+                <div class="muted" id="timeHint" style="font-size:12.5px">Seleccioná una fecha para ver horarios.</div>
+              </div>
+
+              <div class="slotsGrid" id="timeSlots"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="cardBody">
-          <div class="section">
-            <h3>Curso</h3>
-            <div id="courseBox" class="muted">Cargando…</div>
-          </div>
-
-          <div class="section">
-            <h3>Turnos disponibles</h3>
-            <div id="slots" class="slots"></div>
-            <div id="slotsHelp" class="muted tiny" style="margin-top:8px"></div>
-          </div>
-
-          <div class="section">
-            <h3>Participantes</h3>
-            <div class="row">
-              <div class="field">
-                <label for="qty">Cantidad de participantes</label>
-                <input id="qty" type="number" min="1" step="1" value="1" disabled>
-                <div id="qtyHint" class="muted tiny"></div>
-              </div>
-              <div style="min-width:190px;flex:0 0 auto">
-                <label>&nbsp;</label>
-                <button id="btnBuild" class="ghost" disabled>Generar participantes</button>
-              </div>
+        <!-- RIGHT: booking details -->
+        <div class="panel">
+          <div class="panelHead">
+            <div style="min-width:240px">
+              <div class="title">Detalle y confirmación</div>
+              <p class="sub">Confirmá el curso seleccionado y completá los datos para finalizar.</p>
             </div>
-
-            <div id="namesWrap"></div>
-          </div>
-
-          <div class="section">
-            <h3>Facturación</h3>
-            <div class="row">
-              <div class="field">
-                <label for="billName">Razón social / Nombre *</label>
-                <input id="billName" type="text" placeholder="Ej: Juan Pérez / Todo Costura S.A.">
-              </div>
-              <div class="field">
-                <label for="billDocType">Tipo de documento *</label>
-                <select id="billDocType">
-                  <option value="personal" selected>Documento personal (Cédula)</option>
-                  <option value="fiscal">Documento fiscal (RUC)</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="field">
-                <label id="billDocLabel" for="billDocNumber">Documento personal (Cédula) *</label>
-                <input id="billDocNumber" type="text" placeholder="Ej: 1234567">
-              </div>
-              <div class="field">
-                <label for="billEmail">Correo de facturación *</label>
-                <input id="billEmail" type="email" placeholder="facturacion@dominio.com">
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="field">
-                <label for="billPhone">Teléfono (opcional)</label>
-                <input id="billPhone" type="text" placeholder="+595…">
-              </div>
-              <div class="field">
-                <label for="billAddress">Dirección *</label>
-                <input id="billAddress" type="text" placeholder="Calle, número, barrio">
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="field">
-                <label for="billCity">Ciudad *</label>
-                <input id="billCity" type="text" placeholder="Ej: Asunción">
-              </div>
+            <div class="muted" style="font-size:12.5px;text-align:right">
+              Campos obligatorios con *
             </div>
           </div>
 
-          <div class="section">
-            <h3>Comprobante de pago</h3>
-            <div class="row">
-              <div class="field">
-                <label for="payFile">Adjuntar comprobante (JPG/PNG/PDF) *</label>
-                <input id="payFile" type="file" accept="image/*,application/pdf">
-              </div>
-              <div class="field">
-                <label>Estado</label>
-                <div id="payFileStatus" class="muted tiny" style="padding:11px 12px;border:1px dashed var(--line);border-radius:14px;background:#fff">Sin archivo</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>Confirmación</h3>
-            <div class="btns">
-              <button id="btnPreview" class="ghost" disabled>Vista previa</button>
-              <button id="btnConfirm" class="primary" disabled>Confirmar y enviar</button>
+          <div class="panelBody">
+            <div class="section">
+              <h3 style="margin:0 0 10px 0;font-size:13px;color:#334155;font-weight:950;letter-spacing:.14em;text-transform:uppercase">Curso</h3>
+              <div id="courseBox" class="muted">Cargando…</div>
             </div>
 
-            <div id="formMsg" class="msg"></div>
-            <div id="sendMsg" class="msg"></div>
+            <div class="section" style="margin-top:16px">
+              <h3 style="margin:0 0 10px 0;font-size:13px;color:#334155;font-weight:950;letter-spacing:.14em;text-transform:uppercase">Turno seleccionado</h3>
+              <div class="muted" id="selectedSummary" style="font-size:13.5px;line-height:1.45">Aún no seleccionaste fecha y horario.</div>
+            </div>
 
-            <pre id="previewJson" style="display:none;"></pre>
-            <pre id="debug" style="display:none;"></pre>
+            <div class="section" style="margin-top:18px">
+              <h3 style="margin:0 0 10px 0;font-size:13px;color:#334155;font-weight:950;letter-spacing:.14em;text-transform:uppercase">Participantes</h3>
+
+              <div class="row">
+                <div class="field">
+                  <label for="qty">Cantidad de participantes</label>
+                  <input id="qty" type="number" min="1" step="1" value="1" disabled>
+                  <div id="qtyHint" class="muted" style="font-size:12.5px;margin-top:6px"></div>
+                </div>
+                <div style="flex:0 0 auto;min-width:190px">
+                  <label>&nbsp;</label>
+                  <button id="btnBuild" class="ghost" disabled>Generar formulario</button>
+                </div>
+              </div>
+
+              <div id="namesWrap"></div>
+            </div>
+
+            <div class="section" style="margin-top:18px">
+              <h3 style="margin:0 0 10px 0;font-size:13px;color:#334155;font-weight:950;letter-spacing:.14em;text-transform:uppercase">Facturación</h3>
+
+              <div class="row">
+                <div class="field">
+                  <label for="billName">Razón social / Nombre *</label>
+                  <input id="billName" type="text" placeholder="Ej: Juan Pérez / Empresa S.A.">
+                </div>
+                <div class="field">
+                  <label for="billDocType">Tipo de documento *</label>
+                  <select id="billDocType">
+                    <option value="personal" selected>Documento personal (Cédula)</option>
+                    <option value="fiscal">Documento fiscal (RUC)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="field">
+                  <label id="billDocLabel" for="billDocNumber">Documento personal (Cédula) *</label>
+                  <input id="billDocNumber" type="text" placeholder="Ej: 1234567">
+                </div>
+                <div class="field">
+                  <label for="billEmail">Correo de facturación *</label>
+                  <input id="billEmail" type="email" placeholder="facturacion@dominio.com">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="field">
+                  <label for="billPhone">Teléfono (opcional)</label>
+                  <input id="billPhone" type="text" placeholder="+595…">
+                </div>
+                <div class="field">
+                  <label for="billAddress">Dirección *</label>
+                  <input id="billAddress" type="text" placeholder="Calle, número, barrio">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="field">
+                  <label for="billCity">Ciudad *</label>
+                  <input id="billCity" type="text" placeholder="Ej: Asunción">
+                </div>
+              </div>
+            </div>
+
+            <div class="section" style="margin-top:18px">
+              <h3 style="margin:0 0 10px 0;font-size:13px;color:#334155;font-weight:950;letter-spacing:.14em;text-transform:uppercase">Comprobante de pago</h3>
+
+              <div class="row">
+                <div class="field">
+                  <label for="payFile">Adjuntar comprobante (JPG/PNG/PDF) *</label>
+                  <input id="payFile" type="file" accept="image/*,application/pdf">
+                </div>
+                <div class="field">
+                  <label>Estado</label>
+                  <div id="payFileStatus" class="muted" style="padding:11px 12px;border:1px dashed var(--line);border-radius:14px;background:#fff;font-size:12.5px">Sin archivo</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section" style="margin-top:18px">
+              <h3 style="margin:0 0 10px 0;font-size:13px;color:#334155;font-weight:950;letter-spacing:.14em;text-transform:uppercase">Confirmación</h3>
+
+              <div class="actions">
+                <button id="btnPreview" class="ghost" disabled>Generar vista previa</button>
+                <button id="btnConfirm" class="primary" disabled>Confirmar reserva</button>
+              </div>
+
+              <div id="formMsg" class="msg"></div>
+              <div id="sendMsg" class="msg"></div>
+
+              <pre id="previewJson" style="display:none;"></pre>
+              <pre id="debug" style="display:none;"></pre>
+            </div>
           </div>
         </div>
       </div>
@@ -562,28 +679,38 @@
   const POLL_DELAY_MS = 1500;
   const POLL_MAX_TRIES = 120;
 
-  const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
+  const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
-  // Logo (opcional): poné una URL absoluta o relativa (ej: "./logo-todocostura.png")
-  const LOGO_URL = ""; // <- completá si querés usar imagen
+  // Logo (opcional)
+  const LOGO_URL = ""; // ej: "./logo-todocostura.png"
 
   // =====================
   // DOM
   // =====================
   const statusEl = document.getElementById("status");
-  const slotsEl = document.getElementById("slots");
-  const slotsHelpEl = document.getElementById("slotsHelp");
-  const debugEl = document.getElementById("debug");
   const courseBoxEl = document.getElementById("courseBox");
 
+  // Calendar
+  const calMonthEl = document.getElementById("calMonth");
+  const calDowEl = document.getElementById("calDow");
+  const calDaysEl = document.getElementById("calDays");
+  const btnPrevMonth = document.getElementById("btnPrevMonth");
+  const btnNextMonth = document.getElementById("btnNextMonth");
+
+  const timeSlotsEl = document.getElementById("timeSlots");
+  const timeHintEl = document.getElementById("timeHint");
+  const selectedSummaryEl = document.getElementById("selectedSummary");
+
+  // Steps
+  const step1 = document.getElementById("step1");
+  const step2 = document.getElementById("step2");
+  const step3 = document.getElementById("step3");
+
+  // Participants
   const qtyEl = document.getElementById("qty");
   const qtyHintEl = document.getElementById("qtyHint");
   const btnBuild = document.getElementById("btnBuild");
   const namesWrap = document.getElementById("namesWrap");
-
-  const formMsg = document.getElementById("formMsg");
-  const sendMsg = document.getElementById("sendMsg");
-  const previewJsonEl = document.getElementById("previewJson");
 
   // Billing
   const billNameEl = document.getElementById("billName");
@@ -595,13 +722,17 @@
   const billAddressEl = document.getElementById("billAddress");
   const billCityEl = document.getElementById("billCity");
 
-  // Payment proof
+  // Payment
   const payFileEl = document.getElementById("payFile");
   const payFileStatusEl = document.getElementById("payFileStatus");
 
   // Confirm
   const btnPreview = document.getElementById("btnPreview");
   const btnConfirm = document.getElementById("btnConfirm");
+  const formMsg = document.getElementById("formMsg");
+  const sendMsg = document.getElementById("sendMsg");
+  const previewJsonEl = document.getElementById("previewJson");
+  const debugEl = document.getElementById("debug");
 
   // Loading
   const loadingEl = document.getElementById("loading");
@@ -622,9 +753,10 @@
     course_id: null,
     course: null,
     slots: [],
-    selected_slot: null,
+    selected_date: null,  // "YYYY-MM-DD"
+    selected_slot: null,  // slot object
     last_preview_payload: null,
-    payment_proof: null // {filename,mime_type,size_bytes,base64}
+    payment_proof: null
   };
 
   // =====================
@@ -690,8 +822,8 @@
 
   async function postReserva(payload){
     const r = await fetch(RESERVA_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
       body: JSON.stringify(payload)
     });
     const t = await r.text();
@@ -716,57 +848,244 @@
     loadBarEl.style.width = Math.round(p * 100) + "%";
     loadingEl.style.display = "flex";
   }
-
-  function hideLoading(){
-    loadingEl.style.display = "none";
-  }
+  function hideLoading(){ loadingEl.style.display = "none"; }
 
   // =====================
-  // Logo (optional)
+  // Logo
   // =====================
   function setupLogo(){
     if (!LOGO_URL) return;
-
-    [logoImg, logoImg2].forEach((img) => {
-      img.src = LOGO_URL;
-      img.style.display = "block";
-    });
+    [logoImg, logoImg2].forEach((img) => { img.src = LOGO_URL; img.style.display = "block"; });
     [logoFallback, logoFallback2].forEach((el) => el.style.display = "none");
-
-    // Si falla la carga, vuelve al fallback
-    logoImg.onerror = () => {
-      logoImg.style.display = "none";
-      logoFallback.style.display = "block";
-    };
-    logoImg2.onerror = () => {
-      logoImg2.style.display = "none";
-      logoFallback2.style.display = "block";
-    };
+    logoImg.onerror = () => { logoImg.style.display="none"; logoFallback.style.display="block"; };
+    logoImg2.onerror = () => { logoImg2.style.display="none"; logoFallback2.style.display="block"; };
   }
 
   // =====================
-  // Render Curso
+  // Render Course
   // =====================
   function renderCourse(course){
     if (!course){
       courseBoxEl.innerHTML = "<em>Sin datos del curso</em>";
       return;
     }
-
     const name = htmlEscape(course.name || course.nombre_curso || "Curso");
     const category = htmlEscape(course.category || course.categoria || "");
     const price = course.price ?? course.precio ?? null;
     const platform = htmlEscape(course.platform || course.plataforma || "");
     const learning = htmlEscape(course.learning_type || course.tipo_aprendizaje || "");
-
     courseBoxEl.innerHTML =
       `<div style="font-weight:950;font-size:16px;margin-bottom:6px">${name}</div>` +
-      `<div class="muted tiny">Categoría: ${category || "-"} · Modalidad: ${learning || "-"} · Plataforma: ${platform || "-"}</div>` +
-      `<div class="muted tiny">Precio: ${price ?? "-"}</div>`;
+      `<div class="muted" style="font-size:12.5px;line-height:1.5">Categoría: ${category || "-"} · Modalidad: ${learning || "-"} · Plataforma: ${platform || "-"}</div>` +
+      `<div class="muted" style="font-size:12.5px;line-height:1.5;margin-top:4px">Precio: ${price ?? "-"}</div>`;
   }
 
   // =====================
-  // Slots
+  // Slots -> Date grouping
+  // =====================
+  function toISODateFromSlot(slot){
+    // esperamos slot.fecha como "YYYY-MM-DD" (ideal). Si viene en otro formato, ajustar acá.
+    return String(slot.fecha || "").trim();
+  }
+
+  function getAvailableDates(slots){
+    const set = new Set();
+    for (const s of (slots||[])){
+      const d = toISODateFromSlot(s);
+      if (d) set.add(d);
+    }
+    return Array.from(set).sort();
+  }
+
+  function getSlotsForDate(slots, isoDate){
+    return (slots||[])
+      .filter(s => toISODateFromSlot(s) === isoDate)
+      .slice()
+      .sort((a,b)=> String(a.hora||"").localeCompare(String(b.hora||"")));
+  }
+
+  // =====================
+  // Calendar
+  // =====================
+  const DOW = ["Lu","Ma","Mi","Ju","Vi","Sa","Do"];
+  let calCursor = new Date(); // month cursor
+
+  function fmtMonthYear(d){
+    const months = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+    return `${months[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  function isoFromDate(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function dateFromISO(iso){
+    const [y,m,d] = String(iso).split("-").map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m-1, d);
+  }
+
+  function setStep(active){
+    [step1,step2,step3].forEach(el=>el.classList.remove("active"));
+    if (active === 1) step1.classList.add("active");
+    if (active === 2) step2.classList.add("active");
+    if (active === 3) step3.classList.add("active");
+  }
+
+  function renderCalendar(){
+    calMonthEl.textContent = fmtMonthYear(calCursor);
+
+    // header DOW (render once)
+    if (!calDowEl.dataset.ready){
+      calDowEl.innerHTML = DOW.map(x=>`<div class="dow">${x}</div>`).join("");
+      calDowEl.dataset.ready = "1";
+    }
+
+    calDaysEl.innerHTML = "";
+
+    const year = calCursor.getFullYear();
+    const month = calCursor.getMonth();
+    const first = new Date(year, month, 1);
+
+    // convert JS sunday-based to monday-based grid
+    const jsDow = first.getDay(); // 0=Sun
+    const mondayBased = (jsDow === 0) ? 6 : (jsDow - 1); // 0=Mon..6=Sun
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+
+    // previous month padding
+    const prevDays = mondayBased;
+    const prevLast = new Date(year, month, 0).getDate();
+
+    const available = new Set(getAvailableDates(STATE.slots)); // dates with at least one slot
+
+    // total cells: 42 (6 weeks) looks consistent
+    const totalCells = 42;
+
+    for (let i=0;i<totalCells;i++){
+      const cell = document.createElement("div");
+      cell.className = "day";
+
+      let cellDate = null;
+      if (i < prevDays){
+        const dayNum = prevLast - prevDays + 1 + i;
+        cell.textContent = String(dayNum);
+        cell.classList.add("muted");
+      } else if (i < prevDays + daysInMonth){
+        const dayNum = (i - prevDays) + 1;
+        cell.textContent = String(dayNum);
+        cellDate = new Date(year, month, dayNum);
+
+        const iso = isoFromDate(cellDate);
+
+        // enable only if date has slots
+        const isAvail = available.has(iso);
+        if (!isAvail){
+          cell.classList.add("muted");
+          cell.style.cursor = "not-allowed";
+        } else {
+          cell.addEventListener("click", () => {
+            STATE.selected_date = iso;
+            STATE.selected_slot = null;
+            renderCalendar();
+            renderTimeSlots();
+            onDateSelected();
+          });
+        }
+
+        // selected styling
+        if (STATE.selected_date === iso){
+          cell.classList.add("selected");
+        }
+
+      } else {
+        const dayNum = i - (prevDays + daysInMonth) + 1;
+        cell.textContent = String(dayNum);
+        cell.classList.add("muted");
+      }
+
+      calDaysEl.appendChild(cell);
+    }
+  }
+
+  function onDateSelected(){
+    setStep(2);
+    timeHintEl.textContent = "Seleccioná un horario para continuar.";
+    updateSelectedSummary();
+    disableForm("Seleccioná un horario.");
+    resetPreview();
+  }
+
+  // =====================
+  // Time slots render
+  // =====================
+  function renderTimeSlots(){
+    timeSlotsEl.innerHTML = "";
+
+    if (!STATE.selected_date){
+      timeHintEl.textContent = "Seleccioná una fecha para ver horarios.";
+      setStep(1);
+      return;
+    }
+
+    const list = getSlotsForDate(STATE.slots, STATE.selected_date);
+    if (!list.length){
+      timeHintEl.textContent = "No hay horarios para esta fecha.";
+      return;
+    }
+
+    timeHintEl.textContent = `Horarios para ${STATE.selected_date}.`;
+
+    for (const s of list){
+      const disp = normalizeInt(s.cupos_disponibles);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "timeBtn";
+      btn.innerHTML = `<span>${htmlEscape(s.hora || "—")}</span><span class="badge">Cupos: ${htmlEscape(disp)}</span>`;
+
+      if (!Number.isFinite(disp) || disp <= 0){
+        btn.disabled = true;
+        btn.style.opacity = ".55";
+        btn.style.cursor = "not-allowed";
+      } else {
+        btn.addEventListener("click", () => {
+          STATE.selected_slot = s;
+          // re-render selection
+          Array.from(timeSlotsEl.querySelectorAll(".timeBtn")).forEach(x=>x.classList.remove("selected"));
+          btn.classList.add("selected");
+          onSlotSelected();
+        });
+      }
+
+      // if same selected
+      if (STATE.selected_slot && STATE.selected_slot.slot_id === s.slot_id){
+        btn.classList.add("selected");
+      }
+
+      timeSlotsEl.appendChild(btn);
+    }
+  }
+
+  function updateSelectedSummary(){
+    if (!STATE.selected_date){
+      selectedSummaryEl.textContent = "Aún no seleccionaste fecha y horario.";
+      return;
+    }
+    if (!STATE.selected_slot){
+      selectedSummaryEl.textContent = `Fecha seleccionada: ${STATE.selected_date}. Falta elegir un horario.`;
+      return;
+    }
+    selectedSummaryEl.innerHTML =
+      `<div style="font-weight:950;color:#0f172a">` +
+      `${htmlEscape(STATE.selected_slot.fecha)} · ${htmlEscape(STATE.selected_slot.hora)}` +
+      `</div>` +
+      `<div class="muted" style="font-size:12.5px;margin-top:6px">Cupos disponibles: ${htmlEscape(STATE.selected_slot.cupos_disponibles)}</div>`;
+  }
+
+  // =====================
+  // Disable / enable form
   // =====================
   function disableForm(reason){
     qtyEl.disabled = true;
@@ -777,65 +1096,17 @@
     namesWrap.innerHTML = "";
     setMsg(reason ? `<span class="muted">${htmlEscape(reason)}</span>` : "", "");
     setSendMsg("", "");
-    resetPreview();
-  }
-
-  function renderSlots(slots){
-    slotsEl.innerHTML = "";
-    STATE.selected_slot = null;
-
-    if (!Array.isArray(slots) || slots.length === 0){
-      slotsEl.innerHTML = "<em class='muted'>No hay turnos disponibles.</em>";
-      slotsHelpEl.textContent = "";
-      return disableForm("No hay turnos disponibles.");
-    }
-
-    slots.forEach((s, idx) => {
-      const id = `slot_${idx}`;
-
-      const box = document.createElement("div");
-      box.className = "slot";
-
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = "slot";
-      input.id = id;
-      input.value = s.slot_id;
-
-      input.addEventListener("change", () => {
-        STATE.selected_slot = s;
-        onSlotSelected();
-      });
-
-      const right = document.createElement("div");
-      right.style.flex = "1 1 auto";
-
-      const lab = document.createElement("label");
-      lab.htmlFor = id;
-      lab.textContent = `${s.fecha} · ${s.hora}`;
-      right.appendChild(lab);
-
-      const disp = normalizeInt(s.cupos_disponibles);
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      meta.innerHTML = `Cupos: <span class="kpi">${htmlEscape(disp)}</span>`;
-      right.appendChild(meta);
-
-      box.appendChild(input);
-      box.appendChild(right);
-      slotsEl.appendChild(box);
-    });
-
-    slotsHelpEl.textContent = "Seleccioná un turno para habilitar la cantidad de participantes.";
-    disableForm("Seleccioná un turno.");
   }
 
   function onSlotSelected(){
     const s = STATE.selected_slot;
-    if (!s) return disableForm("Seleccioná un turno.");
+    updateSelectedSummary();
+
+    if (!s) return disableForm("Seleccioná un horario.");
+    setStep(3);
 
     const disp = normalizeInt(s.cupos_disponibles);
-    if (!Number.isFinite(disp) || disp <= 0) return disableForm("Este turno no tiene cupos disponibles.");
+    if (!Number.isFinite(disp) || disp <= 0) return disableForm("Este horario no tiene cupos disponibles.");
 
     qtyEl.disabled = false;
     qtyEl.min = "1";
@@ -902,7 +1173,7 @@
       return;
     }
     if (!Number.isFinite(disp) || disp < 1){
-      setMsg("Disponibilidad inválida para este turno.", "err");
+      setMsg("Disponibilidad inválida para este horario.", "err");
       btnPreview.disabled = true;
       resetPreview();
       return;
@@ -915,9 +1186,10 @@
     }
 
     const note = document.createElement("div");
-    note.className = "muted tiny";
+    note.className = "muted";
+    note.style.fontSize = "12.5px";
     note.style.marginTop = "10px";
-    note.textContent = "Completá los datos de cada participante (campos obligatorios: nombres, apellidos, cédula, email).";
+    note.textContent = "Completá los datos de cada participante (obligatorios: nombres, apellidos, cédula, email).";
     namesWrap.appendChild(note);
 
     for (let i=1;i<=qty;i++){
@@ -926,7 +1198,7 @@
       box.setAttribute("data-pblock","1");
 
       const head = document.createElement("div");
-      head.className = "pboxTitle";
+      head.className = "pboxHead";
       head.innerHTML = `<div class="left"><span class="idx">${i}</span> Participante</div>`;
       box.appendChild(head);
 
@@ -1006,7 +1278,7 @@
   }
 
   // =====================
-  // Payment proof (file)
+  // Payment proof
   // =====================
   function isPaymentProofValid(){
     return Boolean(STATE.payment_proof && STATE.payment_proof.base64);
@@ -1094,27 +1366,20 @@
   // =====================
   function buildPayload(){
     return {
-      meta: {
-        source: "web_reservas",
-        sent_at_iso: new Date().toISOString()
-      },
+      meta: { source: "web_agendamiento", sent_at_iso: new Date().toISOString() },
       course_id: STATE.course_id,
       course: safeCourse(STATE.course),
-
       slot: {
         slot_id: STATE.selected_slot?.slot_id || null,
         fecha: STATE.selected_slot?.fecha || null,
         hora: STATE.selected_slot?.hora || null,
         cupos_disponibles_snapshot: STATE.selected_slot?.cupos_disponibles ?? null
       },
-
       reservation: {
         cantidad_participantes: normalizeInt(qtyEl.value),
         participantes: getParticipants()
       },
-
       billing: getBilling(),
-
       payment_proof: STATE.payment_proof
     };
   }
@@ -1174,7 +1439,7 @@
     STATE.last_preview_payload = payload;
     renderPreview(payload);
     setMsg("");
-    setSendMsg("<span class='ok'>Vista previa generada. Revisá y confirmá el envío.</span>");
+    setSendMsg("<span class='ok'>Vista previa generada. Revisá y confirmá.</span>");
     btnConfirm.disabled = false;
   });
 
@@ -1199,7 +1464,7 @@
       const res = await postReserva(payload);
 
       if (res.ok && res.json?.ok !== false){
-        setSendMsg(`<span class='ok'>Enviado correctamente (HTTP ${res.status}).</span>`);
+        setSendMsg(`<span class='ok'>Reserva confirmada (HTTP ${res.status}).</span>`);
       } else {
         setSendMsg(`<span class='err'>No se pudo completar el envío (HTTP ${res.status}).</span>`);
       }
@@ -1224,27 +1489,42 @@
   // Bootstrap / Refresh polling
   // =====================
   async function loadBootstrap(courseId){
-    showLoading("Cargando información del curso…", "Recuperando datos desde Zoho Creator.", 0.25);
+    showLoading("Cargando agendamiento…", "Recuperando curso y disponibilidad.", 0.25);
 
     const res = await apiGet(`${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`);
     if (!res.ok || !res.json) return null;
     if (res.json.ok !== true) return res.json;
 
-    showLoading("Preparando turnos…", "Aplicando validaciones y disponibilidad.", 0.60);
+    showLoading("Preparando calendario…", "Organizando fechas y horarios.", 0.60);
 
     STATE.course_id = courseId;
     STATE.course = res.json.course || null;
     STATE.slots = res.json.slots || [];
+    STATE.selected_date = null;
+    STATE.selected_slot = null;
 
     renderCourse(STATE.course);
-    renderSlots(STATE.slots);
 
-    setStatus(`Listo · ${(STATE.slots||[]).length} turnos`);
+    // calendar cursor to current month (or first available date month)
+    calCursor = new Date();
+    const av = getAvailableDates(STATE.slots);
+    if (av.length){
+      const d0 = dateFromISO(av[0]);
+      if (d0) calCursor = new Date(d0.getFullYear(), d0.getMonth(), 1);
+    }
+
+    renderCalendar();
+    renderTimeSlots();
+    updateSelectedSummary();
+
+    setStatus(`Listo · ${STATE.slots.length} horarios`);
     refreshBillingDocUI();
 
-    btnPreview.disabled = !isFormValid();
+    // initial state: waiting date selection
+    setStep(1);
+    disableForm("Seleccioná fecha y horario.");
 
-    showLoading("Listo", "Podés continuar con la inscripción.", 1.0);
+    showLoading("Listo", "Podés comenzar el agendamiento.", 1.0);
     setTimeout(hideLoading, 180);
 
     return res.json;
@@ -1255,7 +1535,7 @@
   }
 
   async function forceRefreshAndWait(courseId){
-    showLoading("Actualizando turnos…", "Sincronizando disponibilidad. Esto puede tardar unos segundos.", 0.35);
+    showLoading("Actualizando disponibilidad…", "Sincronizando turnos. Esto puede tardar unos segundos.", 0.35);
 
     const before = await getDebugKV(courseId);
     const beforeTs = before?.json?.last_ingest_for_course?.ts || null;
@@ -1263,13 +1543,12 @@
     const r = await apiPost(`${API_BASE}/api/refresh`, { course_id: courseId });
     if (!r.ok) {
       setStatus(`Refresh falló (HTTP ${r.status})`);
-      showLoading("No se pudo actualizar", "Intentá recargar la página.", 0.2);
-      setTimeout(hideLoading, 600);
+      showLoading("No se pudo actualizar", "Recargá la página para reintentar.", 0.2);
+      setTimeout(hideLoading, 700);
       return false;
     }
 
     for (let i=1;i<=POLL_MAX_TRIES;i++){
-      // progreso "suave" mientras espera
       const p = Math.min(0.90, 0.40 + (i / POLL_MAX_TRIES) * 0.50);
       loadBarEl.style.width = Math.round(p*100) + "%";
 
@@ -1298,12 +1577,12 @@
       hideLoading();
       setStatus("Falta #ID=…");
       setMsg("<span class='err'>Abrí esta página con un hash válido, por ejemplo: <b>#ID=4537469...</b></span>");
-      slotsEl.innerHTML = "";
+      timeHintEl.textContent = "No hay curso cargado.";
       return;
     }
 
     setStatus("Cargando…");
-    showLoading("Cargando información del curso…", "Conectando con el sistema.", 0.10);
+    showLoading("Cargando agendamiento…", "Conectando con el sistema.", 0.10);
 
     const boot = await loadBootstrap(courseId);
 
