@@ -136,6 +136,80 @@
       box-shadow: 0 0 0 4px rgba(165,43,100,.10);
     }
 
+    /* Left: service info card (table) */
+    .serviceCard{
+      margin-top:22px;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:#fff;
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+      max-width: 560px;
+    }
+    .serviceHead{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #fbfbfd);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .serviceHead .h{
+      font-weight:950;
+      font-size:13px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#374151;
+    }
+    .serviceHead .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(165,43,100,.18);
+      background: rgba(165,43,100,.06);
+      color:#7a1f4a;
+      font-weight:900;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .infoTable{
+      width:100%;
+      border-collapse:collapse;
+    }
+    .infoTable td{
+      padding:11px 16px;
+      border-bottom:1px solid #f0f2f6;
+      vertical-align:top;
+      font-size:13.5px;
+    }
+    .infoTable tr:last-child td{border-bottom:0}
+    .infoTable td.k{
+      width:42%;
+      color:#4b5563;
+      font-weight:800;
+    }
+    .infoTable td.v{
+      color:#111827;
+      font-weight:700;
+    }
+    .infoTable .mutedv{
+      color:var(--muted);
+      font-weight:700;
+    }
+    .priceBig{
+      font-size:16px;
+      font-weight:950;
+    }
+    .priceSub{
+      margin-top:2px;
+      font-size:12.5px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
     /* Right: card */
     .card{
       background: var(--surface);
@@ -438,6 +512,45 @@
           <span class="chip"><span class="miniDot"></span> Datos de facturación</span>
           <span class="chip"><span class="miniDot"></span> Adjuntar comprobante</span>
         </div>
+
+        <!-- Detalles del servicio (izquierda, tabla) -->
+        <div class="serviceCard" id="serviceCard" style="display:none">
+          <div class="serviceHead">
+            <div class="h">Detalles del curso</div>
+            <div class="pill" id="serviceTypePill">—</div>
+          </div>
+
+          <table class="infoTable" role="presentation">
+            <tr>
+              <td class="k">Curso</td>
+              <td class="v" id="svcName">—</td>
+            </tr>
+            <tr>
+              <td class="k">Categoría</td>
+              <td class="v mutedv" id="svcCategory">—</td>
+            </tr>
+            <tr>
+              <td class="k">Modalidad</td>
+              <td class="v mutedv" id="svcLearning">—</td>
+            </tr>
+            <tr>
+              <td class="k">Plataforma</td>
+              <td class="v mutedv" id="svcPlatform">—</td>
+            </tr>
+            <tr>
+              <td class="k">Tutor</td>
+              <td class="v mutedv" id="svcTutor">—</td>
+            </tr>
+            <tr>
+              <td class="k">Precio</td>
+              <td class="v">
+                <div class="priceBig" id="svcUnitPrice">—</div>
+                <div class="priceSub" id="svcDiscountLine" style="display:none">—</div>
+                <div class="priceSub" id="svcTotalLine">—</div>
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
 
       <div class="card">
@@ -447,11 +560,6 @@
         </div>
 
         <div class="cardBody">
-          <div class="section">
-            <h3>Curso</h3>
-            <div id="courseBox" class="muted">Cargando…</div>
-          </div>
-
           <div class="section">
             <h3>Turnos disponibles</h3>
             <div id="slots" class="slots"></div>
@@ -538,15 +646,12 @@
           <div class="section">
             <h3>Confirmación</h3>
             <div class="btns">
-              <!-- Vista previa DESHABILITADA/OCULTA -->
               <button id="btnPreview" class="ghost" style="display:none" disabled>Vista previa</button>
               <button id="btnConfirm" class="primary" disabled>Confirmar y enviar</button>
             </div>
 
             <div id="formMsg" class="msg"></div>
             <div id="sendMsg" class="msg"></div>
-
-            <!-- No se muestra JSON -->
             <pre id="debug" style="display:none;"></pre>
           </div>
         </div>
@@ -576,7 +681,6 @@
   const slotsEl = document.getElementById("slots");
   const slotsHelpEl = document.getElementById("slotsHelp");
   const debugEl = document.getElementById("debug");
-  const courseBoxEl = document.getElementById("courseBox");
 
   const qtyEl = document.getElementById("qty");
   const qtyHintEl = document.getElementById("qtyHint");
@@ -614,6 +718,18 @@
   const logoFallback = document.getElementById("logoFallback");
   const logoImg2 = document.getElementById("logoImg2");
   const logoFallback2 = document.getElementById("logoFallback2");
+
+  // Service info (left)
+  const serviceCardEl = document.getElementById("serviceCard");
+  const serviceTypePillEl = document.getElementById("serviceTypePill");
+  const svcNameEl = document.getElementById("svcName");
+  const svcCategoryEl = document.getElementById("svcCategory");
+  const svcLearningEl = document.getElementById("svcLearning");
+  const svcPlatformEl = document.getElementById("svcPlatform");
+  const svcTutorEl = document.getElementById("svcTutor");
+  const svcUnitPriceEl = document.getElementById("svcUnitPrice");
+  const svcDiscountLineEl = document.getElementById("svcDiscountLine");
+  const svcTotalLineEl = document.getElementById("svcTotalLine");
 
   // =====================
   // State
@@ -690,10 +806,8 @@
   function slotSortKey(s){
     const fecha = String(s?.fecha||"").trim();
     const hora = String(s?.hora||"").trim();
-    // si no hay fecha/hora, los manda al final
     const d = parseISODate(fecha);
     const dayKey = d ? d.getTime() : Number.MAX_SAFE_INTEGER;
-    // hora formato "HH:mm"
     let hmKey = Number.MAX_SAFE_INTEGER;
     const m = hora.match(/^(\d{1,2}):(\d{2})/);
     if (m){
@@ -732,6 +846,122 @@
     return {ok:r.ok, status:r.status, text:t, json:j};
   }
 
+  // ===== Pricing / Service Info =====
+  function parseMoney(x){
+    if (x === null || x === undefined) return NaN;
+    const n = Number(String(x).replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function clampPct(x){
+    const n = Number(x);
+    if (!Number.isFinite(n)) return NaN;
+    return Math.max(0, Math.min(100, n));
+  }
+
+  function moneyFmtPYG(n){
+    const isInt = Number.isFinite(n) && Math.abs(n - Math.round(n)) < 1e-9;
+    return new Intl.NumberFormat("es-PY", {
+      style: "currency",
+      currency: "PYG",
+      maximumFractionDigits: isInt ? 0 : 2
+    }).format(Number.isFinite(n) ? n : 0);
+  }
+
+  function getCoursePricing(course){
+    const tipo = String(course?.Tipo_de_curso ?? course?.type ?? "").trim();
+    const listUnit = parseMoney(course?.Precio ?? course?.price ?? course?.precio);
+
+    const rawPct = course?.Descuento ?? course?.discount_pct ?? "";
+    let pct = clampPct(parseMoney(rawPct));
+
+    const isFree = (tipo.toLowerCase() === "gratuito");
+    if (isFree && !Number.isFinite(pct)) pct = 100;
+
+    let finalUnit = listUnit;
+    if (isFree && Number.isFinite(listUnit)){
+      finalUnit = listUnit * (1 - (Number.isFinite(pct) ? pct : 100) / 100);
+    }
+
+    return {
+      tipo,
+      isFree,
+      listUnit: Number.isFinite(listUnit) ? listUnit : NaN,
+      discountPct: Number.isFinite(pct) ? pct : NaN,
+      finalUnit: Number.isFinite(finalUnit) ? finalUnit : NaN
+    };
+  }
+
+  function getTutorName(course){
+    const t = course?.Tutor_del_curso || course?.tutor || null;
+    if (!t || typeof t !== "object") return "";
+    const dn = String(t?.zc_display_value || "").trim();
+    if (dn) return dn.replace(/\s+/g," ").trim();
+    const fn = String(t?.["Nombre_y_apellido.first_name"] || "").trim();
+    const ln = String(t?.["Nombre_y_apellido.last_name"] || "").trim();
+    return (fn + " " + ln).trim();
+  }
+
+  function renderServiceInfo(){
+    if (!serviceCardEl) return;
+    const c = STATE.course;
+    if (!c){
+      serviceCardEl.style.display = "none";
+      return;
+    }
+
+    const name = String(c?.nombre_curso ?? c?.name ?? "Curso").trim();
+    const category = String(c?.Categor_a ?? c?.categoria ?? c?.category ?? "").trim();
+    const platform = String(c?.Plataforma ?? c?.plataforma ?? c?.platform ?? "").trim();
+    const learning = String(c?.Tipo_de_aprendizaje ?? c?.tipo_aprendizaje ?? c?.learning_type ?? "").trim();
+    const tutor = getTutorName(c) || "—";
+
+    const pricing = getCoursePricing(c);
+
+    // qty (si no hay slot aún, igual mostramos total para qty=1)
+    const q = (() => {
+      const v = normalizeInt(qtyEl?.value);
+      return (Number.isFinite(v) && v > 0) ? v : 1;
+    })();
+
+    const unitList = pricing.listUnit;
+    const unitFinal = pricing.finalUnit;
+    const totalFinal = (Number.isFinite(unitFinal) ? unitFinal * q : NaN);
+
+    serviceTypePillEl.textContent = pricing.tipo || "—";
+    svcNameEl.textContent = name || "—";
+    svcCategoryEl.textContent = category || "—";
+    svcLearningEl.textContent = learning || "—";
+    svcPlatformEl.textContent = platform || "—";
+    svcTutorEl.textContent = tutor;
+
+    if (Number.isFinite(unitList)){
+      svcUnitPriceEl.textContent = moneyFmtPYG(unitList) + " por participante";
+    } else {
+      svcUnitPriceEl.textContent = "—";
+    }
+
+    if (pricing.isFree){
+      svcDiscountLineEl.style.display = "block";
+      svcDiscountLineEl.textContent =
+        `Descuento aplicado: ${Number.isFinite(pricing.discountPct) ? pricing.discountPct : 100}%`;
+    } else {
+      svcDiscountLineEl.style.display = "none";
+      svcDiscountLineEl.textContent = "";
+    }
+
+    if (Number.isFinite(totalFinal)){
+      svcTotalLineEl.textContent = `Total para ${q} participante(s): ${moneyFmtPYG(totalFinal)}`;
+    } else if (Number.isFinite(unitList)){
+      // si no calculó final, mostrar total con lista
+      svcTotalLineEl.textContent = `Total para ${q} participante(s): ${moneyFmtPYG(unitList * q)}`;
+    } else {
+      svcTotalLineEl.textContent = "Total: —";
+    }
+
+    serviceCardEl.style.display = "block";
+  }
+
   // =====================
   // Loading UI
   // =====================
@@ -764,27 +994,6 @@
   }
 
   // =====================
-  // Render Curso
-  // =====================
-  function renderCourse(course){
-    if (!course){
-      courseBoxEl.innerHTML = "<em>Sin datos del curso</em>";
-      return;
-    }
-
-    const name = htmlEscape(course.name || course.nombre_curso || "Curso");
-    const category = htmlEscape(course.category || course.categoria || "");
-    const price = course.price ?? course.precio ?? null;
-    const platform = htmlEscape(course.platform || course.plataforma || "");
-    const learning = htmlEscape(course.learning_type || course.tipo_aprendizaje || "");
-
-    courseBoxEl.innerHTML =
-      `<div style="font-weight:950;font-size:16px;margin-bottom:6px">${name}</div>` +
-      `<div class="muted tiny">Categoría: ${category || "-"} · Modalidad: ${learning || "-"} · Plataforma: ${platform || "-"}</div>` +
-      `<div class="muted tiny">Precio: ${price ?? "-"}</div>`;
-  }
-
-  // =====================
   // Slots
   // =====================
   function disableForm(reason){
@@ -804,10 +1013,10 @@
     if (!Array.isArray(slots) || slots.length === 0){
       slotsEl.innerHTML = "<em class='muted'>No hay turnos disponibles.</em>";
       slotsHelpEl.textContent = "";
+      renderServiceInfo();
       return disableForm("No hay turnos disponibles.");
     }
 
-    // Ordenar por fecha/hora (lista, sin calendario)
     const sorted = slots.slice().sort((a,b)=>{
       const ka = slotSortKey(a);
       const kb = slotSortKey(b);
@@ -844,7 +1053,6 @@
 
       const lab = document.createElement("label");
       lab.htmlFor = id;
-      // UI: NO mostrar slot_id
       const fechaHuman = formatDateHuman(s.fecha);
       lab.textContent = `${fechaHuman} · ${String(s.hora || "—")}`;
       right.appendChild(lab);
@@ -863,6 +1071,7 @@
     });
 
     slotsHelpEl.textContent = "Seleccioná un turno para habilitar la cantidad de participantes.";
+    renderServiceInfo();
     disableForm("Seleccioná un turno.");
   }
 
@@ -889,6 +1098,7 @@
     const qty = normalizeInt(qtyEl.value);
     if (existingBlocks && existingBlocks !== qty) buildParticipants();
 
+    renderServiceInfo();
     btnConfirm.disabled = !isFormValid();
     setMsg("", "");
     setSendMsg("", "");
@@ -974,6 +1184,7 @@
       namesWrap.appendChild(box);
     }
 
+    renderServiceInfo();
     btnConfirm.disabled = !isFormValid();
     setMsg("", "");
     setSendMsg("", "");
@@ -1151,7 +1362,10 @@
 
   qtyEl.addEventListener("input", () => {
     const s = STATE.selected_slot;
-    if (!s) return;
+    if (!s) {
+      renderServiceInfo();
+      return;
+    }
 
     const disp = normalizeInt(s.cupos_disponibles);
     let qty = normalizeInt(qtyEl.value);
@@ -1162,6 +1376,7 @@
 
     qtyEl.value = String(qty);
 
+    renderServiceInfo();
     btnConfirm.disabled = !isFormValid();
     setSendMsg("");
   });
@@ -1201,7 +1416,6 @@
         setSendMsg(`<span class='err'>No se pudo completar el envío (HTTP ${res.status}).</span>`);
       }
 
-      // Debug interno oculto
       debugEl.style.display = "none";
       debugEl.textContent =
         `POST ${res.status}\n` +
@@ -1232,7 +1446,7 @@
     STATE.course = res.json.course || null;
     STATE.slots = res.json.slots || [];
 
-    renderCourse(STATE.course);
+    renderServiceInfo();
     renderSlots(STATE.slots);
 
     setStatus(`Listo · ${(STATE.slots||[]).length} turnos`);
