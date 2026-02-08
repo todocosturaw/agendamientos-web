@@ -625,16 +625,10 @@
 
 <script>
   // =====================
-  // Config
+  // Config (CORREGIDO)
   // =====================
   const API_BASE = "https://api.taller2.workers.dev";
-
-  // IMPORTANTE:
-  // Este endpoint ahora apunta DIRECTO al Webhook de Zoho Flow (JSON).
-  // Si el navegador te bloquea por CORS, la solución correcta es enviarlo al Worker y que el Worker llame a Flow.
- const API_BASE = "https://api.taller2.workers.dev";
-const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
-
+  const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
 
   const POLL_DELAY_MS = 1500;
   const POLL_MAX_TRIES = 120;
@@ -794,17 +788,6 @@ const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
     return {ok:r.ok, status:r.status, text:t, json:j, url};
   }
 
-  async function apiPost(url, body){
-    const r = await fetch(url, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(body||{})
-    });
-    const t = await r.text();
-    let j=null; try{ j=JSON.parse(t);}catch{}
-    return {ok:r.ok, status:r.status, text:t, json:j, url};
-  }
-
   async function postReserva(payload){
     const r = await fetch(RESERVA_ENDPOINT, {
       method: "POST",
@@ -860,16 +843,13 @@ const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
 
     const unitList = toNumberFlexible(course?.precio);
 
-    // 1) Preferimos descuento_pct si viene
     let pct = course?.descuento_pct;
     pct = (pct === null || pct === undefined || pct === "") ? NaN : Number(pct);
 
-    // 2) Fallback a descuento (string), ej "15%" o "15"
     if (!Number.isFinite(pct)){
       pct = toNumberFlexible(course?.descuento);
     }
 
-    // 3) Si el curso es gratis/gratuito y no vino descuento, asumimos 100
     const isFree = /gratuit|gratis/.test(tipoLower) || (Number.isFinite(unitList) && unitList <= 0);
     const effectivePct = (isFree && !Number.isFinite(pct)) ? 100 : pct;
 
@@ -880,7 +860,6 @@ const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
     }
 
     const showDiscount = Number.isFinite(effectivePct) && effectivePct > 0;
-
     return { tipo, unitList, unitFinal, discountPct: effectivePct, showDiscount, isFree };
   }
 
@@ -921,7 +900,6 @@ const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
     svcPlatformEl.textContent = platform || "—";
     svcTutorEl.textContent = tutor;
 
-    // Precio unitario
     if (Number.isFinite(pricing.unitList)){
       if (pricing.isFree || (Number.isFinite(pricing.discountPct) && pricing.discountPct >= 100)){
         svcUnitPriceEl.innerHTML = `Gratis <span class="badgeOk">0</span>`;
@@ -932,7 +910,6 @@ const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
       svcUnitPriceEl.textContent = "—";
     }
 
-    // Línea de descuento
     if (pricing.showDiscount){
       svcDiscountLineEl.style.display = "block";
       svcDiscountLineEl.innerHTML = `Descuento: <strong>${Number.isFinite(pricing.discountPct) ? pricing.discountPct : 0}%</strong>`;
@@ -940,7 +917,6 @@ const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
       svcDiscountLineEl.style.display = "none";
     }
 
-    // Total a pagar (con descuento si corresponde)
     if (pricing.showDiscount && Number.isFinite(totalFinal)){
       svcTotalLineEl.innerHTML = `Total a pagar para ${q} participante(s): <strong>${moneyFmtPYG(totalFinal)}</strong>`;
     } else if (Number.isFinite(totalList)){
@@ -1422,21 +1398,30 @@ const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
   });
 
   // =====================
-  // Bootstrap / Refresh polling
+  // Bootstrap
   // =====================
   async function loadBootstrap(courseId){
-    showLoading("Cargando información del curso…", "Recuperando datos desde Zoho Creator.", 0.25);
+    showLoading("Cargando información del curso…", "Recuperando datos desde el sistema.", 0.25);
 
     const res = await apiGet(`${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`);
-    if (!res.ok || !res.json) return null;
-    if (res.json.ok !== true) return res.json;
+
+    if (!res.ok || !res.json){
+      setStatus(`Error (HTTP ${res.status})`);
+      showLoading("No se pudo cargar", "Verificá el course_id y que existan datos en KV.", 0.25);
+      // dejamos el overlay visible porque no hay pantalla usable sin datos
+      return null;
+    }
+
+    if (res.json.ok !== true){
+      setStatus("Sin datos");
+      showLoading("Sin datos para este curso", "Ejecutá ingest primero o verificá el ID.", 0.25);
+      return res.json;
+    }
 
     showLoading("Preparando turnos…", "Aplicando validaciones y disponibilidad.", 0.60);
 
     STATE.course_id = courseId;
     STATE.course = res.json.course || null;
-
-    // acepta slots u horarios
     STATE.slots = res.json.slots || res.json.horarios || [];
 
     renderServiceInfo();
@@ -1451,42 +1436,6 @@ const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
     setTimeout(hideLoading, 180);
 
     return res.json;
-  }
-
-  async function getDebugKV(courseId){
-    return apiGet(`${API_BASE}/api/debug-kv?course_id=${encodeURIComponent(courseId)}`);
-  }
-
-  async function forceRefreshAndWait(courseId){
-    showLoading("Actualizando turnos…", "Sincronizando disponibilidad. Esto puede tardar unos segundos.", 0.35);
-
-    const before = await getDebugKV(courseId);
-    const beforeTs = before?.json?.last_ingest_for_course?.ts || null;
-
-    const r = await apiPost(`${API_BASE}/api/refresh`, { course_id: courseId });
-    if (!r.ok) {
-      setStatus(`Refresh falló (HTTP ${r.status})`);
-      showLoading("No se pudo actualizar", "Intentá recargar la página.", 0.2);
-      setTimeout(hideLoading, 600);
-      return false;
-    }
-
-    for (let i=1;i<=POLL_MAX_TRIES;i++){
-      const p = Math.min(0.90, 0.40 + (i / POLL_MAX_TRIES) * 0.50);
-      loadBarEl.style.width = Math.round(p*100) + "%";
-
-      await new Promise(res=>setTimeout(res, POLL_DELAY_MS));
-      const d = await getDebugKV(courseId);
-      const nowTs = d?.json?.last_ingest_for_course?.ts || null;
-      const exists = Boolean(d?.json?.exists);
-
-      if (exists && nowTs && nowTs !== beforeTs) return true;
-    }
-
-    setStatus("No se detectó actualización a tiempo.");
-    showLoading("Demora en sincronización", "Podés recargar para reintentar.", 0.75);
-    setTimeout(hideLoading, 900);
-    return false;
   }
 
   // =====================
@@ -1507,14 +1456,7 @@ const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
     setStatus("Cargando…");
     showLoading("Cargando información del curso…", "Conectando con el sistema.", 0.10);
 
-    const boot = await loadBootstrap(courseId);
-    const shouldForce = (boot?.ok !== true);
-
-    if (shouldForce){
-      const updated = await forceRefreshAndWait(courseId);
-      if (updated) await loadBootstrap(courseId);
-      else hideLoading();
-    }
+    await loadBootstrap(courseId);
   })();
 </script>
 </body>
