@@ -632,7 +632,9 @@
   // IMPORTANTE:
   // Este endpoint ahora apunta DIRECTO al Webhook de Zoho Flow (JSON).
   // Si el navegador te bloquea por CORS, la solución correcta es enviarlo al Worker y que el Worker llame a Flow.
-  const RESERVA_ENDPOINT = "https://flow.zoho.com/871021303/flow/webhook/incoming?zapikey=1001.6a71d639a6c83f3afef72a200c7e1219.b2d513401f5799dc5f017136debbe921&isdebug=false";
+ const API_BASE = "https://api.taller2.workers.dev";
+const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
+
 
   const POLL_DELAY_MS = 1500;
   const POLL_MAX_TRIES = 120;
