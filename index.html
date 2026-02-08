@@ -1378,9 +1378,9 @@
       const res = await postReserva(payload);
 
       if (res.ok){
-        setSendMsg(`<span class='ok'>Enviado correctamente (HTTP ${res.status}).</span>`);
+        setSendMsg(`<span class='ok'>Enviado correctamente, una vez confirmado el pago se te notificara por correo.</span>`);
       } else {
-        setSendMsg(`<span class='err'>No se pudo completar el envío (HTTP ${res.status}).</span>`);
+        setSendMsg(`<span class='err'>No se pudo completar el envío por favor contacta con Todo Costura SA.</span>`);
       }
 
       debugEl.style.display = "none";
