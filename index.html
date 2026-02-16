@@ -427,6 +427,75 @@
       0%{background-position: 200% 0}
       100%{background-position: -200% 0}
     }
+
+    /* ======= NUEVO: intención + temporizador hold ======= */
+    .intentRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:6px;
+    }
+    .toggle{
+      display:flex;gap:10px;flex-wrap:wrap;
+      padding:10px 10px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+      box-shadow: 0 10px 18px rgba(17,24,39,.05);
+    }
+    .topt{
+      display:flex;align-items:center;gap:8px;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+      font-weight:900;
+      font-size:12.5px;
+      color:#374151;
+    }
+    .topt input{margin:0}
+    .holdBar{
+      margin-top:10px;
+      padding:10px 12px;
+      border:1px solid rgba(165,43,100,.20);
+      border-radius:16px;
+      background: rgba(165,43,100,.06);
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .holdBar strong{color:#7a1f4a}
+    .holdTimer{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(165,43,100,.25);
+      background:#fff;
+      font-weight:950;
+      color:#111827;
+      font-size:12.5px;
+      white-space:nowrap;
+    }
+    .holdTimer.warn{
+      border-color: rgba(176,0,32,.25);
+      background: rgba(176,0,32,.06);
+      color:#8a0019;
+    }
+    .linkBtn{
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:900;
+      font-size:12.5px;
+    }
   </style>
 </head>
 
@@ -484,12 +553,12 @@
     <div class="grid">
       <div class="hero">
         <h1>Reservá tu <span class="accent">turno</span> en segundos.</h1>
-        <p>Seleccioná un horario disponible y completá los datos de participantes, facturación y comprobante de pago. El sistema valida cupos en tiempo real para evitar sobre-reservas.</p>
+        <p>Seleccioná un turno disponible y completá los datos. El sistema bloquea cupos por 20 minutos al iniciar la compra y sincroniza disponibilidad en tiempo real.</p>
 
         <div class="heroNote">
-          <span class="chip"><span class="miniDot"></span> Validación de cupos</span>
-          <span class="chip"><span class="miniDot"></span> Datos de facturación</span>
-          <span class="chip"><span class="miniDot"></span> Adjuntar comprobante</span>
+          <span class="chip"><span class="miniDot"></span> Tiempo real</span>
+          <span class="chip"><span class="miniDot"></span> Hold 20 minutos</span>
+          <span class="chip"><span class="miniDot"></span> Verificación RUC</span>
         </div>
 
         <!-- Tabla de info del servicio -->
@@ -520,10 +589,41 @@
       <div class="card">
         <div class="cardHead">
           <div class="title">Formulario de inscripción</div>
-          <div class="sub">Primero seleccioná un turno. Luego completá participantes y datos de facturación.</div>
+          <div class="sub">Elegí si solo querés ver horarios o si vas a comprar. Si comprás, al seleccionar asientos se bloquean por 20 minutos.</div>
         </div>
 
         <div class="cardBody">
+
+          <!-- ======= NUEVO: intención ======= -->
+          <div class="section">
+            <h3>¿Qué deseas hacer?</h3>
+            <div class="intentRow">
+              <div class="toggle" role="group" aria-label="Intención">
+                <label class="topt">
+                  <input type="radio" name="intent" value="view" checked>
+                  Solo ver horarios
+                </label>
+                <label class="topt">
+                  <input type="radio" name="intent" value="buy">
+                  Comprar curso
+                </label>
+              </div>
+              <div class="muted tiny" id="intentHint">Podés ver cupos en tiempo real. Para comprar, elegí “Comprar curso”.</div>
+            </div>
+
+            <!-- ======= NUEVO: barra hold ======= -->
+            <div class="holdBar" id="holdBar">
+              <div>
+                <strong>Reserva temporal activa</strong>
+                <div class="tiny muted" id="holdText">—</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <div class="holdTimer" id="holdTimer">20:00</div>
+                <button class="linkBtn" id="btnRelease" type="button">Liberar</button>
+              </div>
+            </div>
+          </div>
+
           <div class="section">
             <h3>Turnos disponibles</h3>
             <div id="slots" class="slots"></div>
@@ -534,7 +634,7 @@
             <h3>Participantes</h3>
             <div class="row">
               <div class="field">
-                <label for="qty">Cantidad de participantes</label>
+                <label for="qty">Cantidad de participantes / asientos</label>
                 <input id="qty" type="number" min="1" step="1" value="1" disabled>
                 <div id="qtyHint" class="muted tiny"></div>
               </div>
@@ -552,11 +652,11 @@
             <div class="row">
               <div class="field">
                 <label for="billName">Razón social / Nombre *</label>
-                <input id="billName" type="text" placeholder="Ej: Juan Pérez / Todo Costura S.A.">
+                <input id="billName" type="text" placeholder="Ej: Juan Pérez / Todo Costura S.A." disabled>
               </div>
               <div class="field">
                 <label for="billDocType">Tipo de documento *</label>
-                <select id="billDocType">
+                <select id="billDocType" disabled>
                   <option value="personal" selected>Documento personal (Cédula)</option>
                   <option value="fiscal">Documento fiscal (RUC)</option>
                 </select>
@@ -566,29 +666,30 @@
             <div class="row">
               <div class="field">
                 <label id="billDocLabel" for="billDocNumber">Documento personal (Cédula) *</label>
-                <input id="billDocNumber" type="text" placeholder="Ej: 1234567">
+                <input id="billDocNumber" type="text" placeholder="Ej: 1234567" disabled>
+                <div class="tiny muted" id="rucHint" style="margin-top:6px"></div>
               </div>
               <div class="field">
                 <label for="billEmail">Correo de facturación *</label>
-                <input id="billEmail" type="email" placeholder="facturacion@dominio.com">
+                <input id="billEmail" type="email" placeholder="facturacion@dominio.com" disabled>
               </div>
             </div>
 
             <div class="row">
               <div class="field">
                 <label for="billPhone">Teléfono (opcional)</label>
-                <input id="billPhone" type="text" placeholder="+595…">
+                <input id="billPhone" type="text" placeholder="+595…" disabled>
               </div>
               <div class="field">
                 <label for="billAddress">Dirección *</label>
-                <input id="billAddress" type="text" placeholder="Calle, número, barrio">
+                <input id="billAddress" type="text" placeholder="Calle, número, barrio" disabled>
               </div>
             </div>
 
             <div class="row">
               <div class="field">
                 <label for="billCity">Ciudad *</label>
-                <input id="billCity" type="text" placeholder="Ej: Asunción">
+                <input id="billCity" type="text" placeholder="Ej: Asunción" disabled>
               </div>
             </div>
           </div>
@@ -598,7 +699,7 @@
             <div class="row">
               <div class="field">
                 <label for="payFile">Adjuntar comprobante (JPG/PNG/PDF) *</label>
-                <input id="payFile" type="file" accept="image/*,application/pdf">
+                <input id="payFile" type="file" accept="image/*,application/pdf" disabled>
               </div>
               <div class="field">
                 <label>Estado</label>
@@ -610,7 +711,6 @@
           <div class="section">
             <h3>Confirmación</h3>
             <div class="btns">
-              <button id="btnPreview" class="ghost" style="display:none" disabled>Vista previa</button>
               <button id="btnConfirm" class="primary" disabled>Confirmar y enviar</button>
             </div>
 
@@ -625,15 +725,18 @@
 
 <script>
   // =====================
-  // Config (CORREGIDO)
+  // Config
   // =====================
   const API_BASE = "https://api.taller2.workers.dev";
-  const RESERVA_ENDPOINT = `${API_BASE}/api/reserva`;
 
-  const POLL_DELAY_MS = 1500;
-  const POLL_MAX_TRIES = 120;
+  const RESERVA_ENDPOINT   = `${API_BASE}/api/reserva`;
+  const HOLD_ENDPOINT      = `${API_BASE}/api/hold`;
+  const RELEASE_ENDPOINT   = `${API_BASE}/api/release`;
+  const CONFIRM_ENDPOINT   = `${API_BASE}/api/confirmar`;
+  const DNIT_ENDPOINT      = `${API_BASE}/api/dnit`;
 
   const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
+  const HOLD_MS = 20 * 60 * 1000;
 
   // Logo (opcional)
   const LOGO_URL = ""; // ej: "./logo-todocostura.png"
@@ -663,6 +766,7 @@
   const billPhoneEl = document.getElementById("billPhone");
   const billAddressEl = document.getElementById("billAddress");
   const billCityEl = document.getElementById("billCity");
+  const rucHintEl = document.getElementById("rucHint");
 
   // Payment proof
   const payFileEl = document.getElementById("payFile");
@@ -695,6 +799,13 @@
   const svcDiscountLineEl = document.getElementById("svcDiscountLine");
   const svcTotalLineEl = document.getElementById("svcTotalLine");
 
+  // Intent + Hold
+  const intentHintEl = document.getElementById("intentHint");
+  const holdBarEl = document.getElementById("holdBar");
+  const holdTextEl = document.getElementById("holdText");
+  const holdTimerEl = document.getElementById("holdTimer");
+  const btnReleaseEl = document.getElementById("btnRelease");
+
   // =====================
   // State
   // =====================
@@ -703,7 +814,21 @@
     course: null,
     slots: [],
     selected_slot: null,
-    payment_proof: null // {filename,mime_type,size_bytes,base64}
+
+    disponibilidad_id: null,     // 👈 clave para inventario compartido
+    available_rt: null,          // cupos en tiempo real (por disponibilidad)
+
+    intent: "view",              // "view" | "buy"
+    client_id: null,
+
+    hold: null,                  // { hold_id, expires_at, qty }
+    hold_timer: null,            // interval id
+
+    ws: null,
+
+    payment_proof: null,         // {filename,mime_type,size_bytes,base64}
+    ruc_verified: false,
+    ruc_tipo_entidad: ""
   };
 
   // =====================
@@ -788,8 +913,8 @@
     return {ok:r.ok, status:r.status, text:t, json:j, url};
   }
 
-  async function postReserva(payload){
-    const r = await fetch(RESERVA_ENDPOINT, {
+  async function apiPost(url, payload){
+    const r = await fetch(url, {
       method: "POST",
       headers: { "Content-Type":"application/json" },
       body: JSON.stringify(payload)
@@ -800,7 +925,7 @@
   }
 
   // =====================
-  // Pricing
+  // Pricing (igual que tu versión)
   // =====================
   function toNumberFlexible(x){
     if (x === null || x === undefined) return NaN;
@@ -845,10 +970,7 @@
 
     let pct = course?.descuento_pct;
     pct = (pct === null || pct === undefined || pct === "") ? NaN : Number(pct);
-
-    if (!Number.isFinite(pct)){
-      pct = toNumberFlexible(course?.descuento);
-    }
+    if (!Number.isFinite(pct)) pct = toNumberFlexible(course?.descuento);
 
     const isFree = /gratuit|gratis/.test(tipoLower) || (Number.isFinite(unitList) && unitList <= 0);
     const effectivePct = (isFree && !Number.isFinite(pct)) ? 100 : pct;
@@ -872,17 +994,13 @@
 
   function renderServiceInfo(){
     const c = STATE.course;
-    if (!c){
-      serviceCardEl.style.display = "none";
-      return;
-    }
+    if (!c){ serviceCardEl.style.display = "none"; return; }
 
     const name = String(c?.nombre_curso || "Curso").trim();
     const category = String(c?.categoria || "").trim();
     const platform = String(c?.plataforma || "").trim();
     const learning = String(c?.tipo_aprendizaje || "").trim();
     const tutor = getTutorName(c);
-
     const pricing = getPricingFromCourse(c);
 
     const q = (() => {
@@ -938,10 +1056,7 @@
     loadBarEl.style.width = Math.round(p * 100) + "%";
     loadingEl.style.display = "flex";
   }
-
-  function hideLoading(){
-    loadingEl.style.display = "none";
-  }
+  function hideLoading(){ loadingEl.style.display = "none"; }
 
   // =====================
   // Logo
@@ -949,10 +1064,7 @@
   function setupLogo(){
     if (!LOGO_URL) return;
 
-    [logoImg, logoImg2].forEach((img) => {
-      img.src = LOGO_URL;
-      img.style.display = "block";
-    });
+    [logoImg, logoImg2].forEach((img) => { img.src = LOGO_URL; img.style.display = "block"; });
     [logoFallback, logoFallback2].forEach((el) => el.style.display = "none");
 
     logoImg.onerror = () => { logoImg.style.display="none"; logoFallback.style.display="block"; };
@@ -960,7 +1072,96 @@
   }
 
   // =====================
-  // Slots
+  // Intent
+  // =====================
+  function setIntent(intent){
+    STATE.intent = intent;
+
+    const buying = (intent === "buy");
+    intentHintEl.textContent = buying
+      ? "Al seleccionar cantidad se bloquean cupos por 20 minutos."
+      : "Modo solo lectura: podés ver cupos en tiempo real sin bloquear.";
+
+    // si cambia a view y hay hold, liberar
+    if (!buying && STATE.hold){
+      releaseHold("Cambio a solo ver horarios");
+    }
+
+    applyUIAccess();
+  }
+
+  function applyUIAccess(){
+    const buying = (STATE.intent === "buy");
+
+    // Slots se pueden seleccionar siempre, pero si es view no habilitamos pasos de compra
+    qtyEl.disabled = !buying || !STATE.selected_slot || !Number.isFinite(STATE.available_rt) || STATE.available_rt <= 0;
+    btnBuild.disabled = !buying || qtyEl.disabled;
+
+    // Bloquear secciones de facturación/pago hasta que haya hold activo (y modo buy)
+    const canFill = buying && !!STATE.hold;
+
+    [billNameEl, billDocTypeEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl, payFileEl].forEach(el=>{
+      el.disabled = !canFill;
+    });
+
+    btnConfirm.disabled = !isFormValid();
+
+    renderServiceInfo();
+  }
+
+  // =====================
+  // WebSocket tiempo real
+  // =====================
+  function wsUrlForDisponibilidad(disponibilidad_id){
+    const u = new URL(API_BASE.replace(/^http/,"ws") + "/ws");
+    u.searchParams.set("disponibilidad_id", disponibilidad_id);
+    return u.toString();
+  }
+
+  function connectWS(){
+    if (!STATE.disponibilidad_id) return;
+
+    // cerrar anterior si existe
+    if (STATE.ws){
+      try { STATE.ws.close(); } catch {}
+      STATE.ws = null;
+    }
+
+    const ws = new WebSocket(wsUrlForDisponibilidad(STATE.disponibilidad_id));
+    STATE.ws = ws;
+
+    ws.onopen = () => {
+      setStatus("Conectado · tiempo real");
+    };
+
+    ws.onmessage = (ev) => {
+      let msg = null;
+      try { msg = JSON.parse(ev.data); } catch {}
+      if (!msg) return;
+
+      if (msg.type === "snapshot" || msg.type === "update"){
+        if (Number.isFinite(Number(msg.available))) {
+          STATE.available_rt = Number(msg.available);
+          // refrescar UI de cupos
+          renderSlots(STATE.slots);
+          applyUIAccess();
+        }
+      }
+    };
+
+    ws.onclose = () => {
+      setStatus("Desconectado · reintentando…");
+      // Reintento simple
+      setTimeout(() => {
+        if (STATE.disponibilidad_id) connectWS();
+      }, 1500);
+    };
+
+    ws.onerror = () => { /* onclose hará retry */ };
+  }
+
+  // =====================
+  // Slots (mostrar cupo RT por disponibilidad)
   // =====================
   function disableForm(reason){
     qtyEl.disabled = true;
@@ -975,13 +1176,15 @@
 
   function renderSlots(slots){
     slotsEl.innerHTML = "";
-    STATE.selected_slot = null;
+    STATE.selected_slot = STATE.selected_slot; // no resetear si cambian cupos
 
     if (!Array.isArray(slots) || slots.length === 0){
       slotsEl.innerHTML = "<em class='muted'>No hay turnos disponibles.</em>";
       slotsHelpEl.textContent = "";
       return disableForm("No hay turnos disponibles.");
     }
+
+    const available = Number.isFinite(STATE.available_rt) ? STATE.available_rt : null;
 
     const sorted = slots.slice().sort((a,b)=>{
       const ka = slotSortKey(a);
@@ -996,7 +1199,7 @@
     sorted.forEach((s, idx) => {
       const id = `slot_${idx}`;
 
-      const disp = normalizeInt(s.cupos_disponibles);
+      const disp = available; // 👈 cupo global por disponibilidad
       const isOk = Number.isFinite(disp) && disp > 0;
 
       const box = document.createElement("div");
@@ -1008,6 +1211,10 @@
       input.id = id;
       input.value = String(s.slot_id ?? idx);
       input.disabled = !isOk;
+
+      // mantener seleccionado si corresponde
+      const isSelected = STATE.selected_slot && String(STATE.selected_slot.slot_id) === String(s.slot_id);
+      if (isSelected) input.checked = true;
 
       input.addEventListener("change", () => {
         STATE.selected_slot = s;
@@ -1036,16 +1243,23 @@
       slotsEl.appendChild(box);
     });
 
-    slotsHelpEl.textContent = "Seleccioná un turno para habilitar la cantidad de participantes.";
-    disableForm("Seleccioná un turno.");
+    slotsHelpEl.textContent = "Seleccioná un turno para continuar.";
+    if (!STATE.selected_slot) disableForm("Seleccioná un turno.");
   }
 
   function onSlotSelected(){
     const s = STATE.selected_slot;
     if (!s) return disableForm("Seleccioná un turno.");
 
-    const disp = normalizeInt(s.cupos_disponibles);
-    if (!Number.isFinite(disp) || disp <= 0) return disableForm("Este turno no tiene cupos disponibles.");
+    // Cupo global RT
+    const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
+    if (!Number.isFinite(disp) || disp <= 0) return disableForm("No hay cupos disponibles.");
+
+    // solo habilitar qty si está en modo compra
+    if (STATE.intent !== "buy"){
+      disableForm("Estás en modo solo lectura. Elegí “Comprar curso” para continuar.");
+      return;
+    }
 
     qtyEl.disabled = false;
     qtyEl.min = "1";
@@ -1057,12 +1271,18 @@
     qtyEl.value = String(v);
 
     qtyHintEl.textContent = `Máximo permitido: ${disp}.`;
+
+    // Si hay hold activo, y el usuario cambia slot, lo mantenemos igual porque inventario es global.
+    // Si querés forzar selección de slot previo a hold, esto es correcto.
+
     btnBuild.disabled = false;
 
     const existingBlocks = namesWrap.querySelectorAll('[data-pblock="1"]').length;
     const qty = normalizeInt(qtyEl.value);
     if (existingBlocks && existingBlocks !== qty) buildParticipants();
 
+    // Al seleccionar slot en modo compra, aún NO bloqueamos.
+    // Bloqueamos cuando el usuario fija cantidad y se ejecuta createHold().
     renderServiceInfo();
     btnConfirm.disabled = !isFormValid();
     setMsg("", "");
@@ -1070,7 +1290,127 @@
   }
 
   // =====================
-  // Participants
+  // Hold (crear / liberar / timer)
+  // =====================
+  function ensureClientId(){
+    if (STATE.client_id) return STATE.client_id;
+    const saved = localStorage.getItem("tc_client_id");
+    if (saved) { STATE.client_id = saved; return saved; }
+    const cid = "c_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+    localStorage.setItem("tc_client_id", cid);
+    STATE.client_id = cid;
+    return cid;
+  }
+
+  function showHoldBar(){
+    holdBarEl.style.display = "flex";
+  }
+  function hideHoldBar(){
+    holdBarEl.style.display = "none";
+  }
+
+  function formatMMSS(ms){
+    const s = Math.max(0, Math.floor(ms/1000));
+    const mm = String(Math.floor(s/60)).padStart(2,"0");
+    const ss = String(s%60).padStart(2,"0");
+    return `${mm}:${ss}`;
+  }
+
+  function startHoldTimer(){
+    if (!STATE.hold) return;
+
+    if (STATE.hold_timer) clearInterval(STATE.hold_timer);
+
+    const tick = () => {
+      if (!STATE.hold) return;
+      const left = STATE.hold.expires_at - Date.now();
+      holdTimerEl.textContent = formatMMSS(left);
+      holdTimerEl.classList.toggle("warn", left <= 2*60*1000);
+
+      if (left <= 0){
+        clearInterval(STATE.hold_timer);
+        STATE.hold_timer = null;
+        // expira: liberar localmente (servidor expira igual, pero avisamos UI)
+        STATE.hold = null;
+        hideHoldBar();
+        applyUIAccess();
+        setSendMsg("<span class='err'>Se venció el tiempo de reserva temporal. Volvé a seleccionar cantidad.</span>");
+      }
+    };
+
+    tick();
+    STATE.hold_timer = setInterval(tick, 500);
+  }
+
+  async function createOrUpdateHold(){
+    if (STATE.intent !== "buy") return;
+    if (!STATE.disponibilidad_id) return;
+    if (!STATE.selected_slot) { setSendMsg("<span class='err'>Seleccioná un turno.</span>"); return; }
+
+    const qty = normalizeInt(qtyEl.value);
+    if (!Number.isFinite(qty) || qty < 1) return;
+
+    // Si ya existe hold, liberar y crear uno nuevo (simple y consistente)
+    if (STATE.hold){
+      await releaseHold("Actualizar cantidad");
+    }
+
+    btnConfirm.disabled = true;
+    setSendMsg("<span class='muted'>Reservando cupos temporalmente…</span>");
+
+    const payload = {
+      disponibilidad_id: STATE.disponibilidad_id,
+      qty,
+      client_id: ensureClientId(),
+      available_snapshot: Number.isFinite(STATE.available_rt) ? STATE.available_rt : null,
+      // opcional para tracking
+      course_id: STATE.course_id,
+      slot_id: STATE.selected_slot?.slot_id || null
+    };
+
+    const res = await apiPost(HOLD_ENDPOINT, payload);
+    if (!res.ok || !res.json || res.json.ok !== true){
+      setSendMsg(`<span class='err'>No se pudo reservar temporalmente. Cupos disponibles: ${htmlEscape(res.json?.available ?? STATE.available_rt ?? "-")}.</span>`);
+      return;
+    }
+
+    STATE.hold = { hold_id: res.json.hold_id, expires_at: res.json.expires_at, qty };
+    holdTextEl.textContent = `Asientos reservados: ${qty}. Confirmá antes de que expire.`;
+    showHoldBar();
+    startHoldTimer();
+
+    setSendMsg("<span class='ok'>Cupos bloqueados. Continuá con los datos y confirmá.</span>");
+    applyUIAccess();
+  }
+
+  async function releaseHold(reason){
+    if (!STATE.hold) return;
+
+    const hold_id = STATE.hold.hold_id;
+    const client_id = ensureClientId();
+
+    STATE.hold = null;
+    hideHoldBar();
+    if (STATE.hold_timer) { clearInterval(STATE.hold_timer); STATE.hold_timer = null; }
+    applyUIAccess();
+
+    try{
+      await apiPost(RELEASE_ENDPOINT, {
+        disponibilidad_id: STATE.disponibilidad_id,
+        hold_id,
+        client_id,
+        reason: reason || ""
+      });
+    } catch {}
+  }
+
+  btnReleaseEl.addEventListener("click", async () => {
+    await releaseHold("Liberado por usuario");
+    setSendMsg("<span class='muted'>Reserva temporal liberada.</span>");
+  });
+
+  // =====================
+  // Participants (igual con mínimos ajustes)
   // =====================
   function makeField(i, key, labelText, type, required, placeholder){
     const wrap = document.createElement("div");
@@ -1098,10 +1438,9 @@
   function buildParticipants(){
     namesWrap.innerHTML = "";
 
-    const s = STATE.selected_slot;
-    if (!s) return;
+    if (!STATE.selected_slot) return;
 
-    const disp = normalizeInt(s.cupos_disponibles);
+    const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
     const qty = normalizeInt(qtyEl.value);
 
     if (!Number.isFinite(qty) || qty < 1){
@@ -1110,7 +1449,7 @@
       return;
     }
     if (!Number.isFinite(disp) || disp < 1){
-      setMsg("Disponibilidad inválida para este turno.", "err");
+      setMsg("Disponibilidad inválida.", "err");
       btnConfirm.disabled = true;
       return;
     }
@@ -1123,7 +1462,7 @@
     const note = document.createElement("div");
     note.className = "muted tiny";
     note.style.marginTop = "10px";
-    note.textContent = "Completá los datos de cada participante (campos obligatorios: nombres, apellidos, cédula, email).";
+    note.textContent = "Completá los datos de cada participante (obligatorio: nombres, apellidos, cédula, email).";
     namesWrap.appendChild(note);
 
     for (let i=1;i<=qty;i++){
@@ -1173,13 +1512,18 @@
   }
 
   // =====================
-  // Billing
+  // Billing + RUC DNIT
   // =====================
   function refreshBillingDocUI(){
     const type = billDocTypeEl.value;
+    STATE.ruc_verified = false;
+    STATE.ruc_tipo_entidad = "";
+    rucHintEl.textContent = "";
+
     if (type === "fiscal"){
       billDocLabelEl.textContent = "Documento fiscal (RUC) *";
       billDocNumberEl.placeholder = "Ej: 80012345-6";
+      rucHintEl.textContent = "Al salir del campo se verificará el RUC en DNIT.";
     } else {
       billDocLabelEl.textContent = "Documento personal (Cédula) *";
       billDocNumberEl.placeholder = "Ej: 1234567";
@@ -1195,7 +1539,8 @@
       email: (billEmailEl.value||"").trim(),
       telefono: (billPhoneEl.value||"").trim(),
       direccion: (billAddressEl.value||"").trim(),
-      ciudad: (billCityEl.value||"").trim()
+      ciudad: (billCityEl.value||"").trim(),
+      tipo_entidad: STATE.ruc_tipo_entidad || ""
     };
   }
 
@@ -1207,7 +1552,42 @@
     if (!b.email || !isEmailBasic(b.email)) return false;
     if (!b.direccion) return false;
     if (!b.ciudad) return false;
+
+    // Si es RUC, debe estar verificado
+    if (b.tipo_documento === "fiscal" && !STATE.ruc_verified) return false;
+
     return true;
+  }
+
+  async function verifyRUCIfNeeded(){
+    const type = billDocTypeEl.value;
+    if (type !== "fiscal") return;
+
+    const ruc = (billDocNumberEl.value || "").trim();
+    if (!ruc) { STATE.ruc_verified = false; rucHintEl.textContent = "Ingresá un RUC válido."; return; }
+
+    rucHintEl.textContent = "Verificando RUC…";
+    STATE.ruc_verified = false;
+    STATE.ruc_tipo_entidad = "";
+
+    const res = await apiGet(`${DNIT_ENDPOINT}?ruc=${encodeURIComponent(ruc)}`);
+    if (!res.ok || !res.json || res.json.ok !== true){
+      rucHintEl.textContent = "RUC no verificado. Verificá el número o intentá nuevamente.";
+      STATE.ruc_verified = false;
+      btnConfirm.disabled = !isFormValid();
+      return;
+    }
+
+    // Autocompletar
+    const rz = String(res.json.razon_social || "").trim();
+    const te = String(res.json.tipo_entidad || "").trim();
+
+    if (rz) billNameEl.value = rz;
+    STATE.ruc_tipo_entidad = te;
+    STATE.ruc_verified = true;
+
+    rucHintEl.textContent = `RUC verificado${te ? " · " + te : ""}.`;
+    btnConfirm.disabled = !isFormValid();
   }
 
   // =====================
@@ -1270,13 +1650,18 @@
   // Validation
   // =====================
   function isFormValid(){
-    const s = STATE.selected_slot;
-    if (!s) return false;
+    if (STATE.intent !== "buy") return false;
+    if (!STATE.selected_slot) return false;
+    if (!STATE.hold) return false;
 
-    const disp = normalizeInt(s.cupos_disponibles);
+    const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
     const qty = normalizeInt(qtyEl.value);
+
     if (!Number.isFinite(disp) || disp < 1) return false;
-    if (!Number.isFinite(qty) || qty < 1 || qty > disp) return false;
+    if (!Number.isFinite(qty) || qty < 1) return false;
+
+    // la cantidad debe coincidir con el hold
+    if (qty !== STATE.hold.qty) return false;
 
     const participants = getParticipants();
     if (participants.length !== qty) return false;
@@ -1291,11 +1676,14 @@
     if (!isBillingValid()) return false;
     if (!isPaymentProofValid()) return false;
 
+    // hold no expirado
+    if (Date.now() >= STATE.hold.expires_at) return false;
+
     return true;
   }
 
   // =====================
-  // Payload
+  // Payload (incluye disponibilidad_id + hold_id)
   // =====================
   function buildPayload(){
     return {
@@ -1305,16 +1693,28 @@
       },
       course_id: STATE.course_id,
       course: safeCourse(STATE.course),
+
+      disponibilidad_id: STATE.disponibilidad_id,
+
       slot: {
         slot_id: STATE.selected_slot?.slot_id || null,
         fecha: STATE.selected_slot?.fecha || null,
         hora: STATE.selected_slot?.hora || null,
-        cupos_disponibles_snapshot: STATE.selected_slot?.cupos_disponibles ?? null
+        cupos_disponibles_snapshot: STATE.available_rt ?? null
       },
+
+      hold: {
+        hold_id: STATE.hold?.hold_id || null,
+        expires_at: STATE.hold?.expires_at || null,
+        qty: STATE.hold?.qty || null,
+        client_id: ensureClientId()
+      },
+
       reservation: {
         cantidad_participantes: normalizeInt(qtyEl.value),
         participantes: getParticipants()
       },
+
       billing: getBilling(),
       payment_proof: STATE.payment_proof
     };
@@ -1328,17 +1728,20 @@
     buildParticipants();
   });
 
+  qtyEl.addEventListener("change", async () => {
+    renderServiceInfo();
+    // En modo compra: al cambiar cantidad, se crea el hold
+    await createOrUpdateHold();
+    btnConfirm.disabled = !isFormValid();
+  });
+
   qtyEl.addEventListener("input", () => {
-    const s = STATE.selected_slot;
-    if (!s) { renderServiceInfo(); return; }
-
-    const disp = normalizeInt(s.cupos_disponibles);
+    // limitar por cupo disponible (RT)
+    const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
     let qty = normalizeInt(qtyEl.value);
-
     if (!Number.isFinite(qty)) qty = 1;
     if (qty < 1) qty = 1;
     if (Number.isFinite(disp) && disp > 0 && qty > disp) qty = disp;
-
     qtyEl.value = String(qty);
 
     renderServiceInfo();
@@ -1347,7 +1750,12 @@
   });
 
   billDocTypeEl.addEventListener("change", refreshBillingDocUI);
-  [billNameEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
+
+  billDocNumberEl.addEventListener("blur", async () => {
+    await verifyRUCIfNeeded();
+  });
+
+  [billNameEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
     el.addEventListener("input", ()=>{
       btnConfirm.disabled = !isFormValid();
       setSendMsg("");
@@ -1361,26 +1769,57 @@
     setSendMsg("");
   });
 
+  // Intent radios
+  document.querySelectorAll('input[name="intent"]').forEach(r => {
+    r.addEventListener("change", () => setIntent(r.value));
+  });
+
+  // Confirm: revalidar y luego enviar
   btnConfirm.addEventListener("click", async (e) => {
     e.preventDefault();
 
     if (!isFormValid()){
-      setMsg("<span class='err'>Revisá: turno, participantes, facturación y comprobante.</span>");
+      setMsg("<span class='err'>Revisá: selección, cantidad, hold activo, participantes, facturación y comprobante.</span>");
       return;
     }
 
+    btnConfirm.disabled = true;
+    setSendMsg("<span class='muted'>Revalidando cupos…</span>");
+
+    // 1) Confirmar hold (commit en backend)
+    const commit = await apiPost(CONFIRM_ENDPOINT, {
+      disponibilidad_id: STATE.disponibilidad_id,
+      hold_id: STATE.hold.hold_id,
+      client_id: ensureClientId()
+    });
+
+    if (!commit.ok || !commit.json || commit.json.ok !== true){
+      setSendMsg("<span class='err'>No se pudo confirmar: cupos cambiaron o el hold expiró. Volvé a intentar.</span>");
+      // limpiar hold local si expiró
+      if (commit.status === 410) {
+        STATE.hold = null;
+        hideHoldBar();
+        applyUIAccess();
+      }
+      btnConfirm.disabled = !isFormValid();
+      return;
+    }
+
+    // 2) Enviar a Zoho Flow (tu proceso actual)
+    setSendMsg("<span class='muted'>Enviando datos…</span>");
     const payload = buildPayload();
 
-    btnConfirm.disabled = true;
-    setSendMsg("<span class='muted'>Enviando…</span>");
-
     try{
-      const res = await postReserva(payload);
-
-      if (res.ok){
-        setSendMsg(`<span class='ok'>Enviado correctamente, una vez confirmado el pago se te notificara por correo.</span>`);
+      const res = await apiPost(RESERVA_ENDPOINT, payload);
+      if (res.ok && res.json && res.json.ok === true){
+        setSendMsg(`<span class='ok'>Enviado correctamente. Una vez confirmado el pago se te notificará por correo.</span>`);
+        // liberar estado local (ya está confirmado en backend)
+        STATE.hold = null;
+        hideHoldBar();
+        if (STATE.hold_timer) { clearInterval(STATE.hold_timer); STATE.hold_timer = null; }
+        applyUIAccess();
       } else {
-        setSendMsg(`<span class='err'>No se pudo completar el envío por favor contacta con Todo Costura SA.</span>`);
+        setSendMsg(`<span class='err'>No se pudo completar el envío. Contactá con Todo Costura SA.</span>`);
       }
 
       debugEl.style.display = "none";
@@ -1408,7 +1847,6 @@
     if (!res.ok || !res.json){
       setStatus(`Error (HTTP ${res.status})`);
       showLoading("No se pudo cargar", "Verificá el course_id y que existan datos en KV.", 0.25);
-      // dejamos el overlay visible porque no hay pantalla usable sin datos
       return null;
     }
 
@@ -1424,15 +1862,33 @@
     STATE.course = res.json.course || null;
     STATE.slots = res.json.slots || res.json.horarios || [];
 
+    // 👇 disponibilidad_id debe venir del bootstrap
+    STATE.disponibilidad_id = String(res.json.disponibilidad_id || "").trim() || null;
+
+    // fallback: si todavía no lo tenés en backend, no se puede tener inventario compartido real
+    if (!STATE.disponibilidad_id){
+      setStatus("Error · falta disponibilidad");
+      setMsg("<span class='err'>Este curso no trae disponibilidad_id en /api/bootstrap. Debe incluirse para inventario compartido.</span>");
+      showLoading("Falta disponibilidad_id", "Ajustá /api/bootstrap para devolver disponibilidad_id.", 0.25);
+      return res.json;
+    }
+
+    // Inicialmente, usamos el cupo del primer slot como snapshot base (hasta que DO responda)
+    const first = STATE.slots && STATE.slots[0] ? STATE.slots[0] : null;
+    const snap = normalizeInt(first?.cupos_disponibles);
+    STATE.available_rt = Number.isFinite(snap) ? snap : null;
+
     renderServiceInfo();
     renderSlots(STATE.slots);
 
-    setStatus(`Listo · ${(STATE.slots||[]).length} turnos`);
     refreshBillingDocUI();
+    applyUIAccess();
 
-    btnConfirm.disabled = !isFormValid();
+    // conectar WS para cupo RT real
+    connectWS();
 
-    showLoading("Listo", "Podés continuar con la inscripción.", 1.0);
+    setStatus(`Listo · ${(STATE.slots||[]).length} turnos`);
+    showLoading("Listo", "Podés continuar.", 1.0);
     setTimeout(hideLoading, 180);
 
     return res.json;
@@ -1443,6 +1899,7 @@
   // =====================
   (async function init(){
     setupLogo();
+    ensureClientId();
 
     const courseId = getCourseIdFromHash();
     if (!courseId){
