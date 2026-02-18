@@ -428,7 +428,7 @@
       100%{background-position: -200% 0}
     }
 
-    /* ======= NUEVO: intención + temporizador hold ======= */
+    /* intención + temporizador hold */
     .intentRow{
       display:flex;
       gap:10px;
@@ -553,11 +553,11 @@
     <div class="grid">
       <div class="hero">
         <h1>Reservá tu <span class="accent">turno</span> en segundos.</h1>
-        <p>Seleccioná un turno disponible y completá los datos. El sistema bloquea cupos por 20 minutos al iniciar la compra y sincroniza disponibilidad en tiempo real.</p>
+        <p>Seleccioná un turno disponible y completá los datos. El sistema bloquea cupos por 6 minutos al iniciar la compra y sincroniza disponibilidad en tiempo real.</p>
 
         <div class="heroNote">
           <span class="chip"><span class="miniDot"></span> Tiempo real</span>
-          <span class="chip"><span class="miniDot"></span> Hold 20 minutos</span>
+          <span class="chip"><span class="miniDot"></span> Hold 6 minutos</span>
           <span class="chip"><span class="miniDot"></span> Verificación RUC</span>
         </div>
 
@@ -589,12 +589,12 @@
       <div class="card">
         <div class="cardHead">
           <div class="title">Formulario de inscripción</div>
-          <div class="sub">Elegí si solo querés ver horarios o si vas a comprar. Si comprás, al seleccionar asientos se bloquean por 20 minutos.</div>
+          <div class="sub">Elegí si solo querés ver horarios o si vas a comprar. Si comprás, al seleccionar un turno se bloquean cupos por 6 minutos.</div>
         </div>
 
         <div class="cardBody">
 
-          <!-- ======= NUEVO: intención ======= -->
+          <!-- Intención -->
           <div class="section">
             <h3>¿Qué deseas hacer?</h3>
             <div class="intentRow">
@@ -611,14 +611,14 @@
               <div class="muted tiny" id="intentHint">Podés ver cupos en tiempo real. Para comprar, elegí “Comprar curso”.</div>
             </div>
 
-            <!-- ======= NUEVO: barra hold ======= -->
+            <!-- Barra hold -->
             <div class="holdBar" id="holdBar">
               <div>
                 <strong>Reserva temporal activa</strong>
                 <div class="tiny muted" id="holdText">—</div>
               </div>
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <div class="holdTimer" id="holdTimer">20:00</div>
+                <div class="holdTimer" id="holdTimer">06:00</div>
                 <button class="linkBtn" id="btnRelease" type="button">Liberar</button>
               </div>
             </div>
@@ -732,11 +732,11 @@
   const RESERVA_ENDPOINT   = `${API_BASE}/api/reserva`;
   const HOLD_ENDPOINT      = `${API_BASE}/api/hold`;
   const RELEASE_ENDPOINT   = `${API_BASE}/api/release`;
-  const CONFIRM_ENDPOINT   = `${API_BASE}/api/confirmar`;
+  const CONFIRM_ENDPOINT   = `${API_BASE}/api/confirm`;   // ✅ unificado (antes /api/confirmar)
   const DNIT_ENDPOINT      = `${API_BASE}/api/dnit`;
 
   const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
-  const HOLD_MS = 20 * 60 * 1000;
+  const HOLD_MS = 6 * 60 * 1000;          // ✅ 6 minutos
 
   // Logo (opcional)
   const LOGO_URL = ""; // ej: "./logo-todocostura.png"
@@ -815,18 +815,18 @@
     slots: [],
     selected_slot: null,
 
-    disponibilidad_id: null,     // 👈 clave para inventario compartido
-    available_rt: null,          // cupos en tiempo real (por disponibilidad)
+    disponibilidad_id: null,
+    available_rt: null,
 
-    intent: "view",              // "view" | "buy"
+    intent: "view",
     client_id: null,
 
     hold: null,                  // { hold_id, expires_at, qty }
-    hold_timer: null,            // interval id
+    hold_timer: null,
 
     ws: null,
 
-    payment_proof: null,         // {filename,mime_type,size_bytes,base64}
+    payment_proof: null,
     ruc_verified: false,
     ruc_tipo_entidad: ""
   };
@@ -925,7 +925,7 @@
   }
 
   // =====================
-  // Pricing (igual que tu versión)
+  // Pricing
   // =====================
   function toNumberFlexible(x){
     if (x === null || x === undefined) return NaN;
@@ -1079,10 +1079,9 @@
 
     const buying = (intent === "buy");
     intentHintEl.textContent = buying
-      ? "Al seleccionar cantidad se bloquean cupos por 20 minutos."
+      ? "Al seleccionar un turno se bloquean cupos por 6 minutos."
       : "Modo solo lectura: podés ver cupos en tiempo real sin bloquear.";
 
-    // si cambia a view y hay hold, liberar
     if (!buying && STATE.hold){
       releaseHold("Cambio a solo ver horarios");
     }
@@ -1095,6 +1094,8 @@
 
     // Slots se pueden seleccionar siempre, pero si es view no habilitamos pasos de compra
     qtyEl.disabled = !buying || !STATE.selected_slot || !Number.isFinite(STATE.available_rt) || STATE.available_rt <= 0;
+
+    // si estamos en buy, qty siempre editable, pero bloqueamos si no hay slot o stock
     btnBuild.disabled = !buying || qtyEl.disabled;
 
     // Bloquear secciones de facturación/pago hasta que haya hold activo (y modo buy)
@@ -1121,7 +1122,6 @@
   function connectWS(){
     if (!STATE.disponibilidad_id) return;
 
-    // cerrar anterior si existe
     if (STATE.ws){
       try { STATE.ws.close(); } catch {}
       STATE.ws = null;
@@ -1142,7 +1142,12 @@
       if (msg.type === "snapshot" || msg.type === "update"){
         if (Number.isFinite(Number(msg.available))) {
           STATE.available_rt = Number(msg.available);
-          // refrescar UI de cupos
+
+          // si baja a 0 y tenemos hold, liberamos
+          if (STATE.hold && Number(STATE.available_rt) <= 0){
+            releaseHold("Sin stock");
+          }
+
           renderSlots(STATE.slots);
           applyUIAccess();
         }
@@ -1151,7 +1156,6 @@
 
     ws.onclose = () => {
       setStatus("Desconectado · reintentando…");
-      // Reintento simple
       setTimeout(() => {
         if (STATE.disponibilidad_id) connectWS();
       }, 1500);
@@ -1161,7 +1165,7 @@
   }
 
   // =====================
-  // Slots (mostrar cupo RT por disponibilidad)
+  // Slots
   // =====================
   function disableForm(reason){
     qtyEl.disabled = true;
@@ -1176,7 +1180,6 @@
 
   function renderSlots(slots){
     slotsEl.innerHTML = "";
-    STATE.selected_slot = STATE.selected_slot; // no resetear si cambian cupos
 
     if (!Array.isArray(slots) || slots.length === 0){
       slotsEl.innerHTML = "<em class='muted'>No hay turnos disponibles.</em>";
@@ -1199,7 +1202,7 @@
     sorted.forEach((s, idx) => {
       const id = `slot_${idx}`;
 
-      const disp = available; // 👈 cupo global por disponibilidad
+      const disp = available;
       const isOk = Number.isFinite(disp) && disp > 0;
 
       const box = document.createElement("div");
@@ -1212,13 +1215,17 @@
       input.value = String(s.slot_id ?? idx);
       input.disabled = !isOk;
 
-      // mantener seleccionado si corresponde
       const isSelected = STATE.selected_slot && String(STATE.selected_slot.slot_id) === String(s.slot_id);
       if (isSelected) input.checked = true;
 
-      input.addEventListener("change", () => {
+      input.addEventListener("change", async () => {
+        // ✅ liberar al cambiar de turno (UX hardening)
+        if (STATE.hold){
+          await releaseHold("Cambio de turno");
+        }
+
         STATE.selected_slot = s;
-        onSlotSelected();
+        await onSlotSelected();
       });
 
       const right = document.createElement("div");
@@ -1247,15 +1254,13 @@
     if (!STATE.selected_slot) disableForm("Seleccioná un turno.");
   }
 
-  function onSlotSelected(){
+  async function onSlotSelected(){
     const s = STATE.selected_slot;
     if (!s) return disableForm("Seleccioná un turno.");
 
-    // Cupo global RT
     const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
     if (!Number.isFinite(disp) || disp <= 0) return disableForm("No hay cupos disponibles.");
 
-    // solo habilitar qty si está en modo compra
     if (STATE.intent !== "buy"){
       disableForm("Estás en modo solo lectura. Elegí “Comprar curso” para continuar.");
       return;
@@ -1272,25 +1277,24 @@
 
     qtyHintEl.textContent = `Máximo permitido: ${disp}.`;
 
-    // Si hay hold activo, y el usuario cambia slot, lo mantenemos igual porque inventario es global.
-    // Si querés forzar selección de slot previo a hold, esto es correcto.
-
     btnBuild.disabled = false;
 
     const existingBlocks = namesWrap.querySelectorAll('[data-pblock="1"]').length;
     const qty = normalizeInt(qtyEl.value);
     if (existingBlocks && existingBlocks !== qty) buildParticipants();
 
-    // Al seleccionar slot en modo compra, aún NO bloqueamos.
-    // Bloqueamos cuando el usuario fija cantidad y se ejecuta createHold().
     renderServiceInfo();
     btnConfirm.disabled = !isFormValid();
     setMsg("", "");
     setSendMsg("", "");
+
+    // ✅ HOLD AUTOMÁTICO al seleccionar slot
+    await createOrUpdateHold();
+    btnConfirm.disabled = !isFormValid();
   }
 
   // =====================
-  // Hold (crear / liberar / timer)
+  // Hold
   // =====================
   function ensureClientId(){
     if (STATE.client_id) return STATE.client_id;
@@ -1302,12 +1306,8 @@
     return cid;
   }
 
-  function showHoldBar(){
-    holdBarEl.style.display = "flex";
-  }
-  function hideHoldBar(){
-    holdBarEl.style.display = "none";
-  }
+  function showHoldBar(){ holdBarEl.style.display = "flex"; }
+  function hideHoldBar(){ holdBarEl.style.display = "none"; }
 
   function formatMMSS(ms){
     const s = Math.max(0, Math.floor(ms/1000));
@@ -1330,11 +1330,10 @@
       if (left <= 0){
         clearInterval(STATE.hold_timer);
         STATE.hold_timer = null;
-        // expira: liberar localmente (servidor expira igual, pero avisamos UI)
         STATE.hold = null;
         hideHoldBar();
         applyUIAccess();
-        setSendMsg("<span class='err'>Se venció el tiempo de reserva temporal. Volvé a seleccionar cantidad.</span>");
+        setSendMsg("<span class='err'>Se venció el tiempo de reserva temporal. Volvé a seleccionar el turno.</span>");
       }
     };
 
@@ -1350,12 +1349,16 @@
     const qty = normalizeInt(qtyEl.value);
     if (!Number.isFinite(qty) || qty < 1) return;
 
-    // Si ya existe hold, liberar y crear uno nuevo (simple y consistente)
+    // liberar si ya existe hold
     if (STATE.hold){
-      await releaseHold("Actualizar cantidad");
+      await releaseHold("Actualizar hold");
     }
 
+    // hardening UI durante hold
+    qtyEl.disabled = true;
+    btnBuild.disabled = true;
     btnConfirm.disabled = true;
+
     setSendMsg("<span class='muted'>Reservando cupos temporalmente…</span>");
 
     const payload = {
@@ -1363,18 +1366,26 @@
       qty,
       client_id: ensureClientId(),
       available_snapshot: Number.isFinite(STATE.available_rt) ? STATE.available_rt : null,
-      // opcional para tracking
       course_id: STATE.course_id,
       slot_id: STATE.selected_slot?.slot_id || null
     };
 
     const res = await apiPost(HOLD_ENDPOINT, payload);
     if (!res.ok || !res.json || res.json.ok !== true){
+      // re-habilitar
+      qtyEl.disabled = false;
+      btnBuild.disabled = false;
+
       setSendMsg(`<span class='err'>No se pudo reservar temporalmente. Cupos disponibles: ${htmlEscape(res.json?.available ?? STATE.available_rt ?? "-")}.</span>`);
+      applyUIAccess();
       return;
     }
 
-    STATE.hold = { hold_id: res.json.hold_id, expires_at: res.json.expires_at, qty };
+    // expires_at debe venir del backend; si no, fallback a HOLD_MS
+    const exp = Number(res.json.expires_at);
+    const expires_at = Number.isFinite(exp) ? exp : (Date.now() + HOLD_MS);
+
+    STATE.hold = { hold_id: res.json.hold_id, expires_at, qty };
     holdTextEl.textContent = `Asientos reservados: ${qty}. Confirmá antes de que expire.`;
     showHoldBar();
     startHoldTimer();
@@ -1389,6 +1400,7 @@
     const hold_id = STATE.hold.hold_id;
     const client_id = ensureClientId();
 
+    // limpiar UI primero (optimista)
     STATE.hold = null;
     hideHoldBar();
     if (STATE.hold_timer) { clearInterval(STATE.hold_timer); STATE.hold_timer = null; }
@@ -1404,13 +1416,33 @@
     } catch {}
   }
 
+  // ✅ Liberación automática al cerrar/ocultar pestaña (sendBeacon)
+  function releaseHoldBeacon(reason){
+    if (!STATE.hold) return;
+    try{
+      const body = {
+        disponibilidad_id: STATE.disponibilidad_id,
+        hold_id: STATE.hold.hold_id,
+        client_id: ensureClientId(),
+        reason: reason || "pagehide"
+      };
+      const blob = new Blob([JSON.stringify(body)], { type: "application/json" });
+      navigator.sendBeacon(RELEASE_ENDPOINT, blob);
+    } catch {}
+  }
+
+  window.addEventListener("pagehide", () => releaseHoldBeacon("pagehide"));
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") releaseHoldBeacon("visibilitychange_hidden");
+  });
+
   btnReleaseEl.addEventListener("click", async () => {
     await releaseHold("Liberado por usuario");
     setSendMsg("<span class='muted'>Reserva temporal liberada.</span>");
   });
 
   // =====================
-  // Participants (igual con mínimos ajustes)
+  // Participants
   // =====================
   function makeField(i, key, labelText, type, required, placeholder){
     const wrap = document.createElement("div");
@@ -1491,7 +1523,7 @@
     renderServiceInfo();
     btnConfirm.disabled = !isFormValid();
     setMsg("", "");
-    setSendMsg("", "");
+    setSendMsg("");
   }
 
   function getParticipants(){
@@ -1552,10 +1584,7 @@
     if (!b.email || !isEmailBasic(b.email)) return false;
     if (!b.direccion) return false;
     if (!b.ciudad) return false;
-
-    // Si es RUC, debe estar verificado
     if (b.tipo_documento === "fiscal" && !STATE.ruc_verified) return false;
-
     return true;
   }
 
@@ -1578,7 +1607,6 @@
       return;
     }
 
-    // Autocompletar
     const rz = String(res.json.razon_social || "").trim();
     const te = String(res.json.tipo_entidad || "").trim();
 
@@ -1591,7 +1619,7 @@
   }
 
   // =====================
-  // Payment proof (file)
+  // Payment proof
   // =====================
   function isPaymentProofValid(){
     return Boolean(STATE.payment_proof && STATE.payment_proof.base64);
@@ -1660,7 +1688,6 @@
     if (!Number.isFinite(disp) || disp < 1) return false;
     if (!Number.isFinite(qty) || qty < 1) return false;
 
-    // la cantidad debe coincidir con el hold
     if (qty !== STATE.hold.qty) return false;
 
     const participants = getParticipants();
@@ -1676,14 +1703,13 @@
     if (!isBillingValid()) return false;
     if (!isPaymentProofValid()) return false;
 
-    // hold no expirado
     if (Date.now() >= STATE.hold.expires_at) return false;
 
     return true;
   }
 
   // =====================
-  // Payload (incluye disponibilidad_id + hold_id)
+  // Payload
   // =====================
   function buildPayload(){
     return {
@@ -1730,13 +1756,12 @@
 
   qtyEl.addEventListener("change", async () => {
     renderServiceInfo();
-    // En modo compra: al cambiar cantidad, se crea el hold
+    // al cambiar cantidad, refrescamos hold
     await createOrUpdateHold();
     btnConfirm.disabled = !isFormValid();
   });
 
   qtyEl.addEventListener("input", () => {
-    // limitar por cupo disponible (RT)
     const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
     let qty = normalizeInt(qtyEl.value);
     if (!Number.isFinite(qty)) qty = 1;
@@ -1769,12 +1794,11 @@
     setSendMsg("");
   });
 
-  // Intent radios
   document.querySelectorAll('input[name="intent"]').forEach(r => {
     r.addEventListener("change", () => setIntent(r.value));
   });
 
-  // Confirm: revalidar y luego enviar
+  // Confirm
   btnConfirm.addEventListener("click", async (e) => {
     e.preventDefault();
 
@@ -1784,9 +1808,9 @@
     }
 
     btnConfirm.disabled = true;
-    setSendMsg("<span class='muted'>Revalidando cupos…</span>");
+    setSendMsg("<span class='muted'>Confirmando cupos…</span>");
 
-    // 1) Confirmar hold (commit en backend)
+    // 1) Confirmar hold (commit)
     const commit = await apiPost(CONFIRM_ENDPOINT, {
       disponibilidad_id: STATE.disponibilidad_id,
       hold_id: STATE.hold.hold_id,
@@ -1795,7 +1819,6 @@
 
     if (!commit.ok || !commit.json || commit.json.ok !== true){
       setSendMsg("<span class='err'>No se pudo confirmar: cupos cambiaron o el hold expiró. Volvé a intentar.</span>");
-      // limpiar hold local si expiró
       if (commit.status === 410) {
         STATE.hold = null;
         hideHoldBar();
@@ -1805,7 +1828,7 @@
       return;
     }
 
-    // 2) Enviar a Zoho Flow (tu proceso actual)
+    // 2) Enviar a Flow
     setSendMsg("<span class='muted'>Enviando datos…</span>");
     const payload = buildPayload();
 
@@ -1813,7 +1836,6 @@
       const res = await apiPost(RESERVA_ENDPOINT, payload);
       if (res.ok && res.json && res.json.ok === true){
         setSendMsg(`<span class='ok'>Enviado correctamente. Una vez confirmado el pago se te notificará por correo.</span>`);
-        // liberar estado local (ya está confirmado en backend)
         STATE.hold = null;
         hideHoldBar();
         if (STATE.hold_timer) { clearInterval(STATE.hold_timer); STATE.hold_timer = null; }
@@ -1862,10 +1884,7 @@
     STATE.course = res.json.course || null;
     STATE.slots = res.json.slots || res.json.horarios || [];
 
-    // 👇 disponibilidad_id debe venir del bootstrap
     STATE.disponibilidad_id = String(res.json.disponibilidad_id || "").trim() || null;
-
-    // fallback: si todavía no lo tenés en backend, no se puede tener inventario compartido real
     if (!STATE.disponibilidad_id){
       setStatus("Error · falta disponibilidad");
       setMsg("<span class='err'>Este curso no trae disponibilidad_id en /api/bootstrap. Debe incluirse para inventario compartido.</span>");
@@ -1873,7 +1892,6 @@
       return res.json;
     }
 
-    // Inicialmente, usamos el cupo del primer slot como snapshot base (hasta que DO responda)
     const first = STATE.slots && STATE.slots[0] ? STATE.slots[0] : null;
     const snap = normalizeInt(first?.cupos_disponibles);
     STATE.available_rt = Number.isFinite(snap) ? snap : null;
@@ -1884,7 +1902,6 @@
     refreshBillingDocUI();
     applyUIAccess();
 
-    // conectar WS para cupo RT real
     connectWS();
 
     setStatus(`Listo · ${(STATE.slots||[]).length} turnos`);
