@@ -557,7 +557,7 @@
 
         <div class="heroNote">
           <span class="chip"><span class="miniDot"></span> Tiempo real</span>
-          <span class="chip"><span class="miniDot"></span> Hold 20 minutos</span>
+          <span class="chip"><span class="miniDot"></span> Pre-reserva 20 minutos</span>
           <span class="chip"><span class="miniDot"></span> Verificación RUC</span>
         </div>
 
@@ -1367,7 +1367,7 @@
     const res = await apiPost(HOLD_ENDPOINT, payload);
     if (!res.ok || !res.json || res.json.ok !== true){
       const av = res.json?.available ?? STATE.available_rt ?? "-";
-      setSendMsg(`<span class='err'>No se pudo reservar. Cupos disponibles: ${htmlEscape(av)}.</span>`);
+      setSendMsg(`<span class='err'>Tu cantidad supera la cantidad disponible, porque alguien ya esta reservando antes que tú, actualiza la pagina para ver la disponibilidad real. ${htmlEscape(av)}.</span>`);
       return { ok:false, error:"hold_failed", res };
     }
 
