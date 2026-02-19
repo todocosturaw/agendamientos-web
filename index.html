@@ -6,560 +6,536 @@
   <title>Reservas | Todo Costura</title>
   <meta name="description" content="Seleccioná un turno y completá los datos para confirmar tu inscripción." />
   <meta name="theme-color" content="#ffffff" />
-
   <style>
-    :root{
-      --brand:#a52b64;
-
-      --bg:#ffffff;
-      --surface:#ffffff;
-      --txt:#111827;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-
-      --soft:#f6f7fb;
-      --soft2:#f3f4f6;
-
-      --r:18px;
-      --r2:22px;
-
+    :root {
+      --brand: #a52b64;
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --txt: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --soft: #f6f7fb;
+      --soft2: #f3f4f6;
+      --r: 18px;
+      --r2: 22px;
       --shadow: 0 18px 55px rgba(17,24,39,.10);
       --shadow2: 0 10px 25px rgba(17,24,39,.08);
-
       --focus: 0 0 0 4px rgba(165,43,100,.14);
     }
-
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
+    * { box-sizing: border-box }
+    html, body { height: 100% }
+    body {
+      margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
       background: linear-gradient(180deg, #ffffff 0%, #ffffff 60%, #fbfbfd 100%);
       color: var(--txt);
     }
-
-    .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 40px}
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px 40px }
 
     /* Header */
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      margin-bottom:22px;
-      flex-wrap:wrap;
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
     }
-    .brand{
-      display:flex;align-items:center;gap:12px;min-width:240px;
+    .brand {
+      display: flex; align-items: center; gap: 12px; min-width: 240px;
     }
-    .tc-modal { display:none; position:fixed; inset:0; z-index:9999; }
-.tc-modal.is-open { display:block; }
+    .tc-modal { display: none; position: fixed; inset: 0; z-index: 9999; }
+    .tc-modal.is-open { display: block; }
+    .tc-modal__overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.45);
+    }
+    .tc-modal__panel {
+      position: relative;
+      max-width: 520px;
+      margin: 10vh auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 18px 55px rgba(17,24,39,.18);
+      overflow: hidden;
+    }
+    .tc-modal__header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .tc-modal__title { margin: 0; font-size: 18px; color: #111827; }
+    .tc-modal__close {
+      border: none; background: transparent;
+      font-size: 26px; line-height: 1;
+      cursor: pointer; color: #6b7280;
+    }
+    .tc-modal__body { padding: 16px 18px; color: #111827; }
+    .tc-modal__actions {
+      display: flex; gap: 10px; justify-content: flex-end;
+      padding: 14px 18px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .tc-btn {
+      border-radius: 12px;
+      padding: 10px 14px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      cursor: pointer;
+    }
+    .tc-btn--primary {
+      background: #a52b64; color: #fff; border-color: #a52b64;
+    }
+    .tc-btn--ghost {
+      background: #fff; color: #111827;
+    }
 
-.tc-modal__overlay{
-  position:absolute; inset:0;
-  background: rgba(0,0,0,.45);
-}
-
-.tc-modal__panel{
-  position:relative;
-  max-width: 520px;
-  margin: 10vh auto;
-  background:#fff;
-  border-radius: 16px;
-  box-shadow: 0 18px 55px rgba(17,24,39,.18);
-  overflow:hidden;
-}
-
-.tc-modal__header{
-  display:flex; align-items:center; justify-content:space-between;
-  padding: 16px 18px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.tc-modal__title{ margin:0; font-size: 18px; color:#111827; }
-
-.tc-modal__close{
-  border:none; background:transparent;
-  font-size: 26px; line-height: 1;
-  cursor:pointer; color:#6b7280;
-}
-
-.tc-modal__body{
-  padding: 16px 18px;
-  color:#111827;
-}
-
-.tc-modal__actions{
-  display:flex; gap:10px; justify-content:flex-end;
-  padding: 14px 18px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.tc-btn{
-  border-radius: 12px;
-  padding: 10px 14px;
-  border: 1px solid #e5e7eb;
-  background:#fff;
-  cursor:pointer;
-}
-
-.tc-btn--primary{
-  background:#a52b64; color:#fff; border-color:#a52b64;
-}
-
-.tc-btn--ghost{
-  background:#fff; color:#111827;
-}
-
-    .logoBox{
-      width:44px;height:44px;border-radius:14px;
-      border:1px solid rgba(165,43,100,.18);
+    .logoBox {
+      width: 44px; height: 44px; border-radius: 14px;
+      border: 1px solid rgba(165,43,100,.18);
       background: rgba(165,43,100,.06);
-      display:grid;place-items:center;
-      overflow:hidden;
-      flex:0 0 auto;
+      display: grid; place-items: center;
+      overflow: hidden;
+      flex: 0 0 auto;
     }
-    .logoBox img{width:100%;height:100%;object-fit:cover;display:block}
-    .brandText{
-      display:flex;flex-direction:column;line-height:1.2;
+    .logoBox img { width: 100%; height: 100%; object-fit: cover; display: block }
+    .brandText {
+      display: flex; flex-direction: column; line-height: 1.2;
     }
-    .brandText .name{
-      font-weight:900;
-      letter-spacing:.2px;
-      font-size:14px;
+    .brandText .name {
+      font-weight: 900;
+      letter-spacing: .2px;
+      font-size: 14px;
     }
-    .brandText .tag{
-      color:var(--muted);
-      font-size:12.5px;
-      margin-top:4px;
+    .brandText .tag {
+      color: var(--muted);
+      font-size: 12.5px;
+      margin-top: 4px;
     }
-
-    .statusPill{
-      display:inline-flex;align-items:center;gap:10px;
-      padding:9px 12px;border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
+    .statusPill {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
       box-shadow: 0 10px 18px rgba(17,24,39,.06);
-      color:var(--muted);
-      font-size:12.5px;
-      white-space:nowrap;
+      color: var(--muted);
+      font-size: 12.5px;
+      white-space: nowrap;
     }
-    .dot{width:9px;height:9px;border-radius:99px;background:rgba(165,43,100,.40);box-shadow: 0 0 0 4px rgba(165,43,100,.10)}
+    .dot { width: 9px; height: 9px; border-radius: 99px; background: rgba(165,43,100,.40); box-shadow: 0 0 0 4px rgba(165,43,100,.10) }
 
     /* Layout */
-    .grid{
-      display:grid;
+    .grid {
+      display: grid;
       grid-template-columns: 1.05fr .95fr;
-      gap:26px;
-      align-items:start;
+      gap: 26px;
+      align-items: start;
     }
-    @media (max-width:980px){
-      .grid{grid-template-columns:1fr;gap:18px}
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; gap: 18px }
     }
 
-    /* Left: hero */
-    .hero{padding:12px 0}
-    .hero h1{
-      margin:8px 0 10px 0;
-      font-size:44px;
-      line-height:1.05;
-      letter-spacing:-.6px;
-      font-weight:950;
+    /* Hero */
+    .hero { padding: 12px 0 }
+    .hero h1 {
+      margin: 8px 0 10px 0;
+      font-size: 44px;
+      line-height: 1.05;
+      letter-spacing: -0.6px;
+      font-weight: 950;
     }
-    .hero h1 .accent{color:var(--brand)}
-    .hero p{
-      margin:0;
-      color:var(--muted);
-      font-size:15.5px;
-      line-height:1.6;
-      max-width:54ch;
+    .hero h1 .accent { color: var(--brand) }
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15.5px;
+      line-height: 1.6;
+      max-width: 54ch;
     }
-    .heroNote{
-      margin-top:18px;
-      display:flex;gap:10px;flex-wrap:wrap;align-items:center;
-      color:var(--muted);
-      font-size:12.5px;
+    .heroNote {
+      margin-top: 18px;
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+      color: var(--muted);
+      font-size: 12.5px;
     }
-    .chip{
-      display:inline-flex;align-items:center;
-      padding:7px 10px;border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
+    .chip {
+      display: inline-flex; align-items: center;
+      padding: 7px 10px; border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
       box-shadow: 0 10px 18px rgba(17,24,39,.05);
-      gap:8px;
+      gap: 8px;
     }
-    .chip .miniDot{
-      width:7px;height:7px;border-radius:99px;background:rgba(165,43,100,.45);
+    .chip .miniDot {
+      width: 7px; height: 7px; border-radius: 99px;
+      background: rgba(165,43,100,.45);
       box-shadow: 0 0 0 4px rgba(165,43,100,.10);
     }
 
-    /* Left: service info card (table) */
-    .serviceCard{
-      margin-top:22px;
-      border:1px solid var(--line);
-      border-radius:22px;
-      background:#fff;
+    /* Service info card */
+    .serviceCard {
+      margin-top: 22px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #fff;
       box-shadow: var(--shadow2);
-      overflow:hidden;
+      overflow: hidden;
       max-width: 560px;
     }
-    .serviceHead{
-      padding:14px 16px;
-      border-bottom:1px solid var(--line);
+    .serviceHead {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
       background: linear-gradient(180deg, #ffffff, #fbfbfd);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
     }
-    .serviceHead .h{
-      font-weight:950;
-      font-size:13px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#374151;
+    .serviceHead .h {
+      font-weight: 950;
+      font-size: 13px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #374151;
     }
-    .serviceHead .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(165,43,100,.18);
+    .serviceHead .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 999px;
+      border: 1px solid rgba(165,43,100,.18);
       background: rgba(165,43,100,.06);
-      color:#7a1f4a;
-      font-weight:900;
-      font-size:12px;
-      white-space:nowrap;
+      color: #7a1f4a;
+      font-weight: 900;
+      font-size: 12px;
+      white-space: nowrap;
     }
-    .infoTable{width:100%;border-collapse:collapse}
-    .infoTable td{
-      padding:11px 16px;
-      border-bottom:1px solid #f0f2f6;
-      vertical-align:top;
-      font-size:13.5px;
+    .infoTable { width: 100%; border-collapse: collapse }
+    .infoTable td {
+      padding: 11px 16px;
+      border-bottom: 1px solid #f0f2f6;
+      vertical-align: top;
+      font-size: 13.5px;
     }
-    .infoTable tr:last-child td{border-bottom:0}
-    .infoTable td.k{width:42%;color:#4b5563;font-weight:800}
-    .infoTable td.v{color:#111827;font-weight:700}
-    .infoTable .mutedv{color:var(--muted);font-weight:700}
-
-    .priceBig{font-size:16px;font-weight:950}
-    .priceSub{margin-top:2px;font-size:12.5px;color:var(--muted);font-weight:700}
-    .priceSub strong{color:#111827;font-weight:900}
-    .badgeOk{
-      display:inline-flex;align-items:center;
-      padding:3px 8px;border-radius:999px;
-      border:1px solid rgba(10,122,47,.18);
+    .infoTable tr:last-child td { border-bottom: 0 }
+    .infoTable td.k { width: 42%; color: #4b5563; font-weight: 800 }
+    .infoTable td.v { color: #111827; font-weight: 700 }
+    .infoTable .mutedv { color: var(--muted); font-weight: 700 }
+    .priceBig { font-size: 16px; font-weight: 950 }
+    .priceSub { margin-top: 2px; font-size: 12.5px; color: var(--muted); font-weight: 700 }
+    .priceSub strong { color: #111827; font-weight: 900 }
+    .badgeOk {
+      display: inline-flex; align-items: center;
+      padding: 3px 8px; border-radius: 999px;
+      border: 1px solid rgba(10,122,47,.18);
       background: rgba(10,122,47,.08);
-      color:#0a7a2f;
-      font-weight:900;
-      font-size:11.5px;
-      margin-left:8px;
+      color: #0a7a2f;
+      font-weight: 900;
+      font-size: 11.5px;
+      margin-left: 8px;
     }
 
-    /* Right: card */
-    .card{
+    /* Card derecha */
+    .card {
       background: var(--surface);
-      border:1px solid var(--line);
+      border: 1px solid var(--line);
       border-radius: var(--r2);
       box-shadow: var(--shadow);
-      overflow:hidden;
+      overflow: hidden;
     }
-    .cardHead{
-      padding:18px 18px 14px 18px;
-      border-bottom:1px solid var(--line);
+    .cardHead {
+      padding: 18px 18px 14px 18px;
+      border-bottom: 1px solid var(--line);
       background: linear-gradient(180deg, #ffffff, #fbfbfd);
     }
-    .cardHead .title{
-      margin:0;
-      font-size:14px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#374151;
-      font-weight:950;
+    .cardHead .title {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #374151;
+      font-weight: 950;
     }
-    .cardHead .sub{
-      margin:8px 0 0 0;
-      color:var(--muted);
-      font-size:13.5px;
-      line-height:1.45;
+    .cardHead .sub {
+      margin: 8px 0 0 0;
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.45;
     }
-    .cardBody{padding:16px 18px 18px}
+    .cardBody { padding: 16px 18px 18px }
+    .section { margin-top: 14px }
+    .section:first-child { margin-top: 0 }
+    .section h3 {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      color: #374151;
+      font-weight: 900;
+    }
+    .muted { color: var(--muted) }
+    .tiny { font-size: 12.5px }
 
-    .section{margin-top:14px}
-    .section:first-child{margin-top:0}
-    .section h3{
-      margin:0 0 10px 0;
-      font-size:13px;
-      color:#374151;
-      font-weight:900;
+    /* Campos */
+    .row { display: flex; gap: 10px; flex-wrap: wrap }
+    .field { flex: 1 1 220px; min-width: 210px }
+    label {
+      display: block;
+      margin: 10px 0 6px 0;
+      font-size: 12.5px;
+      color: #4b5563;
+      font-weight: 700;
     }
-
-    .muted{color:var(--muted)}
-    .tiny{font-size:12.5px}
-
-    /* Fields */
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .field{flex:1 1 220px;min-width:210px}
-    label{
-      display:block;
-      margin:10px 0 6px 0;
-      font-size:12.5px;
-      color:#4b5563;
-      font-weight:700;
-    }
-    input[type="text"], input[type="email"], input[type="number"], select, textarea{
-      width:100%;
-      padding:11px 12px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      outline:none;
-      background:#fff;
-      color:var(--txt);
-      font-size:14px;
+    input[type="text"], input[type="email"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      outline: none;
+      background: #fff;
+      color: var(--txt);
+      font-size: 14px;
       transition: box-shadow .15s ease, border-color .15s ease;
     }
-    textarea{min-height:86px;resize:vertical}
-    input:focus, select:focus, textarea:focus{
+    textarea { min-height: 86px; resize: vertical }
+    input:focus, select:focus, textarea:focus {
       border-color: rgba(165,43,100,.55);
       box-shadow: var(--focus);
     }
-    input:disabled, select:disabled, textarea:disabled{
+    input:disabled, select:disabled, textarea:disabled {
       background: #f8fafc;
-      color:#9ca3af;
-      cursor:not-allowed;
+      color: #9ca3af;
+      cursor: not-allowed;
     }
 
-    /* Slots list */
-    .slots{display:flex;flex-direction:column;gap:10px}
-    .slot{
-      display:flex;gap:10px;align-items:flex-start;
-      padding:12px 12px;
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:#fff;
+    /* Slots */
+    .slots { display: flex; flex-direction: column; gap: 10px }
+    .slot {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 12px 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
       transition: border-color .15s ease, box-shadow .15s ease, transform .08s ease;
     }
-    .slot:hover{
+    .slot:hover {
       border-color: rgba(165,43,100,.22);
       box-shadow: var(--shadow2);
       transform: translateY(-1px);
     }
-    .slot input{margin-top:2px}
-    .slot label{margin:0;color:var(--txt);font-weight:900;font-size:13.5px}
-    .slot .meta{margin-top:4px;color:var(--muted);font-size:12.5px;line-height:1.35;display:flex;gap:8px;flex-wrap:wrap}
-    .kpi{
-      display:inline-flex;align-items:center;
-      padding:4px 10px;border-radius:999px;
-      border:1px solid rgba(165,43,100,.20);
-      background: rgba(165,43,100,.06);
-      color:#7a1f4a;
-      font-weight:900;
-      font-size:12px;
+    .slot input { margin-top: 2px }
+    .slot label { margin: 0; color: var(--txt); font-weight: 900; font-size: 13.5px }
+    .slot .meta {
+      margin-top: 4px; color: var(--muted); font-size: 12.5px; line-height: 1.35;
+      display: flex; gap: 8px; flex-wrap: wrap;
     }
-    .kpi.gray{
+    .kpi {
+      display: inline-flex; align-items: center;
+      padding: 4px 10px; border-radius: 999px;
+      border: 1px solid rgba(165,43,100,.20);
+      background: rgba(165,43,100,.06);
+      color: #7a1f4a;
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .kpi.gray {
       border-color: rgba(107,114,128,.25);
       background: rgba(107,114,128,.08);
-      color:#4b5563;
+      color: #4b5563;
     }
-    .slot.disabled{opacity:.55;background:#fcfcfe}
-    .slot.disabled:hover{box-shadow:none;transform:none;border-color: var(--line)}
+    .slot.disabled { opacity: .55; background: #fcfcfe }
+    .slot.disabled:hover { box-shadow: none; transform: none; border-color: var(--line) }
 
-    /* Participant blocks */
-    .pbox{
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
+    /* Bloques de participantes */
+    .pbox {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
       background: #fff;
-      margin-top:10px;
+      margin-top: 10px;
     }
-    .pboxTitle{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      margin-bottom:8px;
+    .pboxTitle {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin-bottom: 8px;
     }
-    .pboxTitle .left{
-      display:flex;align-items:center;gap:8px;
-      font-weight:900;color:#374151;font-size:13px;
+    .pboxTitle .left {
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 900; color: #374151; font-size: 13px;
     }
-    .idx{
-      width:26px;height:26px;border-radius:10px;
-      display:grid;place-items:center;
+    .idx {
+      width: 26px; height: 26px; border-radius: 10px;
+      display: grid; place-items: center;
       background: rgba(165,43,100,.08);
-      border:1px solid rgba(165,43,100,.18);
-      color:#7a1f4a;
-      font-weight:950;
-      font-size:12px;
+      border: 1px solid rgba(165,43,100,.18);
+      color: #7a1f4a;
+      font-weight: 950;
+      font-size: 12px;
     }
 
-    /* Buttons */
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    button{
-      border:0;border-radius:14px;cursor:pointer;
-      padding:11px 14px;font-weight:950;font-size:13.5px;
+    /* Botones */
+    .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px }
+    button {
+      border: 0; border-radius: 14px; cursor: pointer;
+      padding: 11px 14px; font-weight: 950; font-size: 13.5px;
       transition: transform .08s ease, box-shadow .15s ease, opacity .15s ease;
     }
-    button:active{transform: translateY(1px)}
-    button:disabled{opacity:.55;cursor:not-allowed;transform:none}
-    .primary{
+    button:active { transform: translateY(1px) }
+    button:disabled { opacity: .55; cursor: not-allowed; transform: none }
+    .primary {
       background: var(--brand);
-      color:#fff;
+      color: #fff;
       box-shadow: 0 16px 35px rgba(165,43,100,.20);
     }
-    .primary:hover{box-shadow: 0 18px 40px rgba(165,43,100,.24)}
-    .ghost{
-      background:#fff;border:1px solid var(--line);color:var(--txt);
+    .primary:hover { box-shadow: 0 18px 40px rgba(165,43,100,.24) }
+    .ghost {
+      background: #fff; border: 1px solid var(--line); color: var(--txt);
       box-shadow: 0 12px 22px rgba(17,24,39,.06);
     }
 
-    /* Messages */
-    .msg{margin-top:10px;font-size:13px;line-height:1.35}
-    .err{color:#b00020;font-weight:800}
-    .ok{color:#0a7a2f;font-weight:800}
+    /* Mensajes */
+    .msg { margin-top: 10px; font-size: 13px; line-height: 1.35 }
+    .err { color: #b00020; font-weight: 800 }
+    .ok { color: #0a7a2f; font-weight: 800 }
 
-    /* Loading overlay */
-    .loading{
-      position:fixed;inset:0;
+    /* Loading */
+    .loading {
+      position: fixed; inset: 0;
       background: rgba(255,255,255,.92);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-      z-index:9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 9999;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }
-    .loadCard{
-      width:min(640px, 92vw);
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:24px;
+    .loadCard {
+      width: min(640px, 92vw);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 24px;
       box-shadow: var(--shadow);
-      overflow:hidden;
+      overflow: hidden;
     }
-    .loadTop{
-      padding:18px 18px 14px;
-      border-bottom:1px solid var(--line);
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
+    .loadTop {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
       background: linear-gradient(180deg, #ffffff, #fbfbfd);
     }
-    .loadTop .left{display:flex;align-items:center;gap:12px}
-    .spinner{
-      width:36px;height:36px;border-radius:99px;
-      border:3px solid rgba(165,43,100,.15);
+    .loadTop .left { display: flex; align-items: center; gap: 12px }
+    .spinner {
+      width: 36px; height: 36px; border-radius: 99px;
+      border: 3px solid rgba(165,43,100,.15);
       border-top-color: rgba(165,43,100,.85);
       animation: spin 1s linear infinite;
     }
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .loadTitle{
-      display:flex;flex-direction:column;gap:4px;
+    @keyframes spin { to { transform: rotate(360deg) } }
+    .loadTitle {
+      display: flex; flex-direction: column; gap: 4px;
     }
-    .loadTitle strong{font-weight:950;font-size:14px;color:#111827}
-    .loadTitle span{font-size:12.5px;color:var(--muted)}
-    .progressWrap{padding:16px 18px 18px}
-    .bar{
-      height:10px;border-radius:999px;background: var(--soft2);
-      overflow:hidden;border:1px solid var(--line);
+    .loadTitle strong { font-weight: 950; font-size: 14px; color: #111827 }
+    .loadTitle span { font-size: 12.5px; color: var(--muted) }
+    .progressWrap { padding: 16px 18px 18px }
+    .bar {
+      height: 10px; border-radius: 999px; background: var(--soft2);
+      overflow: hidden; border: 1px solid var(--line);
     }
-    .bar > div{
-      height:100%;
-      width:30%;
+    .bar > div {
+      height: 100%;
+      width: 30%;
       background: linear-gradient(90deg, rgba(165,43,100,.20), rgba(165,43,100,.75));
-      border-radius:999px;
+      border-radius: 999px;
       transition: width .25s ease;
     }
-    .skel{
-      margin-top:14px;
-      display:grid;gap:10px;
+    .skel {
+      margin-top: 14px;
+      display: grid; gap: 10px;
     }
-    .skel .line{
-      height:12px;border-radius:999px;
+    .skel .line {
+      height: 12px; border-radius: 999px;
       background: linear-gradient(90deg, #f3f4f6 0%, #eceef3 45%, #f3f4f6 100%);
       background-size: 200% 100%;
       animation: shimmer 1.2s ease-in-out infinite;
-      border:1px solid #eef0f5;
+      border: 1px solid #eef0f5;
     }
-    .skel .line.w60{width:60%}
-    .skel .line.w80{width:80%}
-    .skel .line.w95{width:95%}
-    @keyframes shimmer{
-      0%{background-position: 200% 0}
-      100%{background-position: -200% 0}
+    .skel .line.w60 { width: 60% }
+    .skel .line.w80 { width: 80% }
+    .skel .line.w95 { width: 95% }
+    @keyframes shimmer {
+      0% { background-position: 200% 0 }
+      100% { background-position: -200% 0 }
     }
 
-    /* intención + temporizador hold */
-    .intentRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-top:6px;
+    /* Intención + hold bar */
+    .intentRow {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 6px;
     }
-    .toggle{
-      display:flex;gap:10px;flex-wrap:wrap;
-      padding:10px 10px;
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:#fff;
+    .toggle {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      padding: 10px 10px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
       box-shadow: 0 10px 18px rgba(17,24,39,.05);
     }
-    .topt{
-      display:flex;align-items:center;gap:8px;
-      padding:8px 10px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      cursor:pointer;
-      user-select:none;
-      font-weight:900;
-      font-size:12.5px;
-      color:#374151;
+    .topt {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 900;
+      font-size: 12.5px;
+      color: #374151;
     }
-    .topt input{margin:0}
-    .holdBar{
-      margin-top:10px;
-      padding:10px 12px;
-      border:1px solid rgba(165,43,100,.20);
-      border-radius:16px;
+    .topt input { margin: 0 }
+    .holdBar {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(165,43,100,.20);
+      border-radius: 16px;
       background: rgba(165,43,100,.06);
-      display:none;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    .holdBar strong{color:#7a1f4a}
-    .holdTimer{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(165,43,100,.25);
-      background:#fff;
-      font-weight:950;
-      color:#111827;
-      font-size:12.5px;
-      white-space:nowrap;
+    .holdBar strong { color: #7a1f4a }
+    .holdTimer {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(165,43,100,.25);
+      background: #fff;
+      font-weight: 950;
+      color: #111827;
+      font-size: 12.5px;
+      white-space: nowrap;
     }
-    .holdTimer.warn{
+    .holdTimer.warn {
       border-color: rgba(176,0,32,.25);
       background: rgba(176,0,32,.06);
-      color:#8a0019;
+      color: #8a0019;
     }
-    .linkBtn{
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      font-weight:900;
-      font-size:12.5px;
+    .linkBtn {
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-weight: 900;
+      font-size: 12.5px;
     }
   </style>
 </head>
-
 <body>
-  <!-- Pantalla de carga -->
+
+  <!-- Loading overlay -->
   <div class="loading" id="loading">
     <div class="loadCard" role="status" aria-live="polite">
       <div class="loadTop">
@@ -602,7 +578,6 @@
           <div class="tag">Agenda · Inscripción</div>
         </div>
       </div>
-
       <div class="statusPill" id="status">
         <span class="dot" aria-hidden="true"></span>
         <span>Inicializando…</span>
@@ -613,20 +588,17 @@
       <div class="hero">
         <h1>Reservá tu <span class="accent">turno</span> en segundos.</h1>
         <p>Seleccioná un turno disponible y completá los datos. El sistema bloquea cupos por 20 minutos al iniciar la carga de participantes y sincroniza disponibilidad en tiempo real.</p>
-
         <div class="heroNote">
           <span class="chip"><span class="miniDot"></span> Tiempo real</span>
           <span class="chip"><span class="miniDot"></span> Pre-reserva 20 minutos</span>
           <span class="chip"><span class="miniDot"></span> Verificación RUC</span>
         </div>
 
-        <!-- Tabla de info del servicio -->
         <div class="serviceCard" id="serviceCard" style="display:none">
           <div class="serviceHead">
             <div class="h">Detalles del curso</div>
             <div class="pill" id="serviceTypePill">—</div>
           </div>
-
           <table class="infoTable" role="presentation">
             <tr><td class="k">Curso</td><td class="v" id="svcName">—</td></tr>
             <tr><td class="k">Categoría</td><td class="v mutedv" id="svcCategory">—</td></tr>
@@ -650,10 +622,8 @@
           <div class="title">Formulario de inscripción</div>
           <div class="sub">Elegí si solo querés ver horarios o si vas a comprar. Para comprar, seleccioná un turno, definí cantidad y luego “Añadir participantes” para reservar por 20 minutos.</div>
         </div>
-
         <div class="cardBody">
 
-          <!-- Intención -->
           <div class="section">
             <h3>¿Qué deseas hacer?</h3>
             <div class="intentRow">
@@ -670,7 +640,6 @@
               <div class="muted tiny" id="intentHint">Podés ver cupos en tiempo real. Para comprar, elegí “Comprar curso”.</div>
             </div>
 
-            <!-- Barra hold -->
             <div class="holdBar" id="holdBar">
               <div>
                 <strong>Reserva temporal activa</strong>
@@ -698,11 +667,10 @@
                 <div id="qtyHint" class="muted tiny"></div>
               </div>
               <div style="min-width:190px;flex:0 0 auto">
-                <label>&nbsp;</label>
+                <label> </label>
                 <button id="btnBuild" class="ghost" disabled>Añadir participantes</button>
               </div>
             </div>
-
             <div id="namesWrap"></div>
           </div>
 
@@ -721,7 +689,6 @@
                 </select>
               </div>
             </div>
-
             <div class="row">
               <div class="field">
                 <label id="billDocLabel" for="billDocNumber">Documento personal (Cédula) *</label>
@@ -733,7 +700,6 @@
                 <input id="billEmail" type="email" placeholder="facturacion@dominio.com" disabled>
               </div>
             </div>
-
             <div class="row">
               <div class="field">
                 <label for="billPhone">Teléfono (opcional)</label>
@@ -744,7 +710,6 @@
                 <input id="billAddress" type="text" placeholder="Calle, número, barrio" disabled>
               </div>
             </div>
-
             <div class="row">
               <div class="field">
                 <label for="billCity">Ciudad *</label>
@@ -772,1311 +737,1017 @@
             <div class="btns">
               <button id="btnConfirm" class="primary" disabled>Confirmar y enviar</button>
             </div>
-
             <div id="formMsg" class="msg"></div>
             <div id="sendMsg" class="msg"></div>
             <pre id="debug" style="display:none;"></pre>
           </div>
+
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Modal de error -->
+  <div id="errorModal" class="tc-modal" aria-hidden="true">
+    <div class="tc-modal__overlay" onclick="closeErrorModal()"></div>
+    <div class="tc-modal__panel" role="dialog" aria-modal="true" aria-labelledby="tcModalTitle">
+      <div class="tc-modal__header">
+        <h3 id="tcModalTitle" class="tc-modal__title">No se pudo reservar</h3>
+        <button type="button" class="tc-modal__close" onclick="closeErrorModal()" aria-label="Cerrar">×</button>
+      </div>
+      <div id="tcModalMsg" class="tc-modal__body"></div>
+      <div class="tc-modal__actions">
+        <button type="button" class="tc-btn tc-btn--ghost" onclick="closeErrorModal()">Cerrar</button>
+        <button type="button" class="tc-btn tc-btn--primary" onclick="location.reload()">Actualizar</button>
+      </div>
+    </div>
+  </div>
+
 <script>
-  <script>
-  function openErrorModal(message) {
-    const modal = document.getElementById("errorModal");
-    const msg = document.getElementById("tcModalMsg");
+// ────────────────────────────────────────────────────────────────────────────────
+//  Todo el JavaScript completo - versión corregida y organizada
+// ────────────────────────────────────────────────────────────────────────────────
 
-    msg.textContent = message || "Ocurrió un error.";
-    modal.classList.add("is-open");
-    modal.setAttribute("aria-hidden", "false");
+// Modal de error
+function openErrorModal(message) {
+  const modal = document.getElementById("errorModal");
+  const msg = document.getElementById("tcModalMsg");
+  msg.textContent = message || "Ocurrió un error.";
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  document.documentElement.style.overflow = "hidden";
+}
 
-    // Evita scroll detrás del modal
-    document.documentElement.style.overflow = "hidden";
+function closeErrorModal() {
+  const modal = document.getElementById("errorModal");
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  document.documentElement.style.overflow = "";
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeErrorModal();
+});
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Configuración
+// ────────────────────────────────────────────────────────────────────────────────
+const CONFIG = {
+  API_BASE: "https://api.taller2.workers.dev",
+  HOLD_MINUTES: 20,
+  MAX_FILE_MB: 5,
+};
+
+const API_BASE = CONFIG.API_BASE;
+const RESERVA_ENDPOINT  = `${API_BASE}/api/reserva`;
+const HOLD_ENDPOINT     = `${API_BASE}/api/hold`;
+const RELEASE_ENDPOINT  = `${API_BASE}/api/release`;
+const CONFIRM_ENDPOINT  = `${API_BASE}/api/confirm`;
+const DNIT_ENDPOINT     = `${API_BASE}/api/dnit`;
+
+const HOLD_MS = CONFIG.HOLD_MINUTES * 60 * 1000;
+const MAX_FILE_BYTES = CONFIG.MAX_FILE_MB * 1024 * 1024;
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Cache de elementos DOM
+// ────────────────────────────────────────────────────────────────────────────────
+const els = {
+  status: document.getElementById("status"),
+  slots: document.getElementById("slots"),
+  slotsHelp: document.getElementById("slotsHelp"),
+  debug: document.getElementById("debug"),
+  qty: document.getElementById("qty"),
+  qtyHint: document.getElementById("qtyHint"),
+  btnBuild: document.getElementById("btnBuild"),
+  namesWrap: document.getElementById("namesWrap"),
+  formMsg: document.getElementById("formMsg"),
+  sendMsg: document.getElementById("sendMsg"),
+  billName: document.getElementById("billName"),
+  billDocType: document.getElementById("billDocType"),
+  billDocLabel: document.getElementById("billDocLabel"),
+  billDocNumber: document.getElementById("billDocNumber"),
+  billEmail: document.getElementById("billEmail"),
+  billPhone: document.getElementById("billPhone"),
+  billAddress: document.getElementById("billAddress"),
+  billCity: document.getElementById("billCity"),
+  rucHint: document.getElementById("rucHint"),
+  payFile: document.getElementById("payFile"),
+  payFileStatus: document.getElementById("payFileStatus"),
+  btnConfirm: document.getElementById("btnConfirm"),
+  loading: document.getElementById("loading"),
+  loadTitle: document.getElementById("loadTitle"),
+  loadSub: document.getElementById("loadSub"),
+  loadBar: document.getElementById("loadBar"),
+  logoImg: document.getElementById("logoImg"),
+  logoFallback: document.getElementById("logoFallback"),
+  logoImg2: document.getElementById("logoImg2"),
+  logoFallback2: document.getElementById("logoFallback2"),
+  serviceCard: document.getElementById("serviceCard"),
+  serviceTypePill: document.getElementById("serviceTypePill"),
+  svcName: document.getElementById("svcName"),
+  svcCategory: document.getElementById("svcCategory"),
+  svcLearning: document.getElementById("svcLearning"),
+  svcPlatform: document.getElementById("svcPlatform"),
+  svcTutor: document.getElementById("svcTutor"),
+  svcUnitPrice: document.getElementById("svcUnitPrice"),
+  svcDiscountLine: document.getElementById("svcDiscountLine"),
+  svcTotalLine: document.getElementById("svcTotalLine"),
+  intentHint: document.getElementById("intentHint"),
+  holdBar: document.getElementById("holdBar"),
+  holdText: document.getElementById("holdText"),
+  holdTimer: document.getElementById("holdTimer"),
+  btnRelease: document.getElementById("btnRelease"),
+};
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Estado global
+// ────────────────────────────────────────────────────────────────────────────────
+let STATE = {
+  course_id: null,
+  course: null,
+  slots: [],
+  selected_slot: null,
+  disponibilidad_id: null,
+  available_rt: null,
+  intent: "view",
+  client_id: null,
+  hold: null,
+  hold_timer: null,
+  ws: null,
+  payment_proof: null,
+  ruc_verified: false,
+  ruc_tipo_entidad: ""
+};
+
+let isSubmitting = false;
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────────────────────────
+function htmlEscape(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function setStatus(text) {
+  els.status.innerHTML = `<span class="dot" aria-hidden="true"></span><span>${htmlEscape(text)}</span>`;
+}
+
+function setMsg(html, cls = "") {
+  els.formMsg.className = "msg " + cls;
+  els.formMsg.innerHTML = html || "";
+}
+
+function setSendMsg(html, cls = "") {
+  els.sendMsg.className = "msg " + cls;
+  els.sendMsg.innerHTML = html || "";
+}
+
+function normalizeInt(x) {
+  const n = Number(x);
+  return Number.isFinite(n) ? Math.trunc(n) : NaN;
+}
+
+function isEmailBasic(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
+}
+
+function safeCourse(course) {
+  if (!course || typeof course !== "object") return null;
+  return JSON.parse(JSON.stringify(course));
+}
+
+function getCourseIdFromHash() {
+  const h = (location.hash || "").replace(/^#/, "");
+  const p = new URLSearchParams(h);
+  return p.get("ID") || p.get("course_id");
+}
+
+function parseISODate(iso) {
+  const s = String(iso || "").trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+  if (!y || !mo || !d) return null;
+  return new Date(y, mo - 1, d);
+}
+
+function formatDateHuman(iso) {
+  const d = parseISODate(iso);
+  if (!d) return String(iso || "").trim() || "—";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+function slotSortKey(s) {
+  const fecha = String(s?.fecha || "").trim();
+  const hora = String(s?.hora || "").trim();
+  const d = parseISODate(fecha);
+  const dayKey = d ? d.getTime() : Number.MAX_SAFE_INTEGER;
+  let hmKey = Number.MAX_SAFE_INTEGER;
+  const m = hora.match(/^(\d{1,2}):(\d{2})/);
+  if (m) {
+    const hh = Number(m[1]), mm = Number(m[2]);
+    if (Number.isFinite(hh) && Number.isFinite(mm)) hmKey = hh * 60 + mm;
   }
+  return [dayKey, hmKey, fecha, hora];
+}
 
-  function closeErrorModal() {
-    const modal = document.getElementById("errorModal");
-    modal.classList.remove("is-open");
-    modal.setAttribute("aria-hidden", "true");
+async function apiGet(url) {
+  const r = await fetch(url, { method: "GET" });
+  const t = await r.text();
+  let j = null; try { j = JSON.parse(t); } catch {}
+  return { ok: r.ok, status: r.status, text: t, json: j };
+}
 
-    document.documentElement.style.overflow = "";
-  }
-
-  // Cerrar con ESC
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeErrorModal();
+async function apiPost(url, payload) {
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
   });
-</script>
+  const t = await r.text();
+  let j = null; try { j = JSON.parse(t); } catch {}
+  return { ok: r.ok, status: r.status, text: t, json: j };
+}
 
-  // =====================
-  // Config
-  // =====================
-  const API_BASE = "https://api.taller2.workers.dev";
+// ────────────────────────────────────────────────────────────────────────────────
+// Precio y formateo
+// ────────────────────────────────────────────────────────────────────────────────
+function toNumberFlexible(x) {
+  if (x == null) return NaN;
+  let s = String(x).trim().replace(/[^\d.,-]/g, "");
+  const lc = s.lastIndexOf(","), ld = s.lastIndexOf(".");
+  if (lc !== -1 && ld !== -1) {
+    const dec = lc > ld ? "," : ".";
+    s = s.split(dec === "," ? "." : ",").join("").replace(dec, ".");
+  } else if (lc !== -1) {
+    s = s.replace(",", ".");
+  }
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN;
+}
 
-  const RESERVA_ENDPOINT   = `${API_BASE}/api/reserva`;
-  const HOLD_ENDPOINT      = `${API_BASE}/api/hold`;
-  const RELEASE_ENDPOINT   = `${API_BASE}/api/release`;
-  const CONFIRM_ENDPOINT   = `${API_BASE}/api/confirm`;
-  const DNIT_ENDPOINT      = `${API_BASE}/api/dnit`;
+function moneyFmtPYG(n) {
+  const isInt = Number.isFinite(n) && Math.abs(n - Math.round(n)) < 1e-9;
+  return new Intl.NumberFormat("es-PY", {
+    style: "currency",
+    currency: "PYG",
+    maximumFractionDigits: isInt ? 0 : 2
+  }).format(Number.isFinite(n) ? n : 0);
+}
 
-  const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
-  const HOLD_MS = 20 * 60 * 1000;          // ✅ 20 minutos
-
-  const LOGO_URL = ""; // opcional
-
-  // =====================
-  // DOM
-  // =====================
-  const statusEl = document.getElementById("status");
-  const slotsEl = document.getElementById("slots");
-  const slotsHelpEl = document.getElementById("slotsHelp");
-  const debugEl = document.getElementById("debug");
-
-  const qtyEl = document.getElementById("qty");
-  const qtyHintEl = document.getElementById("qtyHint");
-  const btnBuild = document.getElementById("btnBuild");
-  const namesWrap = document.getElementById("namesWrap");
-
-  const formMsg = document.getElementById("formMsg");
-  const sendMsg = document.getElementById("sendMsg");
-
-  // Billing
-  const billNameEl = document.getElementById("billName");
-  const billDocTypeEl = document.getElementById("billDocType");
-  const billDocLabelEl = document.getElementById("billDocLabel");
-  const billDocNumberEl = document.getElementById("billDocNumber");
-  const billEmailEl = document.getElementById("billEmail");
-  const billPhoneEl = document.getElementById("billPhone");
-  const billAddressEl = document.getElementById("billAddress");
-  const billCityEl = document.getElementById("billCity");
-  const rucHintEl = document.getElementById("rucHint");
-
-  // Payment proof
-  const payFileEl = document.getElementById("payFile");
-  const payFileStatusEl = document.getElementById("payFileStatus");
-
-  // Confirm
-  const btnConfirm = document.getElementById("btnConfirm");
-
-  // Loading
-  const loadingEl = document.getElementById("loading");
-  const loadTitleEl = document.getElementById("loadTitle");
-  const loadSubEl = document.getElementById("loadSub");
-  const loadBarEl = document.getElementById("loadBar");
-
-  // Logos
-  const logoImg = document.getElementById("logoImg");
-  const logoFallback = document.getElementById("logoFallback");
-  const logoImg2 = document.getElementById("logoImg2");
-  const logoFallback2 = document.getElementById("logoFallback2");
-
-  // Service info (left)
-  const serviceCardEl = document.getElementById("serviceCard");
-  const serviceTypePillEl = document.getElementById("serviceTypePill");
-  const svcNameEl = document.getElementById("svcName");
-  const svcCategoryEl = document.getElementById("svcCategory");
-  const svcLearningEl = document.getElementById("svcLearning");
-  const svcPlatformEl = document.getElementById("svcPlatform");
-  const svcTutorEl = document.getElementById("svcTutor");
-  const svcUnitPriceEl = document.getElementById("svcUnitPrice");
-  const svcDiscountLineEl = document.getElementById("svcDiscountLine");
-  const svcTotalLineEl = document.getElementById("svcTotalLine");
-
-  // Intent + Hold
-  const intentHintEl = document.getElementById("intentHint");
-  const holdBarEl = document.getElementById("holdBar");
-  const holdTextEl = document.getElementById("holdText");
-  const holdTimerEl = document.getElementById("holdTimer");
-  const btnReleaseEl = document.getElementById("btnRelease");
-
-  // =====================
-  // State
-  // =====================
-  let STATE = {
-    course_id: null,
-    course: null,
-    slots: [],
-    selected_slot: null,
-
-    disponibilidad_id: null,
-    available_rt: null,
-
-    intent: "view",
-    client_id: null,
-
-    hold: null,                  // { hold_id, expires_at, qty }
-    hold_timer: null,
-
-    ws: null,
-
-    payment_proof: null,
-    ruc_verified: false,
-    ruc_tipo_entidad: ""
+function getPricingFromCourse(course) {
+  const tipo = String(course?.tipo_de_curso || "").trim();
+  const unitList = toNumberFlexible(course?.precio);
+  let pct = Number(course?.descuento_pct ?? course?.descuento ?? NaN);
+  const isFree = /gratis|gratuit/i.test(tipo) || (Number.isFinite(unitList) && unitList <= 0);
+  const effectivePct = isFree && !Number.isFinite(pct) ? 100 : pct;
+  let unitFinal = unitList;
+  if (Number.isFinite(unitList) && Number.isFinite(effectivePct)) {
+    unitFinal = unitList * (1 - effectivePct / 100);
+    if (unitFinal < 0) unitFinal = 0;
+  }
+  return {
+    tipo,
+    unitList,
+    unitFinal,
+    discountPct: effectivePct,
+    showDiscount: Number.isFinite(effectivePct) && effectivePct > 0,
+    isFree
   };
+}
 
-  // =====================
-  // Helpers
-  // =====================
-  function htmlEscape(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+function getTutorName(course) {
+  return String(course?.tutor_nombre || course?.tutor?.nombre || "—").trim() || "—";
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Render info curso (lado izquierdo)
+// ────────────────────────────────────────────────────────────────────────────────
+function renderServiceInfo() {
+  const c = STATE.course;
+  if (!c) {
+    els.serviceCard.style.display = "none";
+    return;
   }
 
-  function setStatus(text){
-    statusEl.innerHTML = `<span class="dot" aria-hidden="true"></span><span>${htmlEscape(text)}</span>`;
-  }
+  const pricing = getPricingFromCourse(c);
+  const q = normalizeInt(els.qty.value) || 1;
 
-  function setMsg(html, cls){
-    formMsg.className = "msg " + (cls || "");
-    formMsg.innerHTML = html || "";
-  }
+  els.serviceTypePill.textContent = pricing.tipo || "—";
+  els.svcName.textContent       = c.nombre_curso || "—";
+  els.svcCategory.textContent   = c.categoria || "—";
+  els.svcLearning.textContent   = c.tipo_aprendizaje || "—";
+  els.svcPlatform.textContent   = c.plataforma || "—";
+  els.svcTutor.textContent      = getTutorName(c);
 
-  function setSendMsg(html, cls){
-    sendMsg.className = "msg " + (cls || "");
-    sendMsg.innerHTML = html || "";
-  }
-
-  function normalizeInt(x){
-    const n = Number(x);
-    return Number.isFinite(n) ? Math.trunc(n) : NaN;
-  }
-
-  function isEmailBasic(v){
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
-  }
-
-  function safeCourse(course){
-    if (!course || typeof course !== "object") return null;
-    return JSON.parse(JSON.stringify(course));
-  }
-
-  function getCourseIdFromHash(){
-    const h = (location.hash || "").replace(/^#/, "");
-    const p = new URLSearchParams(h);
-    return p.get("ID") || p.get("course_id");
-  }
-
-  function parseISODate(iso){
-    const s = String(iso||"").trim();
-    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!m) return null;
-    const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
-    if (!y || !mo || !d) return null;
-    return new Date(y, mo-1, d);
-  }
-
-  function formatDateHuman(iso){
-    const d = parseISODate(iso);
-    if (!d) return String(iso||"").trim() || "—";
-    const dd = String(d.getDate()).padStart(2,"0");
-    const mm = String(d.getMonth()+1).padStart(2,"0");
-    const yy = d.getFullYear();
-    return `${dd}/${mm}/${yy}`;
-  }
-
-  function slotSortKey(s){
-    const fecha = String(s?.fecha||"").trim();
-    const hora = String(s?.hora||"").trim();
-    const d = parseISODate(fecha);
-    const dayKey = d ? d.getTime() : Number.MAX_SAFE_INTEGER;
-    let hmKey = Number.MAX_SAFE_INTEGER;
-    const m = hora.match(/^(\d{1,2}):(\d{2})/);
-    if (m){
-      const hh = Number(m[1]), mm = Number(m[2]);
-      if (Number.isFinite(hh) && Number.isFinite(mm)) hmKey = hh*60+mm;
-    }
-    return [dayKey, hmKey, fecha, hora];
-  }
-
-  async function apiGet(url){
-    const r = await fetch(url, { method:"GET" });
-    const t = await r.text();
-    let j=null; try{ j=JSON.parse(t);}catch{}
-    return {ok:r.ok, status:r.status, text:t, json:j, url};
-  }
-
-  async function apiPost(url, payload){
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify(payload)
-    });
-    const t = await r.text();
-    let j=null; try{ j=JSON.parse(t);}catch{}
-    return {ok:r.ok, status:r.status, text:t, json:j};
-  }
-
-  // =====================
-  // Pricing
-  // =====================
-  function toNumberFlexible(x){
-    if (x === null || x === undefined) return NaN;
-    let s = String(x).trim();
-    if (!s) return NaN;
-    s = s.replace(/[^\d.,-]/g, "");
-    if (!s) return NaN;
-
-    const lastComma = s.lastIndexOf(",");
-    const lastDot = s.lastIndexOf(".");
-
-    if (lastComma !== -1 && lastDot !== -1){
-      const decSep = lastComma > lastDot ? "," : ".";
-      const thouSep = decSep === "," ? "." : ",";
-      s = s.split(thouSep).join("");
-      s = s.replace(decSep, ".");
-    } else if (lastComma !== -1 && lastDot === -1){
-      s = s.replace(",", ".");
-    } else if (lastDot !== -1 && lastComma === -1){
-      const parts = s.split(".");
-      if (parts.length > 2) s = parts.join("");
-    }
-
-    const n = Number(s);
-    return Number.isFinite(n) ? n : NaN;
-  }
-
-  function moneyFmtPYG(n){
-    const isInt = Number.isFinite(n) && Math.abs(n - Math.round(n)) < 1e-9;
-    return new Intl.NumberFormat("es-PY", {
-      style: "currency",
-      currency: "PYG",
-      maximumFractionDigits: isInt ? 0 : 2
-    }).format(Number.isFinite(n) ? n : 0);
-  }
-
-  function getPricingFromCourse(course){
-    const tipo = String(course?.tipo_de_curso || "").trim();
-    const tipoLower = tipo.toLowerCase();
-
-    const unitList = toNumberFlexible(course?.precio);
-
-    let pct = course?.descuento_pct;
-    pct = (pct === null || pct === undefined || pct === "") ? NaN : Number(pct);
-    if (!Number.isFinite(pct)) pct = toNumberFlexible(course?.descuento);
-
-    const isFree = /gratuit|gratis/.test(tipoLower) || (Number.isFinite(unitList) && unitList <= 0);
-    const effectivePct = (isFree && !Number.isFinite(pct)) ? 100 : pct;
-
-    let unitFinal = unitList;
-    if (Number.isFinite(unitList) && Number.isFinite(effectivePct)){
-      unitFinal = unitList * (1 - effectivePct/100);
-      if (unitFinal < 0) unitFinal = 0;
-    }
-
-    const showDiscount = Number.isFinite(effectivePct) && effectivePct > 0;
-    return { tipo, unitList, unitFinal, discountPct: effectivePct, showDiscount, isFree };
-  }
-
-  function getTutorName(course){
-    const t = course?.tutor || null;
-    const direct = String(course?.tutor_nombre || "").trim();
-    const n = String(t?.nombre || "").trim();
-    return direct || n || "—";
-  }
-
-  function renderServiceInfo(){
-    const c = STATE.course;
-    if (!c){ serviceCardEl.style.display = "none"; return; }
-
-    const name = String(c?.nombre_curso || "Curso").trim();
-    const category = String(c?.categoria || "").trim();
-    const platform = String(c?.plataforma || "").trim();
-    const learning = String(c?.tipo_aprendizaje || "").trim();
-    const tutor = getTutorName(c);
-    const pricing = getPricingFromCourse(c);
-
-    const q = (() => {
-      const v = normalizeInt(qtyEl?.value);
-      return (Number.isFinite(v) && v > 0) ? v : 1;
-    })();
-
-    const totalList = Number.isFinite(pricing.unitList) ? pricing.unitList * q : NaN;
-    const totalFinal = Number.isFinite(pricing.unitFinal) ? pricing.unitFinal * q : NaN;
-
-    serviceTypePillEl.textContent = pricing.tipo || "—";
-    svcNameEl.textContent = name || "—";
-    svcCategoryEl.textContent = category || "—";
-    svcLearningEl.textContent = learning || "—";
-    svcPlatformEl.textContent = platform || "—";
-    svcTutorEl.textContent = tutor;
-
-    if (Number.isFinite(pricing.unitList)){
-      if (pricing.isFree || (Number.isFinite(pricing.discountPct) && pricing.discountPct >= 100)){
-        svcUnitPriceEl.innerHTML = `Gratis <span class="badgeOk">0</span>`;
-      } else {
-        svcUnitPriceEl.textContent = `${moneyFmtPYG(pricing.unitList)} por participante`;
-      }
+  if (Number.isFinite(pricing.unitList)) {
+    if (pricing.isFree) {
+      els.svcUnitPrice.innerHTML = `Gratis <span class="badgeOk">0</span>`;
     } else {
-      svcUnitPriceEl.textContent = "—";
+      els.svcUnitPrice.textContent = `${moneyFmtPYG(pricing.unitList)} por participante`;
     }
-
-    if (pricing.showDiscount){
-      svcDiscountLineEl.style.display = "block";
-      svcDiscountLineEl.innerHTML = `Descuento: <strong>${Number.isFinite(pricing.discountPct) ? pricing.discountPct : 0}%</strong>`;
-    } else {
-      svcDiscountLineEl.style.display = "none";
-    }
-
-    if (pricing.showDiscount && Number.isFinite(totalFinal)){
-      svcTotalLineEl.innerHTML = `Total a pagar para ${q} participante(s): <strong>${moneyFmtPYG(totalFinal)}</strong>`;
-    } else if (Number.isFinite(totalList)){
-      svcTotalLineEl.innerHTML = `Total para ${q} participante(s): <strong>${moneyFmtPYG(totalList)}</strong>`;
-    } else {
-      svcTotalLineEl.textContent = "Total: —";
-    }
-
-    serviceCardEl.style.display = "block";
+  } else {
+    els.svcUnitPrice.textContent = "—";
   }
 
-  // =====================
-  // Loading UI
-  // =====================
-  function showLoading(title, sub, progress01){
-    loadTitleEl.textContent = title || "Cargando…";
-    loadSubEl.textContent = sub || "";
-    const p = Math.max(0, Math.min(1, Number(progress01 ?? 0.1)));
-    loadBarEl.style.width = Math.round(p * 100) + "%";
-    loadingEl.style.display = "flex";
-  }
-  function hideLoading(){ loadingEl.style.display = "none"; }
-
-  // =====================
-  // Logo
-  // =====================
-  function setupLogo(){
-    if (!LOGO_URL) return;
-
-    [logoImg, logoImg2].forEach((img) => { img.src = LOGO_URL; img.style.display = "block"; });
-    [logoFallback, logoFallback2].forEach((el) => el.style.display = "none");
-
-    logoImg.onerror = () => { logoImg.style.display="none"; logoFallback.style.display="block"; };
-    logoImg2.onerror = () => { logoImg2.style.display="none"; logoFallback2.style.display="block"; };
+  els.svcDiscountLine.style.display = pricing.showDiscount ? "block" : "none";
+  if (pricing.showDiscount) {
+    els.svcDiscountLine.innerHTML = `Descuento: <strong>${pricing.discountPct}%</strong>`;
   }
 
-  // =====================
-  // Intent
-  // =====================
-  function setIntent(intent){
-    STATE.intent = intent;
-
-    const buying = (intent === "buy");
-    intentHintEl.textContent = buying
-      ? "Seleccioná un turno, definí cantidad y presioná “Añadir participantes” para reservar por 20 minutos."
-      : "Modo solo lectura: podés ver cupos en tiempo real sin bloquear.";
-
-    if (!buying && STATE.hold){
-      releaseHold("Cambio a solo ver horarios");
-    }
-    if (!buying){
-      namesWrap.innerHTML = "";
-      setSendMsg("");
-      setMsg("", "");
-    }
-
-    applyUIAccess();
+  const total = pricing.showDiscount ? pricing.unitFinal : pricing.unitList;
+  if (Number.isFinite(total)) {
+    els.svcTotalLine.innerHTML = `Total para ${q} participante(s): <strong>${moneyFmtPYG(total * q)}</strong>`;
+  } else {
+    els.svcTotalLine.textContent = "Total: —";
   }
 
-  function clearParticipantsUI(){
-    namesWrap.innerHTML = "";
+  els.serviceCard.style.display = "block";
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Loading
+// ────────────────────────────────────────────────────────────────────────────────
+function showLoading(title, sub, progress = 0.1) {
+  els.loadTitle.textContent = title || "Cargando…";
+  els.loadSub.textContent = sub || "";
+  els.loadBar.style.width = Math.round(Math.max(0, Math.min(1, progress)) * 100) + "%";
+  els.loading.style.display = "flex";
+}
+
+function hideLoading() {
+  els.loading.style.display = "none";
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Intención view/buy
+// ────────────────────────────────────────────────────────────────────────────────
+function setIntent(intent) {
+  STATE.intent = intent;
+  const buying = intent === "buy";
+
+  els.intentHint.textContent = buying
+    ? "Seleccioná un turno, definí cantidad y presioná “Añadir participantes” para reservar por 20 minutos."
+    : "Modo solo lectura: podés ver cupos en tiempo real sin bloquear.";
+
+  if (!buying && STATE.hold) releaseHold("Cambio a solo ver horarios");
+
+  if (!buying) {
+    els.namesWrap.innerHTML = "";
+    setSendMsg("");
+    setMsg("");
   }
 
-  function applyUIAccess(){
-    const buying = (STATE.intent === "buy");
-    const hasSlot = !!STATE.selected_slot;
-    const hasStock = Number.isFinite(STATE.available_rt) && STATE.available_rt > 0;
+  applyUIAccess();
+}
 
-    // qty se edita antes del hold (si buy + slot + stock). Cuando hay hold activo, lo bloqueamos.
-    qtyEl.disabled = !buying || !hasSlot || !hasStock || !!STATE.hold;
+function applyUIAccess() {
+  const buying   = STATE.intent === "buy";
+  const hasSlot  = !!STATE.selected_slot;
+  const hasStock = Number.isFinite(STATE.available_rt) && STATE.available_rt > 0;
+  const hasHold  = !!STATE.hold;
 
-    // Añadir participantes crea hold + timer + recién permite completar el resto
-    btnBuild.disabled = !buying || !hasSlot || !hasStock || !!STATE.hold;
+  els.qty.disabled       = !buying || !hasSlot || !hasStock || hasHold;
+  els.btnBuild.disabled  = !buying || !hasSlot || !hasStock || hasHold;
 
-    // Facturación/pago solo con hold activo
-    const canFill = buying && !!STATE.hold;
-    [billNameEl, billDocTypeEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl, payFileEl].forEach(el=>{
-      el.disabled = !canFill;
-    });
+  const canFill = buying && hasHold;
+  [
+    els.billName, els.billDocType, els.billDocNumber, els.billEmail,
+    els.billPhone, els.billAddress, els.billCity, els.payFile
+  ].forEach(el => el.disabled = !canFill);
 
-    btnConfirm.disabled = !isFormValid();
-    renderServiceInfo();
-  }
+  els.btnConfirm.disabled = !isFormValid();
+  renderServiceInfo();
+}
 
-  // =====================
-  // WebSocket tiempo real
-  // =====================
-  function wsUrlForDisponibilidad(disponibilidad_id){
-    const u = new URL(API_BASE.replace(/^http/,"ws") + "/ws");
-    u.searchParams.set("disponibilidad_id", disponibilidad_id);
-    return u.toString();
-  }
+// ────────────────────────────────────────────────────────────────────────────────
+// WebSocket
+// ────────────────────────────────────────────────────────────────────────────────
+function connectWS() {
+  if (!STATE.disponibilidad_id) return;
+  if (STATE.ws) { STATE.ws.close(); STATE.ws = null; }
 
-  function connectWS(){
-    if (!STATE.disponibilidad_id) return;
+  const ws = new WebSocket(API_BASE.replace(/^http/, "ws") + "/ws?disponibilidad_id=" + STATE.disponibilidad_id);
+  STATE.ws = ws;
 
-    if (STATE.ws){
-      try { STATE.ws.close(); } catch {}
-      STATE.ws = null;
-    }
+  ws.onopen = () => setStatus("Conectado · tiempo real");
 
-    const ws = new WebSocket(wsUrlForDisponibilidad(STATE.disponibilidad_id));
-    STATE.ws = ws;
-
-    ws.onopen = () => {
-      setStatus("Conectado · tiempo real");
-    };
-
-    ws.onmessage = (ev) => {
-      let msg = null;
-      try { msg = JSON.parse(ev.data); } catch {}
-      if (!msg) return;
-
-      if (msg.type === "snapshot" || msg.type === "update"){
+  ws.onmessage = ev => {
+    try {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === "snapshot" || msg.type === "update") {
         if (Number.isFinite(Number(msg.available))) {
           STATE.available_rt = Number(msg.available);
-
-          // Si se queda sin stock y NO tenemos hold, lo reflejamos.
-          // Si tenemos hold, NO lo liberamos por WS: el hold ya “reservó” cupos y el backend debe respetarlo.
           renderSlots(STATE.slots);
           applyUIAccess();
         }
       }
-    };
+    } catch {}
+  };
 
-    ws.onclose = () => {
-      setStatus("Desconectado · reintentando…");
-      setTimeout(() => {
-        if (STATE.disponibilidad_id) connectWS();
-      }, 1500);
-    };
+  ws.onclose = () => {
+    setStatus("Desconectado · reintentando…");
+    setTimeout(connectWS, 1500);
+  };
+}
 
-    ws.onerror = () => { /* onclose hará retry */ };
+// ────────────────────────────────────────────────────────────────────────────────
+// Render turnos
+// ────────────────────────────────────────────────────────────────────────────────
+function renderSlots(slots) {
+  els.slots.innerHTML = "";
+
+  if (!Array.isArray(slots) || slots.length === 0) {
+    els.slots.innerHTML = "<em class='muted'>No hay turnos disponibles.</em>";
+    disableForm("No hay turnos disponibles.");
+    return;
   }
 
-  // =====================
-  // Slots
-  // =====================
-  function disableForm(reason){
-    qtyEl.disabled = true;
-    btnBuild.disabled = true;
-    btnConfirm.disabled = true;
-    qtyHintEl.textContent = reason || "";
-    clearParticipantsUI();
-    setMsg(reason ? `<span class="muted">${htmlEscape(reason)}</span>` : "", "");
-    setSendMsg("", "");
-    renderServiceInfo();
-  }
+  const avail = Number.isFinite(STATE.available_rt) ? STATE.available_rt : null;
 
-  function renderSlots(slots){
-    slotsEl.innerHTML = "";
-
-    if (!Array.isArray(slots) || slots.length === 0){
-      slotsEl.innerHTML = "<em class='muted'>No hay turnos disponibles.</em>";
-      slotsHelpEl.textContent = "";
-      return disableForm("No hay turnos disponibles.");
+  slots.slice().sort((a,b) => {
+    const ka = slotSortKey(a), kb = slotSortKey(b);
+    for (let i = 0; i < ka.length; i++) {
+      if (ka[i] < kb[i]) return -1;
+      if (ka[i] > kb[i]) return 1;
     }
+    return 0;
+  }).forEach((s, i) => {
+    const id = `slot_${i}`;
+    const ok = Number.isFinite(avail) && avail > 0;
 
-    const available = Number.isFinite(STATE.available_rt) ? STATE.available_rt : null;
+    const div = document.createElement("div");
+    div.className = `slot${ok ? "" : " disabled"}`;
 
-    const sorted = slots.slice().sort((a,b)=>{
-      const ka = slotSortKey(a);
-      const kb = slotSortKey(b);
-      for (let i=0;i<ka.length;i++){
-        if (ka[i] < kb[i]) return -1;
-        if (ka[i] > kb[i]) return 1;
-      }
-      return 0;
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "slot";
+    radio.id = id;
+    radio.value = s.slot_id ?? i;
+    radio.disabled = !ok;
+    if (STATE.selected_slot?.slot_id === s.slot_id) radio.checked = true;
+
+    radio.addEventListener("change", async () => {
+      if (STATE.hold) await releaseHold("Cambio de turno");
+      STATE.selected_slot = s;
+      await onSlotSelected();
     });
 
-    sorted.forEach((s, idx) => {
-      const id = `slot_${idx}`;
+    const cont = document.createElement("div");
+    cont.style.flex = "1";
 
-      const disp = available;
-      const isOk = Number.isFinite(disp) && disp > 0;
+    const label = document.createElement("label");
+    label.htmlFor = id;
+    label.textContent = `${formatDateHuman(s.fecha)} · ${s.hora || "—"}`;
+    cont.appendChild(label);
 
-      const box = document.createElement("div");
-      box.className = "slot" + (isOk ? "" : " disabled");
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = `
+      <span class="kpi">Cupos: ${Number.isFinite(avail) ? avail : "-"}</span>
+      <span class="kpi gray">${ok ? "Disponible" : "Sin cupos"}</span>
+    `;
+    cont.appendChild(meta);
 
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = "slot";
-      input.id = id;
-      input.value = String(s.slot_id ?? idx);
-      input.disabled = !isOk;
+    div.append(radio, cont);
+    els.slots.appendChild(div);
+  });
 
-      const isSelected = STATE.selected_slot && String(STATE.selected_slot.slot_id) === String(s.slot_id);
-      if (isSelected) input.checked = true;
+  els.slotsHelp.textContent = "Seleccioná un turno para continuar.";
+  if (!STATE.selected_slot) disableForm("Seleccioná un turno.");
+}
 
-      input.addEventListener("change", async () => {
-        // Si había hold y cambia de turno, liberar (hardening)
-        if (STATE.hold){
-          await releaseHold("Cambio de turno");
-        }
-        clearParticipantsUI();
+async function onSlotSelected() {
+  if (!STATE.selected_slot) return disableForm("Seleccioná un turno.");
 
-        STATE.selected_slot = s;
-        await onSlotSelected();
-      });
+  const avail = STATE.available_rt;
+  if (!Number.isFinite(avail) || avail <= 0) return disableForm("No hay cupos disponibles.");
 
-      const right = document.createElement("div");
-      right.style.flex = "1 1 auto";
+  if (STATE.intent !== "buy") return disableForm("Modo solo lectura. Cambiá a “Comprar curso”.");
 
-      const lab = document.createElement("label");
-      lab.htmlFor = id;
-      const fechaHuman = formatDateHuman(s.fecha);
-      lab.textContent = `${fechaHuman} · ${String(s.hora || "—")}`;
-      right.appendChild(lab);
+  let v = normalizeInt(els.qty.value) || 1;
+  if (v > avail) v = avail;
+  els.qty.value = v;
+  els.qty.min = 1;
+  els.qty.max = avail;
+  els.qtyHint.textContent = `Máximo: ${avail}`;
 
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      meta.innerHTML = `
-        <span class="kpi">Cupos: ${htmlEscape(Number.isFinite(disp) ? disp : "-")}</span>
-        <span class="kpi gray">${isOk ? "Disponible" : "Sin cupos"}</span>
-      `;
-      right.appendChild(meta);
+  setSendMsg("<span class='muted'>Definí cantidad y presioná “Añadir participantes”.</span>");
+  applyUIAccess();
+}
 
-      box.appendChild(input);
-      box.appendChild(right);
-      slotsEl.appendChild(box);
-    });
+function disableForm(reason = "") {
+  els.qty.disabled = true;
+  els.btnBuild.disabled = true;
+  els.btnConfirm.disabled = true;
+  els.qtyHint.textContent = reason;
+  els.namesWrap.innerHTML = "";
+  setMsg(reason ? `<span class="muted">${reason}</span>` : "");
+  setSendMsg("");
+  renderServiceInfo();
+}
 
-    slotsHelpEl.textContent = "Seleccioná un turno para continuar.";
-    if (!STATE.selected_slot) disableForm("Seleccioná un turno.");
-  }
-
-  async function onSlotSelected(){
-    const s = STATE.selected_slot;
-    if (!s) return disableForm("Seleccioná un turno.");
-
-    const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
-    if (!Number.isFinite(disp) || disp <= 0) return disableForm("No hay cupos disponibles.");
-
-    if (STATE.intent !== "buy"){
-      disableForm("Estás en modo solo lectura. Elegí “Comprar curso” para continuar.");
-      return;
-    }
-
-    qtyEl.disabled = false;
-    qtyEl.min = "1";
-    qtyEl.max = String(disp);
-
-    let v = normalizeInt(qtyEl.value);
-    if (!Number.isFinite(v) || v < 1) v = 1;
-    if (v > disp) v = disp;
-    qtyEl.value = String(v);
-
-    qtyHintEl.textContent = `Máximo permitido: ${disp}.`;
-
-    setMsg("", "");
-    setSendMsg("<span class='muted'>Definí cantidad y presioná “Añadir participantes” para reservar por 20 minutos.</span>");
-    applyUIAccess();
-  }
-
-  // =====================
-  // Hold
-  // =====================
-  function ensureClientId(){
-    if (STATE.client_id) return STATE.client_id;
-    const saved = localStorage.getItem("tc_client_id");
-    if (saved) { STATE.client_id = saved; return saved; }
-    const cid = "c_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
-    localStorage.setItem("tc_client_id", cid);
+// ────────────────────────────────────────────────────────────────────────────────
+// Hold (reserva temporal)
+// ────────────────────────────────────────────────────────────────────────────────
+function ensureClientId() {
+  let cid = localStorage.getItem("tc_client_id");
+  if (cid) {
     STATE.client_id = cid;
     return cid;
   }
-
-  function showHoldBar(){ holdBarEl.style.display = "flex"; }
-  function hideHoldBar(){ holdBarEl.style.display = "none"; }
-
-  function formatMMSS(ms){
-    const s = Math.max(0, Math.floor(ms/1000));
-    const mm = String(Math.floor(s/60)).padStart(2,"0");
-    const ss = String(s%60).padStart(2,"0");
-    return `${mm}:${ss}`;
-  }
-
-  function startHoldTimer(){
-    if (!STATE.hold) return;
-
-    if (STATE.hold_timer) clearInterval(STATE.hold_timer);
-
-    const tick = () => {
-      if (!STATE.hold) return;
-      const left = STATE.hold.expires_at - Date.now();
-      holdTimerEl.textContent = formatMMSS(left);
-      holdTimerEl.classList.toggle("warn", left <= 2*60*1000);
-
-      if (left <= 0){
-        clearInterval(STATE.hold_timer);
-        STATE.hold_timer = null;
-
-        // Expira localmente (el backend también debe expirar por TTL).
-        STATE.hold = null;
-        hideHoldBar();
-        clearParticipantsUI();
-        STATE.payment_proof = null;
-        payFileEl.value = "";
-        payFileStatusEl.textContent = "Sin archivo";
-
-        setSendMsg("<span class='err'>Se venció el tiempo de reserva temporal. Volvé a presionar “Añadir participantes” para reservar nuevamente.</span>");
-        applyUIAccess();
-      }
-    };
-
-    tick();
-    STATE.hold_timer = setInterval(tick, 500);
-  }
-
-  async function createHoldNow(qty){
-    if (STATE.intent !== "buy") return { ok:false, error:"intent" };
-    if (!STATE.disponibilidad_id) return { ok:false, error:"no_disponibilidad" };
-    if (!STATE.selected_slot) return { ok:false, error:"no_slot" };
-
-    // si ya había hold, liberar primero (consistente)
-    if (STATE.hold){
-      await releaseHold("Recrear hold");
-    }
-
-    setSendMsg("<span class='muted'>Reservando cupos por 20 minutos…</span>");
-
-    const payload = {
-      disponibilidad_id: STATE.disponibilidad_id,
-      qty,
-      client_id: ensureClientId(),
-      available_snapshot: Number.isFinite(STATE.available_rt) ? STATE.available_rt : null, // ✅ cache de snapshot
-      course_id: STATE.course_id,
-      slot_id: STATE.selected_slot?.slot_id || null
-    };
-
-    const res = await apiPost(HOLD_ENDPOINT, payload);
-    if (!res.ok || !res.json || res.json.ok !== true){
-  const av = res.json?.available ?? STATE.available_rt ?? "-";
-
-  openErrorModal(
-    `Tu cantidad supera la cantidad disponible. 
-     Actualmente solo hay ${av} cupo(s) disponibles. Actualiza la pagina para actualizar los datos`
-  );
-
-  return { ok:false, error:"hold_failed", res };
+  cid = "c_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+  localStorage.setItem("tc_client_id", cid);
+  STATE.client_id = cid;
+  return cid;
 }
 
+function showHoldBar() { els.holdBar.style.display = "flex"; }
+function hideHoldBar() { els.holdBar.style.display = "none"; }
 
-    const exp = Number(res.json.expires_at);
-    const expires_at = Number.isFinite(exp) ? exp : (Date.now() + HOLD_MS);
+function formatMMSS(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+}
 
-    STATE.hold = { hold_id: res.json.hold_id, expires_at, qty };
-    holdTextEl.textContent = `Asientos reservados: ${qty}. Confirmá antes de que expire.`;
-    showHoldBar();
-    startHoldTimer();
+function startHoldTimer() {
+  if (!STATE.hold || STATE.hold_timer) return;
 
-    setSendMsg("<span class='ok'>Reserva temporal creada. Completá participantes y datos para confirmar.</span>");
-    return { ok:true };
-  }
-
-  async function releaseHold(reason){
+  const tick = () => {
     if (!STATE.hold) return;
+    const left = STATE.hold.expires_at - Date.now();
+    els.holdTimer.textContent = formatMMSS(left);
+    els.holdTimer.classList.toggle("warn", left <= 120000);
 
-    const hold_id = STATE.hold.hold_id;
-    const client_id = ensureClientId();
+    if (left <= 0) {
+      clearInterval(STATE.hold_timer);
+      STATE.hold_timer = null;
+      STATE.hold = null;
+      hideHoldBar();
+      els.namesWrap.innerHTML = "";
+      els.payFile.value = "";
+      els.payFileStatus.textContent = "Sin archivo";
+      setSendMsg("<span class='err'>Tiempo de reserva expirado. Volvé a reservar.</span>");
+      applyUIAccess();
+    }
+  };
 
-    // limpiar UI primero (optimista)
-    STATE.hold = null;
-    hideHoldBar();
-    if (STATE.hold_timer) { clearInterval(STATE.hold_timer); STATE.hold_timer = null; }
+  tick();
+  STATE.hold_timer = setInterval(tick, 500);
+}
 
-    // Al liberar, también bloqueamos facturación/pago y pedimos volver a reservar
-    STATE.payment_proof = null;
-    payFileEl.value = "";
-    payFileStatusEl.textContent = "Sin archivo";
+async function createHoldNow(qty) {
+  if (STATE.hold) await releaseHold("Reemplazo hold");
 
-    applyUIAccess();
+  const payload = {
+    disponibilidad_id: STATE.disponibilidad_id,
+    qty,
+    client_id: ensureClientId(),
+    available_snapshot: STATE.available_rt,
+    course_id: STATE.course_id,
+    slot_id: STATE.selected_slot?.slot_id
+  };
 
-    try{
-      await apiPost(RELEASE_ENDPOINT, {
-        disponibilidad_id: STATE.disponibilidad_id,
-        hold_id,
-        client_id,
-        reason: reason || ""
-      });
-    } catch {}
+  setSendMsg("<span class='muted'>Reservando cupos…</span>");
+
+  const res = await apiPost(HOLD_ENDPOINT, payload);
+  if (!res.ok || !res.json?.ok) {
+    const av = res.json?.available ?? STATE.available_rt ?? "—";
+    openErrorModal(`Solo hay ${av} cupo(s) disponible(s).`);
+    return { ok: false };
   }
 
-  // liberación automática al cerrar/ocultar pestaña (sendBeacon)
-  function releaseHoldBeacon(reason){
-    if (!STATE.hold) return;
-    try{
-      const body = {
-        disponibilidad_id: STATE.disponibilidad_id,
-        hold_id: STATE.hold.hold_id,
-        client_id: ensureClientId(),
-        reason: reason || "pagehide"
-      };
-      const blob = new Blob([JSON.stringify(body)], { type: "application/json" });
-      navigator.sendBeacon(RELEASE_ENDPOINT, blob);
-    } catch {}
+  const exp = Number(res.json.expires_at) || Date.now() + HOLD_MS;
+  STATE.hold = { hold_id: res.json.hold_id, expires_at: exp, qty };
+
+  els.holdText.textContent = `Asientos reservados: ${qty}. Confirmá antes de que expire.`;
+  showHoldBar();
+  startHoldTimer();
+  setSendMsg("<span class='ok'>Reserva temporal activa (20 min).</span>");
+
+  return { ok: true };
+}
+
+async function releaseHold(reason = "") {
+  if (!STATE.hold) return;
+
+  const { hold_id } = STATE.hold;
+  const client_id = ensureClientId();
+
+  if (STATE.hold_timer) {
+    clearInterval(STATE.hold_timer);
+    STATE.hold_timer = null;
   }
 
-  window.addEventListener("pagehide", () => releaseHoldBeacon("pagehide"));
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") releaseHoldBeacon("visibilitychange_hidden");
-  });
+  STATE.hold = null;
+  hideHoldBar();
+  STATE.payment_proof = null;
+  els.payFile.value = "";
+  els.payFileStatus.textContent = "Sin archivo";
 
-  btnReleaseEl.addEventListener("click", async () => {
-    await releaseHold("Liberado por usuario");
-    clearParticipantsUI();
-    setSendMsg("<span class='muted'>Reserva temporal liberada. Si querés continuar, presioná “Añadir participantes” nuevamente.</span>");
-  });
+  applyUIAccess();
 
-  // =====================
-  // Participants
-  // =====================
-  function makeField(i, key, labelText, type, required, placeholder){
-    const wrap = document.createElement("div");
-    wrap.className = "field";
-
-    const lab = document.createElement("label");
-    lab.htmlFor = `p${i}_${key}`;
-    lab.textContent = labelText + (required ? " *" : "");
-    wrap.appendChild(lab);
-
-    const inp = document.createElement("input");
-    inp.type = type;
-    inp.id = `p${i}_${key}`;
-    inp.placeholder = placeholder || "";
-
-    inp.addEventListener("input", () => {
-      btnConfirm.disabled = !isFormValid();
-      setSendMsg("");
+  try {
+    await apiPost(RELEASE_ENDPOINT, {
+      disponibilidad_id: STATE.disponibilidad_id,
+      hold_id,
+      client_id,
+      reason
     });
+  } catch {}
+}
 
-    wrap.appendChild(inp);
-    return wrap;
+// Beacon para liberar al cerrar pestaña
+function releaseHoldBeacon(reason) {
+  if (!STATE.hold) return;
+  try {
+    navigator.sendBeacon(RELEASE_ENDPOINT, JSON.stringify({
+      disponibilidad_id: STATE.disponibilidad_id,
+      hold_id: STATE.hold.hold_id,
+      client_id: ensureClientId(),
+      reason: reason || "close"
+    }));
+  } catch {}
+}
+
+window.addEventListener("pagehide", () => releaseHoldBeacon("pagehide"));
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") releaseHoldBeacon("hidden");
+});
+
+els.btnRelease.onclick = async () => {
+  await releaseHold("Usuario liberó manualmente");
+  els.namesWrap.innerHTML = "";
+  setSendMsg("<span class='muted'>Reserva liberada. Podés reservar nuevamente.</span>");
+};
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Participantes
+// ────────────────────────────────────────────────────────────────────────────────
+function buildParticipants() {
+  els.namesWrap.innerHTML = "";
+
+  const qty = normalizeInt(els.qty.value);
+  if (!qty || qty < 1) return;
+
+  const note = document.createElement("div");
+  note.className = "muted tiny";
+  note.style.marginTop = "10px";
+  note.textContent = "Datos obligatorios: nombres, apellidos, cédula, email";
+  els.namesWrap.appendChild(note);
+
+  for (let i = 1; i <= qty; i++) {
+    const box = document.createElement("div");
+    box.className = "pbox";
+    box.dataset.pblock = "1";
+
+    box.innerHTML = `
+      <div class="pboxTitle">
+        <div class="left"><span class="idx">${i}</span> Participante</div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="p${i}_nombres">Nombres *</label><input id="p${i}_nombres" type="text" required placeholder="Ej: María José"></div>
+        <div class="field"><label for="p${i}_apellidos">Apellidos *</label><input id="p${i}_apellidos" type="text" required placeholder="Ej: González"></div>
+        <div class="field"><label for="p${i}_cedula">Cédula *</label><input id="p${i}_cedula" type="text" required placeholder="Ej: 5123456"></div>
+        <div class="field"><label for="p${i}_email">Correo *</label><input id="p${i}_email" type="email" required placeholder="ejemplo@correo.com"></div>
+        <div class="field"><label for="p${i}_contacto">Contacto</label><input id="p${i}_contacto" type="text" placeholder="+595 ..."></div>
+      </div>
+    `;
+
+    els.namesWrap.appendChild(box);
   }
 
-  function buildParticipants(){
-    namesWrap.innerHTML = "";
+  els.btnConfirm.disabled = !isFormValid();
+}
 
-    if (!STATE.selected_slot) return;
-
-    const qty = normalizeInt(qtyEl.value);
-    if (!Number.isFinite(qty) || qty < 1){
-      setMsg("Cantidad inválida.", "err");
-      btnConfirm.disabled = true;
-      return;
-    }
-
-    const note = document.createElement("div");
-    note.className = "muted tiny";
-    note.style.marginTop = "10px";
-    note.textContent = "Completá los datos de cada participante (obligatorio: nombres, apellidos, cédula, email).";
-    namesWrap.appendChild(note);
-
-    for (let i=1;i<=qty;i++){
-      const box = document.createElement("div");
-      box.className = "pbox";
-      box.setAttribute("data-pblock","1");
-
-      const head = document.createElement("div");
-      head.className = "pboxTitle";
-      head.innerHTML = `<div class="left"><span class="idx">${i}</span> Participante</div>`;
-      box.appendChild(head);
-
-      const row = document.createElement("div");
-      row.className = "row";
-
-      row.appendChild(makeField(i, "nombres", "Nombres", "text", true, "Ej: Juan Carlos"));
-      row.appendChild(makeField(i, "apellidos", "Apellidos", "text", true, "Ej: Gómez López"));
-      row.appendChild(makeField(i, "cedula", "Cédula", "text", true, "Ej: 1234567"));
-      row.appendChild(makeField(i, "email", "Correo", "email", true, "Ej: correo@dominio.com"));
-      row.appendChild(makeField(i, "contacto", "Contacto", "text", false, "Ej: +595…"));
-
-      box.appendChild(row);
-      namesWrap.appendChild(box);
-    }
-
-    renderServiceInfo();
-    btnConfirm.disabled = !isFormValid();
-    setMsg("", "");
-  }
-
-  function getParticipants(){
-    const blocks = Array.from(namesWrap.querySelectorAll('[data-pblock="1"]'));
-    const out = [];
-    for (let idx=0; idx<blocks.length; idx++){
-      const i = idx + 1;
-      const q = (k) => (namesWrap.querySelector(`#p${i}_${k}`)?.value || "").trim();
-      out.push({
-        nombres: q("nombres"),
-        apellidos: q("apellidos"),
-        cedula: q("cedula"),
-        email: q("email"),
-        contacto: q("contacto") || ""
-      });
-    }
-    return out;
-  }
-
-  // =====================
-  // Billing + RUC DNIT
-  // =====================
-  function refreshBillingDocUI(){
-    const type = billDocTypeEl.value;
-    STATE.ruc_verified = false;
-    STATE.ruc_tipo_entidad = "";
-    rucHintEl.textContent = "";
-
-    if (type === "fiscal"){
-      billDocLabelEl.textContent = "Documento fiscal (RUC) *";
-      billDocNumberEl.placeholder = "Ej: 80012345-6";
-      rucHintEl.textContent = "Al salir del campo se verificará el RUC en DNIT.";
-    } else {
-      billDocLabelEl.textContent = "Documento personal (Cédula) *";
-      billDocNumberEl.placeholder = "Ej: 1234567";
-    }
-    btnConfirm.disabled = !isFormValid();
-  }
-
-  function getBilling(){
+function getParticipants() {
+  return Array.from(els.namesWrap.querySelectorAll("[data-pblock='1']")).map((block, idx) => {
+    const i = idx + 1;
     return {
-      razon_social: (billNameEl.value||"").trim(),
-      tipo_documento: billDocTypeEl.value,
-      documento: (billDocNumberEl.value||"").trim(),
-      email: (billEmailEl.value||"").trim(),
-      telefono: (billPhoneEl.value||"").trim(),
-      direccion: (billAddressEl.value||"").trim(),
-      ciudad: (billCityEl.value||"").trim(),
-      tipo_entidad: STATE.ruc_tipo_entidad || ""
+      nombres:   document.getElementById(`p${i}_nombres`)?.value.trim()   || "",
+      apellidos: document.getElementById(`p${i}_apellidos`)?.value.trim() || "",
+      cedula:    document.getElementById(`p${i}_cedula`)?.value.trim()    || "",
+      email:     document.getElementById(`p${i}_email`)?.value.trim()     || "",
+      contacto:  document.getElementById(`p${i}_contacto`)?.value.trim()  || ""
     };
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Facturación + RUC
+// ────────────────────────────────────────────────────────────────────────────────
+function refreshBillingDocUI() {
+  const fiscal = els.billDocType.value === "fiscal";
+  els.billDocLabel.textContent = fiscal ? "RUC *" : "Cédula *";
+  els.billDocNumber.placeholder = fiscal ? "Ej: 80012345-6" : "Ej: 5123456";
+  els.rucHint.textContent = fiscal ? "Se verificará al salir del campo" : "";
+  STATE.ruc_verified = false;
+  STATE.ruc_tipo_entidad = "";
+  els.btnConfirm.disabled = !isFormValid();
+}
+
+async function verifyRUCIfNeeded() {
+  if (els.billDocType.value !== "fiscal") return;
+
+  const ruc = els.billDocNumber.value.trim();
+  if (!ruc) {
+    els.rucHint.textContent = "Ingresá RUC";
+    return;
   }
 
-  function isBillingValid(){
-    const b = getBilling();
-    if (!b.razon_social) return false;
-    if (!b.tipo_documento) return false;
-    if (!b.documento) return false;
-    if (!b.email || !isEmailBasic(b.email)) return false;
-    if (!b.direccion) return false;
-    if (!b.ciudad) return false;
-    if (b.tipo_documento === "fiscal" && !STATE.ruc_verified) return false;
-    return true;
-  }
+  els.rucHint.textContent = "Verificando…";
+  const res = await apiGet(`${DNIT_ENDPOINT}?ruc=${encodeURIComponent(ruc)}`);
 
-  async function verifyRUCIfNeeded(){
-    const type = billDocTypeEl.value;
-    if (type !== "fiscal") return;
-
-    const ruc = (billDocNumberEl.value || "").trim();
-    if (!ruc) { STATE.ruc_verified = false; rucHintEl.textContent = "Ingresá un RUC válido."; return; }
-
-    rucHintEl.textContent = "Verificando RUC…";
-    STATE.ruc_verified = false;
-    STATE.ruc_tipo_entidad = "";
-
-    const res = await apiGet(`${DNIT_ENDPOINT}?ruc=${encodeURIComponent(ruc)}`);
-    if (!res.ok || !res.json || res.json.ok !== true){
-      rucHintEl.textContent = "RUC no verificado. Verificá el número o intentá nuevamente.";
-      STATE.ruc_verified = false;
-      btnConfirm.disabled = !isFormValid();
-      return;
-    }
-
-    const rz = String(res.json.razon_social || "").trim();
-    const te = String(res.json.tipo_entidad || "").trim();
-
-    if (rz) billNameEl.value = rz;
-    STATE.ruc_tipo_entidad = te;
+  if (res.ok && res.json?.ok) {
+    if (res.json.razon_social) els.billName.value = res.json.razon_social;
+    STATE.ruc_tipo_entidad = res.json.tipo_entidad || "";
     STATE.ruc_verified = true;
-
-    rucHintEl.textContent = `RUC verificado${te ? " · " + te : ""}.`;
-    btnConfirm.disabled = !isFormValid();
+    els.rucHint.textContent = "RUC verificado ✓";
+  } else {
+    STATE.ruc_verified = false;
+    els.rucHint.textContent = "RUC no válido o error en verificación";
   }
 
-  // =====================
-  // Payment proof
-  // =====================
-  function isPaymentProofValid(){
-    return Boolean(STATE.payment_proof && STATE.payment_proof.base64);
+  els.btnConfirm.disabled = !isFormValid();
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Comprobante
+// ────────────────────────────────────────────────────────────────────────────────
+async function handlePaymentFile(file) {
+  els.payFileStatus.textContent = "Procesando…";
+  STATE.payment_proof = null;
+
+  if (!file) {
+    els.payFileStatus.textContent = "Sin archivo";
+    return els.btnConfirm.disabled = !isFormValid();
   }
 
-  function fileToBase64(file){
-    return new Promise((resolve, reject)=>{
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
+  if (file.size > MAX_FILE_BYTES) {
+    els.payFileStatus.textContent = "Archivo > 5 MB";
+    return els.btnConfirm.disabled = true;
+  }
+
+  try {
+    const reader = new FileReader();
+    const base64 = await new Promise((res, rej) => {
       reader.onload = () => {
-        const result = String(reader.result || "");
-        const idx = result.indexOf("base64,");
-        if (idx === -1) return reject(new Error("Formato Base64 inválido"));
-        const base64 = result.substring(idx + 7);
-        resolve(base64);
+        const idx = reader.result.indexOf("base64,");
+        res(idx === -1 ? "" : reader.result.substring(idx + 7));
       };
+      reader.onerror = rej;
       reader.readAsDataURL(file);
     });
-  }
 
-  async function handlePaymentFile(file){
-    STATE.payment_proof = null;
-    payFileStatusEl.textContent = "Procesando…";
-    btnConfirm.disabled = true;
+    if (!base64) throw new Error("No se pudo convertir");
 
-    if (!file){
-      payFileStatusEl.textContent = "Sin archivo";
-      btnConfirm.disabled = !isFormValid();
-      return;
-    }
-
-    if (file.size > MAX_FILE_BYTES){
-      payFileStatusEl.textContent = "Archivo demasiado grande (máx. 5 MB)";
-      btnConfirm.disabled = true;
-      return;
-    }
-
-    try{
-      const base64 = await fileToBase64(file);
-      STATE.payment_proof = {
-        filename: file.name,
-        mime_type: file.type || "application/octet-stream",
-        size_bytes: file.size,
-        base64
-      };
-      payFileStatusEl.textContent = `OK: ${file.name} (${Math.round(file.size/1024)} KB)`;
-    } catch(e){
-      payFileStatusEl.textContent = `Error: ${e.message}`;
-      STATE.payment_proof = null;
-    } finally {
-      btnConfirm.disabled = !isFormValid();
-    }
-  }
-
-  // =====================
-  // Validation
-  // =====================
-  function isFormValid(){
-    if (STATE.intent !== "buy") return false;
-    if (!STATE.selected_slot) return false;
-    if (!STATE.hold) return false;
-
-    const qty = normalizeInt(qtyEl.value);
-    if (!Number.isFinite(qty) || qty < 1) return false;
-
-    if (qty !== STATE.hold.qty) return false;
-
-    const participants = getParticipants();
-    if (participants.length !== qty) return false;
-
-    for (const p of participants){
-      if (!p.nombres) return false;
-      if (!p.apellidos) return false;
-      if (!p.cedula) return false;
-      if (!p.email || !isEmailBasic(p.email)) return false;
-    }
-
-    if (!isBillingValid()) return false;
-    if (!isPaymentProofValid()) return false;
-
-    if (Date.now() >= STATE.hold.expires_at) return false;
-
-    return true;
-  }
-
-  // =====================
-  // Payload
-  // =====================
-  function buildPayload(){
-    return {
-      meta: {
-        source: "web_reservas",
-        sent_at_iso: new Date().toISOString()
-      },
-      course_id: STATE.course_id,
-      course: safeCourse(STATE.course),
-
-      disponibilidad_id: STATE.disponibilidad_id,
-
-      slot: {
-        slot_id: STATE.selected_slot?.slot_id || null,
-        fecha: STATE.selected_slot?.fecha || null,
-        hora: STATE.selected_slot?.hora || null,
-        cupos_disponibles_snapshot: STATE.available_rt ?? null
-      },
-
-      hold: {
-        hold_id: STATE.hold?.hold_id || null,
-        expires_at: STATE.hold?.expires_at || null,
-        qty: STATE.hold?.qty || null,
-        client_id: ensureClientId()
-      },
-
-      reservation: {
-        cantidad_participantes: normalizeInt(qtyEl.value),
-        participantes: getParticipants()
-      },
-
-      billing: getBilling(),
-      payment_proof: STATE.payment_proof
+    STATE.payment_proof = {
+      filename: file.name,
+      mime_type: file.type || "application/octet-stream",
+      size_bytes: file.size,
+      base64
     };
+
+    els.payFileStatus.textContent = `OK – ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+  } catch (e) {
+    els.payFileStatus.textContent = "Error al procesar archivo";
+    console.error(e);
   }
 
-  // =====================
-  // Events
-  // =====================
+  els.btnConfirm.disabled = !isFormValid();
+}
 
-  // ✅ Al presionar "Añadir participantes": crea HOLD + inicia temporizador + recién construye participantes
-  btnBuild.addEventListener("click", async (e) => {
-    e.preventDefault();
+// ────────────────────────────────────────────────────────────────────────────────
+// Validación final
+// ────────────────────────────────────────────────────────────────────────────────
+function isFormValid() {
+  if (STATE.intent !== "buy") return false;
+  if (!STATE.selected_slot || !STATE.hold) return false;
 
-    if (STATE.intent !== "buy"){
-      setSendMsg("<span class='err'>Elegí “Comprar curso” para continuar.</span>");
-      return;
-    }
-    if (!STATE.selected_slot){
-      setSendMsg("<span class='err'>Seleccioná un turno.</span>");
-      return;
-    }
+  const qty = normalizeInt(els.qty.value);
+  if (!qty || qty !== STATE.hold.qty) return false;
 
-    const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
-    if (!Number.isFinite(disp) || disp <= 0){
-      setSendMsg("<span class='err'>No hay cupos disponibles.</span>");
-      return;
-    }
+  const parts = getParticipants();
+  if (parts.length !== qty) return false;
 
-    let qty = normalizeInt(qtyEl.value);
-    if (!Number.isFinite(qty) || qty < 1) qty = 1;
-    if (qty > disp) qty = disp;
-    qtyEl.value = String(qty);
+  for (const p of parts) {
+    if (!p.nombres || !p.apellidos || !p.cedula || !isEmailBasic(p.email)) return false;
+  }
 
-    // Hardening UI durante la creación de hold
-    btnBuild.disabled = true;
-    qtyEl.disabled = true;
-    btnConfirm.disabled = true;
+  const b = {
+    rs: els.billName.value.trim(),
+    doc: els.billDocNumber.value.trim(),
+    email: els.billEmail.value.trim(),
+    dir: els.billAddress.value.trim(),
+    ciudad: els.billCity.value.trim(),
+  };
 
-    const h = await createHoldNow(qty);
-    if (!h.ok){
-      qtyEl.disabled = false;
-      btnBuild.disabled = false;
-      applyUIAccess();
-      return;
-    }
+  if (!b.rs || !b.doc || !b.email || !isEmailBasic(b.email) || !b.dir || !b.ciudad) return false;
+  if (els.billDocType.value === "fiscal" && !STATE.ruc_verified) return false;
 
-    // Con hold activo: construir participantes y habilitar formulario
+  if (!STATE.payment_proof?.base64) return false;
+  if (Date.now() >= STATE.hold.expires_at) return false;
+
+  return true;
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Payload final
+// ────────────────────────────────────────────────────────────────────────────────
+function buildPayload() {
+  return {
+    meta: {
+      source: "web_reservas",
+      sent_at_iso: new Date().toISOString()
+    },
+    course_id: STATE.course_id,
+    course: safeCourse(STATE.course),
+    disponibilidad_id: STATE.disponibilidad_id,
+    slot: {
+      slot_id: STATE.selected_slot?.slot_id,
+      fecha: STATE.selected_slot?.fecha,
+      hora: STATE.selected_slot?.hora,
+      cupos_disponibles_snapshot: STATE.available_rt
+    },
+    hold: {
+      hold_id: STATE.hold?.hold_id,
+      expires_at: STATE.hold?.expires_at,
+      qty: STATE.hold?.qty,
+      client_id: ensureClientId()
+    },
+    reservation: {
+      cantidad_participantes: normalizeInt(els.qty.value),
+      participantes: getParticipants()
+    },
+    billing: {
+      razon_social: els.billName.value.trim(),
+      tipo_documento: els.billDocType.value,
+      documento: els.billDocNumber.value.trim(),
+      email: els.billEmail.value.trim(),
+      telefono: els.billPhone.value.trim(),
+      direccion: els.billAddress.value.trim(),
+      ciudad: els.billCity.value.trim(),
+      tipo_entidad: STATE.ruc_tipo_entidad
+    },
+    payment_proof: STATE.payment_proof
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Eventos
+// ────────────────────────────────────────────────────────────────────────────────
+els.btnBuild.onclick = async e => {
+  e.preventDefault();
+
+  if (STATE.intent !== "buy" || !STATE.selected_slot) return;
+
+  let qty = normalizeInt(els.qty.value) || 1;
+  const avail = STATE.available_rt;
+  if (Number.isFinite(avail) && qty > avail) qty = avail;
+  els.qty.value = qty;
+
+  els.btnBuild.disabled = els.qty.disabled = els.btnConfirm.disabled = true;
+
+  const ok = await createHoldNow(qty);
+  if (ok.ok) {
     buildParticipants();
     applyUIAccess();
-  });
+  } else {
+    els.qty.disabled = els.btnBuild.disabled = false;
+    applyUIAccess();
+  }
+};
 
-  // Si el usuario cambia cantidad ANTES del hold, solo actualiza precio.
-  // Si el usuario cambia cantidad CON hold activo, liberamos y le pedimos reservar nuevamente.
-  qtyEl.addEventListener("change", async () => {
-    renderServiceInfo();
+els.qty.oninput = els.qty.onchange = async () => {
+  renderServiceInfo();
 
-    if (STATE.hold){
-      await releaseHold("Cambio de cantidad");
-      clearParticipantsUI();
-      setSendMsg("<span class='muted'>Cambiaste la cantidad. Presioná “Añadir participantes” para reservar nuevamente por 20 minutos.</span>");
-      applyUIAccess();
-    }
-    btnConfirm.disabled = !isFormValid();
-  });
+  if (STATE.hold) {
+    await releaseHold("Cambio cantidad");
+    els.namesWrap.innerHTML = "";
+    setSendMsg("<span class='muted'>Cantidad modificada → reservá nuevamente</span>");
+  }
 
-  qtyEl.addEventListener("input", async () => {
-    const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
-    let qty = normalizeInt(qtyEl.value);
-    if (!Number.isFinite(qty)) qty = 1;
-    if (qty < 1) qty = 1;
-    if (Number.isFinite(disp) && disp > 0 && qty > disp) qty = disp;
-    qtyEl.value = String(qty);
+  applyUIAccess();
+};
 
-    renderServiceInfo();
+els.billDocType.onchange = refreshBillingDocUI;
 
-    if (STATE.hold){
-      await releaseHold("Cambio de cantidad (input)");
-      clearParticipantsUI();
-      setSendMsg("<span class='muted'>Cambiaste la cantidad. Presioná “Añadir participantes” para reservar nuevamente por 20 minutos.</span>");
-      applyUIAccess();
-    }
+els.billDocNumber.onblur = verifyRUCIfNeeded;
 
-    btnConfirm.disabled = !isFormValid();
-  });
+[els.billName, els.billEmail, els.billPhone, els.billAddress, els.billCity].forEach(el =>
+  el.oninput = () => { els.btnConfirm.disabled = !isFormValid(); setSendMsg(""); }
+);
 
-  billDocTypeEl.addEventListener("change", refreshBillingDocUI);
+els.payFile.onchange = e => handlePaymentFile(e.target.files?.[0]);
 
-  billDocNumberEl.addEventListener("blur", async () => {
-    await verifyRUCIfNeeded();
-  });
+document.querySelectorAll('input[name="intent"]').forEach(r =>
+  r.onchange = () => setIntent(r.value)
+);
 
-  [billNameEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
-    el.addEventListener("input", ()=>{
-      btnConfirm.disabled = !isFormValid();
-      setSendMsg("");
-    });
-  });
+els.btnConfirm.onclick = async e => {
+  e.preventDefault();
+  if (isSubmitting || !isFormValid()) return;
 
-  payFileEl.addEventListener("change", async (ev)=>{
-    const file = ev.target.files && ev.target.files[0] ? ev.target.files[0] : null;
-    await handlePaymentFile(file);
-    btnConfirm.disabled = !isFormValid();
-    setSendMsg("");
-  });
+  isSubmitting = true;
+  els.btnConfirm.disabled = true;
+  els.btnConfirm.textContent = "Procesando…";
+  setSendMsg("<span class='muted'>Confirmando reserva…</span>");
 
-  document.querySelectorAll('input[name="intent"]').forEach(r => {
-    r.addEventListener("change", () => setIntent(r.value));
-  });
-
-  // Confirm
-  btnConfirm.addEventListener("click", async (e) => {
-    e.preventDefault();
-
-    if (!isFormValid()){
-      setMsg("<span class='err'>Revisá: selección, reserva temporal activa, participantes, facturación y comprobante.</span>");
-      return;
-    }
-
-    btnConfirm.disabled = true;
-    setSendMsg("<span class='muted'>Confirmando cupos…</span>");
-
-    // 1) Confirmar hold (commit)
+  try {
+    // Confirm hold
     const commit = await apiPost(CONFIRM_ENDPOINT, {
       disponibilidad_id: STATE.disponibilidad_id,
       hold_id: STATE.hold.hold_id,
       client_id: ensureClientId()
     });
 
-    if (!commit.ok || !commit.json || commit.json.ok !== true){
-      setSendMsg("<span class='err'>No se pudo confirmar: cupos cambiaron o el hold expiró. Volvé a intentar.</span>");
+    if (!commit.ok || !commit.json?.ok) {
+      setSendMsg("<span class='err'>No se pudo confirmar la reserva temporal.</span>");
       if (commit.status === 410) {
         STATE.hold = null;
         hideHoldBar();
-        clearParticipantsUI();
-        applyUIAccess();
+        els.namesWrap.innerHTML = "";
       }
-      btnConfirm.disabled = !isFormValid();
       return;
     }
 
-    // 2) Enviar a Flow
-    setSendMsg("<span class='muted'>Enviando datos…</span>");
+    // Enviar reserva completa
     const payload = buildPayload();
+    const final = await apiPost(RESERVA_ENDPOINT, payload);
 
-    try{
-      const res = await apiPost(RESERVA_ENDPOINT, payload);
-      if (res.ok && res.json && res.json.ok === true){
-        setSendMsg(`<span class='ok'>Enviado correctamente. Una vez confirmado el pago se te notificará por correo.</span>`);
-        STATE.hold = null;
-        hideHoldBar();
-        if (STATE.hold_timer) { clearInterval(STATE.hold_timer); STATE.hold_timer = null; }
-        applyUIAccess();
-      } else {
-        setSendMsg(`<span class='err'>No se pudo completar el envío. Contactá con Todo Costura SA.</span>`);
-      }
-
-      debugEl.style.display = "none";
-      debugEl.textContent =
-        `POST ${res.status}\n` +
-        `URL: ${RESERVA_ENDPOINT}\n\n` +
-        `${res.text}\n\n` +
-        `PAYLOAD:\n${JSON.stringify(payload, null, 2)}`;
-
-    } catch (e2){
-      setSendMsg(`<span class='err'>Error de red: ${htmlEscape(e2?.message || String(e2))}</span>`);
-    } finally {
-      btnConfirm.disabled = !isFormValid();
+    if (final.ok && final.json?.ok) {
+      setSendMsg("<span class='ok'>¡Inscripción enviada! Te contactaremos pronto.</span>");
+      STATE.hold = null;
+      hideHoldBar();
+      if (STATE.hold_timer) clearInterval(STATE.hold_timer);
+      els.debug.textContent = JSON.stringify(payload, null, 2);
+    } else {
+      setSendMsg("<span class='err'>Error al enviar la inscripción. Contactá soporte.</span>");
     }
-  });
+  } catch (err) {
+    setSendMsg(`<span class='err'>Error: ${err.message}</span>`);
+  } finally {
+    isSubmitting = false;
+    els.btnConfirm.disabled = !isFormValid();
+    els.btnConfirm.textContent = "Confirmar y enviar";
+  }
+};
 
-  // =====================
-  // Bootstrap
-  // =====================
-  async function loadBootstrap(courseId){
-    showLoading("Cargando información del curso…", "Recuperando datos desde el sistema.", 0.25);
+// ────────────────────────────────────────────────────────────────────────────────
+// Inicio
+// ────────────────────────────────────────────────────────────────────────────────
+(async () => {
+  ensureClientId();
 
-    const res = await apiGet(`${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`);
-
-    if (!res.ok || !res.json){
-      setStatus(`Error (HTTP ${res.status})`);
-      showLoading("No se pudo cargar", "Verificá el course_id y que existan datos en KV.", 0.25);
-      return null;
-    }
-
-    if (res.json.ok !== true){
-      setStatus("Sin datos");
-      showLoading("Sin datos para este curso", "Ejecutá ingest primero o verificá el ID.", 0.25);
-      return res.json;
-    }
-
-    showLoading("Preparando turnos…", "Aplicando validaciones y disponibilidad.", 0.60);
-
-    STATE.course_id = courseId;
-    STATE.course = res.json.course || null;
-    STATE.slots = res.json.slots || res.json.horarios || [];
-
-    STATE.disponibilidad_id = String(res.json.disponibilidad_id || "").trim() || null;
-    if (!STATE.disponibilidad_id){
-      setStatus("Error · falta disponibilidad");
-      setMsg("<span class='err'>Este curso no trae disponibilidad_id en /api/bootstrap. Debe incluirse para inventario compartido.</span>");
-      showLoading("Falta disponibilidad_id", "Ajustá /api/bootstrap para devolver disponibilidad_id.", 0.25);
-      return res.json;
-    }
-
-    // Snapshot inicial (hasta que WS envíe snapshot real)
-    const first = STATE.slots && STATE.slots[0] ? STATE.slots[0] : null;
-    const snap = normalizeInt(first?.cupos_disponibles);
-    STATE.available_rt = Number.isFinite(snap) ? snap : null;
-
-    renderServiceInfo();
-    renderSlots(STATE.slots);
-
-    refreshBillingDocUI();
-    applyUIAccess();
-
-    connectWS();
-
-    setStatus(`Listo · ${(STATE.slots||[]).length} turnos`);
-    showLoading("Listo", "Podés continuar.", 1.0);
-    setTimeout(hideLoading, 180);
-
-    return res.json;
+  const courseId = getCourseIdFromHash();
+  if (!courseId) {
+    hideLoading();
+    setStatus("Falta parámetro #ID");
+    setMsg("<span class='err'>Usá un enlace con #ID=xxxxxxxx</span>");
+    return;
   }
 
-  // =====================
-  // Init
-  // =====================
-  (async function init(){
-    setupLogo();
-    ensureClientId();
+  showLoading("Cargando curso…", "Obteniendo datos", 0.1);
 
-    const courseId = getCourseIdFromHash();
-    if (!courseId){
-      hideLoading();
-      setStatus("Falta #ID=…");
-      setMsg("<span class='err'>Abrí esta página con un hash válido, por ejemplo: <b>#ID=4537469...</b></span>");
-      slotsEl.innerHTML = "";
-      return;
-    }
+  const bootstrap = await apiGet(`${API_BASE}/api/bootstrap?course_id=${encodeURIComponent(courseId)}`);
 
-    setStatus("Cargando…");
-    showLoading("Cargando información del curso…", "Conectando con el sistema.", 0.10);
+  if (!bootstrap.ok || !bootstrap.json?.ok) {
+    showLoading("Error al cargar", "Revisá el ID o la conexión", 0);
+    setStatus("Error de carga");
+    return;
+  }
 
-    await loadBootstrap(courseId);
-  })();
+  STATE.course_id = courseId;
+  STATE.course = bootstrap.json.course;
+  STATE.slots = bootstrap.json.slots || [];
+  STATE.disponibilidad_id = bootstrap.json.disponibilidad_id;
+
+  if (!STATE.disponibilidad_id) {
+    showLoading("Falta disponibilidad_id", "Error de configuración backend", 0);
+    return;
+  }
+
+  // Snapshot inicial
+  STATE.available_rt = normalizeInt(STATE.slots[0]?.cupos_disponibles);
+
+  renderServiceInfo();
+  renderSlots(STATE.slots);
+  refreshBillingDocUI();
+  applyUIAccess();
+  connectWS();
+
+  setStatus(`Listo – ${STATE.slots.length} turnos`);
+  showLoading("¡Listo!", "Seleccioná tu turno", 1);
+  setTimeout(hideLoading, 600);
+})();
 </script>
-  <!-- Modal de error -->
-<div id="errorModal" class="tc-modal" aria-hidden="true">
-  <div class="tc-modal__overlay" onclick="closeErrorModal()"></div>
-
-  <div class="tc-modal__panel" role="dialog" aria-modal="true" aria-labelledby="tcModalTitle">
-    <div class="tc-modal__header">
-      <h3 id="tcModalTitle" class="tc-modal__title">No se pudo reservar</h3>
-      <button type="button" class="tc-modal__close" onclick="closeErrorModal()" aria-label="Cerrar">×</button>
-    </div>
-
-    <div id="tcModalMsg" class="tc-modal__body"></div>
-
-    <div class="tc-modal__actions">
-      <button type="button" class="tc-btn tc-btn--ghost" onclick="closeErrorModal()">Cerrar</button>
-      <button type="button" class="tc-btn tc-btn--primary" onclick="location.reload()">Actualizar</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
