@@ -1469,7 +1469,7 @@
 
       if (!res.ok || !res.json || res.json.ok !== true){
         const av = res.json?.available ?? STATE.available_rt ?? "-";
-        openErrorModal(`Tu cantidad supera la cantidad disponible. Actualmente solo hay ${av} cupo(s) disponibles. Actualizá la página para ver la disponibilidad real.`);
+        openErrorModal(`Tu cantidad supera la cantidad disponible. Actualmente otro cliente se registro antes. Actualizá la página para ver la disponibilidad real o vuele en 20 minutos.`);
         return { ok:false, error:"hold_failed", res };
       }
 
