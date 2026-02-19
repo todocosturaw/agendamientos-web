@@ -52,6 +52,65 @@
     .brand{
       display:flex;align-items:center;gap:12px;min-width:240px;
     }
+    .tc-modal { display:none; position:fixed; inset:0; z-index:9999; }
+.tc-modal.is-open { display:block; }
+
+.tc-modal__overlay{
+  position:absolute; inset:0;
+  background: rgba(0,0,0,.45);
+}
+
+.tc-modal__panel{
+  position:relative;
+  max-width: 520px;
+  margin: 10vh auto;
+  background:#fff;
+  border-radius: 16px;
+  box-shadow: 0 18px 55px rgba(17,24,39,.18);
+  overflow:hidden;
+}
+
+.tc-modal__header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tc-modal__title{ margin:0; font-size: 18px; color:#111827; }
+
+.tc-modal__close{
+  border:none; background:transparent;
+  font-size: 26px; line-height: 1;
+  cursor:pointer; color:#6b7280;
+}
+
+.tc-modal__body{
+  padding: 16px 18px;
+  color:#111827;
+}
+
+.tc-modal__actions{
+  display:flex; gap:10px; justify-content:flex-end;
+  padding: 14px 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.tc-btn{
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  background:#fff;
+  cursor:pointer;
+}
+
+.tc-btn--primary{
+  background:#a52b64; color:#fff; border-color:#a52b64;
+}
+
+.tc-btn--ghost{
+  background:#fff; color:#111827;
+}
+
     .logoBox{
       width:44px;height:44px;border-radius:14px;
       border:1px solid rgba(165,43,100,.18);
@@ -724,6 +783,33 @@
   </div>
 
 <script>
+  <script>
+  function openErrorModal(message) {
+    const modal = document.getElementById("errorModal");
+    const msg = document.getElementById("tcModalMsg");
+
+    msg.textContent = message || "Ocurrió un error.";
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+
+    // Evita scroll detrás del modal
+    document.documentElement.style.overflow = "hidden";
+  }
+
+  function closeErrorModal() {
+    const modal = document.getElementById("errorModal");
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+
+    document.documentElement.style.overflow = "";
+  }
+
+  // Cerrar con ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeErrorModal();
+  });
+</script>
+
   // =====================
   // Config
   // =====================
@@ -1366,10 +1452,16 @@
 
     const res = await apiPost(HOLD_ENDPOINT, payload);
     if (!res.ok || !res.json || res.json.ok !== true){
-      const av = res.json?.available ?? STATE.available_rt ?? "-";
-      setSendMsg(`<span class='err'>Tu cantidad supera la cantidad disponible, porque alguien ya esta reservando antes que tú, actualiza la pagina para ver la disponibilidad real..</span>`);
-      return { ok:false, error:"hold_failed", res };
-    }
+  const av = res.json?.available ?? STATE.available_rt ?? "-";
+
+  openErrorModal(
+    `Tu cantidad supera la cantidad disponible. 
+     Actualmente solo hay ${av} cupo(s) disponibles. Actualiza la pagina para actualizar los datos`
+  );
+
+  return { ok:false, error:"hold_failed", res };
+}
+
 
     const exp = Number(res.json.expires_at);
     const expires_at = Number.isFinite(exp) ? exp : (Date.now() + HOLD_MS);
@@ -1967,5 +2059,24 @@
     await loadBootstrap(courseId);
   })();
 </script>
+  <!-- Modal de error -->
+<div id="errorModal" class="tc-modal" aria-hidden="true">
+  <div class="tc-modal__overlay" onclick="closeErrorModal()"></div>
+
+  <div class="tc-modal__panel" role="dialog" aria-modal="true" aria-labelledby="tcModalTitle">
+    <div class="tc-modal__header">
+      <h3 id="tcModalTitle" class="tc-modal__title">No se pudo reservar</h3>
+      <button type="button" class="tc-modal__close" onclick="closeErrorModal()" aria-label="Cerrar">×</button>
+    </div>
+
+    <div id="tcModalMsg" class="tc-modal__body"></div>
+
+    <div class="tc-modal__actions">
+      <button type="button" class="tc-btn tc-btn--ghost" onclick="closeErrorModal()">Cerrar</button>
+      <button type="button" class="tc-btn tc-btn--primary" onclick="location.reload()">Actualizar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
