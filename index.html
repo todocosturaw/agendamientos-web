@@ -805,7 +805,7 @@
 
   <script>
     // =====================
-    // Modal helpers (CORREGIDO: sin <script> anidado)
+    // Modal helpers
     // =====================
     function openErrorModal(message) {
       const modal = document.getElementById("errorModal");
@@ -816,7 +816,6 @@
       modal.classList.add("is-open");
       modal.setAttribute("aria-hidden", "false");
 
-      // Evita scroll detrás del modal
       document.documentElement.style.overflow = "hidden";
     }
 
@@ -830,7 +829,6 @@
       document.documentElement.style.overflow = "";
     }
 
-    // Cerrar con ESC
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") closeErrorModal();
     });
@@ -847,7 +845,7 @@
     const DNIT_ENDPOINT      = `${API_BASE}/api/dnit`;
 
     const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
-    const HOLD_MS = 20 * 60 * 1000;          // ✅ 20 minutos
+    const HOLD_MS = 20 * 60 * 1000;          // 20 minutos
 
     const LOGO_URL = ""; // opcional
 
@@ -923,15 +921,15 @@
       course_id: null,
       course: null,
       slots: [],
+      slots_by_id: {},            // slot_id -> slot (referencia)
       selected_slot: null,
 
       disponibilidad_id: null,
-      available_rt: null,
 
       intent: "view",
       client_id: null,
 
-      hold: null,                  // { hold_id, expires_at, qty }
+      hold: null,                 // { hold_id, expires_at, qty }
       hold_timer: null,
 
       ws: null,
@@ -1002,9 +1000,13 @@
       return `${dd}/${mm}/${yy}`;
     }
 
+    function slotHora(s){
+      return String(s?.hora || s?.hora_inicio || s?.Hora_inicio || s?.Hora_de_inicio || "—").trim() || "—";
+    }
+
     function slotSortKey(s){
       const fecha = String(s?.fecha||"").trim();
-      const hora = String(s?.hora||"").trim();
+      const hora = slotHora(s);
       const d = parseISODate(fecha);
       const dayKey = d ? d.getTime() : Number.MAX_SAFE_INTEGER;
       let hmKey = Number.MAX_SAFE_INTEGER;
@@ -1014,6 +1016,16 @@
         if (Number.isFinite(hh) && Number.isFinite(mm)) hmKey = hh*60+mm;
       }
       return [dayKey, hmKey, fecha, hora];
+    }
+
+    function slotAvailable(s){
+      const n = Number(s?.cupos_disponibles);
+      return Number.isFinite(n) ? Math.trunc(n) : null;
+    }
+
+    function selectedAvailable(){
+      if (!STATE.selected_slot) return null;
+      return slotAvailable(STATE.selected_slot);
     }
 
     async function apiGet(url){
@@ -1211,7 +1223,9 @@
     function applyUIAccess(){
       const buying = (STATE.intent === "buy");
       const hasSlot = !!STATE.selected_slot;
-      const hasStock = Number.isFinite(STATE.available_rt) && STATE.available_rt > 0;
+
+      const av = selectedAvailable();
+      const hasStock = Number.isFinite(av) && av > 0;
 
       qtyEl.disabled = !buying || !hasSlot || !hasStock || !!STATE.hold;
       btnBuild.disabled = !buying || !hasSlot || !hasStock || !!STATE.hold;
@@ -1254,12 +1268,49 @@
         try { msg = JSON.parse(ev.data); } catch {}
         if (!msg) return;
 
-        if (msg.type === "snapshot" || msg.type === "update"){
-          if (Number.isFinite(Number(msg.available))) {
-            STATE.available_rt = Number(msg.available);
-            renderSlots(STATE.slots);
-            applyUIAccess();
+        if (msg.type === "snapshot" && Array.isArray(msg.slots)) {
+          // snapshot completo por slot
+          for (const s of msg.slots) {
+            const sid = String(s?.slot_id || "").trim();
+            if (!sid) continue;
+            const ref = STATE.slots_by_id[sid];
+            if (ref) {
+              ref.cupos_disponibles = Number.isFinite(Number(s.cupos_disponibles)) ? Math.trunc(Number(s.cupos_disponibles)) : ref.cupos_disponibles;
+              ref.cupos_totales = Number.isFinite(Number(s.cupos_totales)) ? Math.trunc(Number(s.cupos_totales)) : ref.cupos_totales;
+            }
           }
+          renderSlots(STATE.slots);
+          applyUIAccess();
+          return;
+        }
+
+        if (msg.type === "update") {
+          const sid = String(msg?.slot_id || "").trim();
+          const av = Number(msg?.cupos_disponibles);
+          if (!sid || !Number.isFinite(av)) return;
+
+          const ref = STATE.slots_by_id[sid];
+          if (ref) ref.cupos_disponibles = Math.trunc(av);
+
+          // si el slot seleccionado cambió, recalcular límites
+          if (STATE.selected_slot && String(STATE.selected_slot.slot_id) === sid) {
+            if (!STATE.hold) {
+              const disp = selectedAvailable();
+              if (Number.isFinite(disp) && disp > 0) {
+                qtyEl.max = String(disp);
+                qtyHintEl.textContent = `Máximo permitido: ${disp}.`;
+                let v = normalizeInt(qtyEl.value);
+                if (!Number.isFinite(v) || v < 1) v = 1;
+                if (v > disp) v = disp;
+                qtyEl.value = String(v);
+              } else {
+                qtyHintEl.textContent = "No hay cupos disponibles.";
+              }
+            }
+          }
+
+          renderSlots(STATE.slots);
+          applyUIAccess();
         }
       };
 
@@ -1296,8 +1347,6 @@
         return disableForm("No hay turnos disponibles.");
       }
 
-      const available = Number.isFinite(STATE.available_rt) ? STATE.available_rt : null;
-
       const sorted = slots.slice().sort((a,b)=>{
         const ka = slotSortKey(a);
         const kb = slotSortKey(b);
@@ -1311,7 +1360,7 @@
       sorted.forEach((s, idx) => {
         const id = `slot_${idx}`;
 
-        const disp = available;
+        const disp = slotAvailable(s);
         const isOk = Number.isFinite(disp) && disp > 0;
 
         const box = document.createElement("div");
@@ -1343,7 +1392,7 @@
         const lab = document.createElement("label");
         lab.htmlFor = id;
         const fechaHuman = formatDateHuman(s.fecha);
-        lab.textContent = `${fechaHuman} · ${String(s.hora || "—")}`;
+        lab.textContent = `${fechaHuman} · ${slotHora(s)}`;
         right.appendChild(lab);
 
         const meta = document.createElement("div");
@@ -1367,7 +1416,7 @@
       const s = STATE.selected_slot;
       if (!s) return disableForm("Seleccioná un turno.");
 
-      const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
+      const disp = selectedAvailable();
       if (!Number.isFinite(disp) || disp <= 0) return disableForm("No hay cupos disponibles.");
 
       if (STATE.intent !== "buy"){
@@ -1460,7 +1509,6 @@
         disponibilidad_id: STATE.disponibilidad_id,
         qty,
         client_id: ensureClientId(),
-        available_snapshot: Number.isFinite(STATE.available_rt) ? STATE.available_rt : null,
         course_id: STATE.course_id,
         slot_id: STATE.selected_slot?.slot_id || null
       };
@@ -1468,9 +1516,20 @@
       const res = await apiPost(HOLD_ENDPOINT, payload);
 
       if (!res.ok || !res.json || res.json.ok !== true){
-        const av = res.json?.available ?? STATE.available_rt ?? "-";
-        openErrorModal(`Tu cantidad supera la cantidad disponible. Actualmente otro cliente se registro antes. Actualizá la página para ver la disponibilidad real o vuele en 20 minutos.`);
+        const av = Number.isFinite(Number(res.json?.cupos_disponibles)) ? Number(res.json.cupos_disponibles) : selectedAvailable();
+        openErrorModal(
+          `Tu cantidad supera la cantidad disponible. Actualmente otro cliente reservó antes. ` +
+          `Disponibles ahora: ${Number.isFinite(av) ? av : "-"}`
+        );
         return { ok:false, error:"hold_failed", res };
+      }
+
+      // actualizar cupos del slot local con lo que devolvió el DO
+      const sid = String(res.json.slot_id || STATE.selected_slot.slot_id || "").trim();
+      const newAv = Number(res.json.cupos_disponibles);
+      if (sid && Number.isFinite(newAv)) {
+        const ref = STATE.slots_by_id[sid];
+        if (ref) ref.cupos_disponibles = Math.trunc(newAv);
       }
 
       const exp = Number(res.json.expires_at);
@@ -1482,6 +1541,8 @@
       startHoldTimer();
 
       setSendMsg("<span class='ok'>Reserva temporal creada. Completá participantes y datos para confirmar.</span>");
+      renderSlots(STATE.slots);
+      applyUIAccess();
       return { ok:true };
     }
 
@@ -1804,8 +1865,8 @@
         slot: {
           slot_id: STATE.selected_slot?.slot_id || null,
           fecha: STATE.selected_slot?.fecha || null,
-          hora: STATE.selected_slot?.hora || null,
-          cupos_disponibles_snapshot: STATE.available_rt ?? null
+          hora: slotHora(STATE.selected_slot),
+          cupos_disponibles_snapshot: slotAvailable(STATE.selected_slot)
         },
 
         hold: {
@@ -1840,7 +1901,7 @@
         return;
       }
 
-      const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
+      const disp = selectedAvailable();
       if (!Number.isFinite(disp) || disp <= 0){
         setSendMsg("<span class='err'>No hay cupos disponibles.</span>");
         return;
@@ -1880,7 +1941,7 @@
     });
 
     qtyEl.addEventListener("input", async () => {
-      const disp = Number.isFinite(STATE.available_rt) ? STATE.available_rt : NaN;
+      const disp = selectedAvailable();
       let qty = normalizeInt(qtyEl.value);
       if (!Number.isFinite(qty)) qty = 1;
       if (qty < 1) qty = 1;
@@ -1953,6 +2014,13 @@
         return;
       }
 
+      // si el DO devuelve cupos_disponibles, refrescar local
+      const sid = String(commit.json.slot_id || "").trim();
+      const av = Number(commit.json.cupos_disponibles);
+      if (sid && Number.isFinite(av) && STATE.slots_by_id[sid]) {
+        STATE.slots_by_id[sid].cupos_disponibles = Math.trunc(av);
+      }
+
       setSendMsg("<span class='muted'>Enviando datos…</span>");
       const payload = buildPayload();
 
@@ -1963,6 +2031,7 @@
           STATE.hold = null;
           hideHoldBar();
           if (STATE.hold_timer) { clearInterval(STATE.hold_timer); STATE.hold_timer = null; }
+          renderSlots(STATE.slots);
           applyUIAccess();
         } else {
           setSendMsg(`<span class='err'>No se pudo completar el envío. Contactá con Todo Costura SA.</span>`);
@@ -1985,6 +2054,22 @@
     // =====================
     // Bootstrap
     // =====================
+    function rebuildSlotsIndex(){
+      const map = {};
+      for (const s of Array.isArray(STATE.slots) ? STATE.slots : []) {
+        const sid = String(s?.slot_id || "").trim();
+        if (!sid) continue;
+        map[sid] = s;
+      }
+      STATE.slots_by_id = map;
+
+      // si ya había seleccionado uno antes, re-enlazar a la referencia actual
+      if (STATE.selected_slot) {
+        const sid = String(STATE.selected_slot.slot_id || "").trim();
+        if (sid && STATE.slots_by_id[sid]) STATE.selected_slot = STATE.slots_by_id[sid];
+      }
+    }
+
     async function loadBootstrap(courseId){
       showLoading("Cargando información del curso…", "Recuperando datos desde el sistema.", 0.25);
 
@@ -2008,6 +2093,8 @@
       STATE.course = res.json.course || null;
       STATE.slots = res.json.slots || res.json.horarios || [];
 
+      rebuildSlotsIndex();
+
       STATE.disponibilidad_id = String(res.json.disponibilidad_id || "").trim() || null;
       if (!STATE.disponibilidad_id){
         setStatus("Error · falta disponibilidad");
@@ -2015,10 +2102,6 @@
         showLoading("Falta disponibilidad_id", "Ajustá /api/bootstrap para devolver disponibilidad_id.", 0.25);
         return res.json;
       }
-
-      const first = STATE.slots && STATE.slots[0] ? STATE.slots[0] : null;
-      const snap = normalizeInt(first?.cupos_disponibles);
-      STATE.available_rt = Number.isFinite(snap) ? snap : null;
 
       renderServiceInfo();
       renderSlots(STATE.slots);
