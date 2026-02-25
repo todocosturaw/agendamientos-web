@@ -614,12 +614,11 @@
     <div class="grid">
       <div class="hero">
         <h1>Reservá tu <span class="accent">turno</span> en segundos.</h1>
-        <p>Seleccioná un turno disponible y completá los datos. El sistema bloquea cupos por 20 minutos al iniciar la carga de participantes y sincroniza disponibilidad en tiempo real.</p>
+        <p>Seleccioná un turno disponible y completá los datos. El sistema bloquea cupos por 25 minutos al iniciar la carga de participantes y sincroniza disponibilidad en tiempo real.</p>
 
         <div class="heroNote">
           <span class="chip"><span class="miniDot"></span> Tiempo real</span>
-          <span class="chip"><span class="miniDot"></span> Pre-reserva 20 minutos</span>
-          <span class="chip"><span class="miniDot"></span> Verificación RUC</span>
+          <span class="chip"><span class="miniDot"></span> Pre-reserva 25 minutos</span>
         </div>
 
         <!-- Tabla de info del servicio -->
@@ -650,7 +649,7 @@
       <div class="card">
         <div class="cardHead">
           <div class="title">Formulario de inscripción</div>
-          <div class="sub">Elegí si solo querés ver horarios o si vas a comprar. Para comprar, seleccioná un turno, definí cantidad y luego “Añadir participantes” para reservar por 20 minutos.</div>
+          <div class="sub">Elegí si solo querés ver horarios o si vas a comprar. Para comprar, seleccioná un turno, definí cantidad y luego “Añadir participantes” para reservar por 25 minutos.</div>
         </div>
 
         <div class="cardBody">
@@ -679,7 +678,7 @@
                 <div class="tiny muted" id="holdText">—</div>
               </div>
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <div class="holdTimer" id="holdTimer">20:00</div>
+                <div class="holdTimer" id="holdTimer">25:00</div>
                 <button class="linkBtn" id="btnRelease" type="button">Liberar</button>
               </div>
             </div>
@@ -842,10 +841,9 @@
     const HOLD_ENDPOINT      = `${API_BASE}/api/hold`;
     const RELEASE_ENDPOINT   = `${API_BASE}/api/release`;
     const CONFIRM_ENDPOINT   = `${API_BASE}/api/confirm`;
-    const DNIT_ENDPOINT      = `${API_BASE}/api/dnit`;
 
     const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
-    const HOLD_MS = 20 * 60 * 1000;          // 20 minutos
+    const HOLD_MS = 25 * 60 * 1000;          // 25 minutos  ✅ (antes 15/20)
 
     const LOGO_URL = ""; // opcional
 
@@ -934,9 +932,7 @@
 
       ws: null,
 
-      payment_proof: null,
-      ruc_verified: false,
-      ruc_tipo_entidad: ""
+      payment_proof: null
     };
 
     // =====================
@@ -1201,7 +1197,7 @@
 
       const buying = (intent === "buy");
       intentHintEl.textContent = buying
-        ? "Seleccioná un turno, definí cantidad y presioná “Añadir participantes” para reservar por 20 minutos."
+        ? "Seleccioná un turno, definí cantidad y presioná “Añadir participantes” para reservar por 25 minutos."
         : "Modo solo lectura: podés ver cupos en tiempo real sin bloquear.";
 
       if (!buying && STATE.hold){
@@ -1269,7 +1265,6 @@
         if (!msg) return;
 
         if (msg.type === "snapshot" && Array.isArray(msg.slots)) {
-          // snapshot completo por slot
           for (const s of msg.slots) {
             const sid = String(s?.slot_id || "").trim();
             if (!sid) continue;
@@ -1292,7 +1287,6 @@
           const ref = STATE.slots_by_id[sid];
           if (ref) ref.cupos_disponibles = Math.trunc(av);
 
-          // si el slot seleccionado cambió, recalcular límites
           if (STATE.selected_slot && String(STATE.selected_slot.slot_id) === sid) {
             if (!STATE.hold) {
               const disp = selectedAvailable();
@@ -1318,7 +1312,7 @@
         setStatus("Desconectado · reintentando…");
         setTimeout(() => {
           if (STATE.disponibilidad_id) connectWS();
-        }, 1500);
+        }, 2500);
       };
 
       ws.onerror = () => { /* onclose hará retry */ };
@@ -1436,7 +1430,7 @@
       qtyHintEl.textContent = `Máximo permitido: ${disp}.`;
 
       setMsg("", "");
-      setSendMsg("<span class='muted'>Definí cantidad y presioná “Añadir participantes” para reservar por 20 minutos.</span>");
+      setSendMsg("<span class='muted'>Definí cantidad y presioná “Añadir participantes” para reservar por 25 minutos.</span>");
       applyUIAccess();
     }
 
@@ -1503,7 +1497,7 @@
         await releaseHold("Recrear hold");
       }
 
-      setSendMsg("<span class='muted'>Reservando cupos por 20 minutos…</span>");
+      setSendMsg("<span class='muted'>Reservando cupos por 25 minutos…</span>");
 
       const payload = {
         disponibilidad_id: STATE.disponibilidad_id,
@@ -1524,7 +1518,6 @@
         return { ok:false, error:"hold_failed", res };
       }
 
-      // actualizar cupos del slot local con lo que devolvió el DO
       const sid = String(res.json.slot_id || STATE.selected_slot.slot_id || "").trim();
       const newAv = Number(res.json.cupos_disponibles);
       if (sid && Number.isFinite(newAv)) {
@@ -1687,18 +1680,16 @@
     }
 
     // =====================
-    // Billing + RUC DNIT
+    // Billing (SIN validación RUC)
     // =====================
     function refreshBillingDocUI(){
       const type = billDocTypeEl.value;
-      STATE.ruc_verified = false;
-      STATE.ruc_tipo_entidad = "";
       rucHintEl.textContent = "";
 
       if (type === "fiscal"){
         billDocLabelEl.textContent = "Documento fiscal (RUC) *";
         billDocNumberEl.placeholder = "Ej: 80012345-6";
-        rucHintEl.textContent = "Al salir del campo se verificará el RUC en DNIT.";
+        rucHintEl.textContent = "No se realiza verificación automática del RUC.";
       } else {
         billDocLabelEl.textContent = "Documento personal (Cédula) *";
         billDocNumberEl.placeholder = "Ej: 1234567";
@@ -1715,7 +1706,7 @@
         telefono: (billPhoneEl.value||"").trim(),
         direccion: (billAddressEl.value||"").trim(),
         ciudad: (billCityEl.value||"").trim(),
-        tipo_entidad: STATE.ruc_tipo_entidad || ""
+        tipo_entidad: "" // sin verificación DNIT
       };
     }
 
@@ -1727,38 +1718,8 @@
       if (!b.email || !isEmailBasic(b.email)) return false;
       if (!b.direccion) return false;
       if (!b.ciudad) return false;
-     if (b.tipo_documento === "fiscal" && !STATE.ruc_verified) return false;
+      // ✅ Eliminado: requisito de verificación RUC
       return true;
-    }
-
-    async function verifyRUCIfNeeded(){
-      const type = billDocTypeEl.value;
-      if (type !== "fiscal") return;
-
-      const ruc = (billDocNumberEl.value || "").trim();
-      if (!ruc) { STATE.ruc_verified = false; rucHintEl.textContent = "Ingresá un RUC válido."; return; }
-
-      rucHintEl.textContent = "Verificando RUC…";
-      STATE.ruc_verified = false;
-      STATE.ruc_tipo_entidad = "";
-
-      const res = await apiGet(`${DNIT_ENDPOINT}?ruc=${encodeURIComponent(ruc)}`);
-      if (!res.ok || !res.json || res.json.ok !== true){
-        rucHintEl.textContent = "RUC no verificado. Verificá el número o intentá nuevamente.";
-        STATE.ruc_verified = false;
-        btnConfirm.disabled = !isFormValid();
-        return;
-      }
-
-      const rz = String(res.json.razon_social || "").trim();
-      const te = String(res.json.tipo_entidad || "").trim();
-
-      if (rz) billNameEl.value = rz;
-      STATE.ruc_tipo_entidad = te;
-      STATE.ruc_verified = true;
-
-      rucHintEl.textContent = `RUC verificado${te ? " · " + te : ""}.`;
-      btnConfirm.disabled = !isFormValid();
     }
 
     // =====================
@@ -1934,7 +1895,7 @@
       if (STATE.hold){
         await releaseHold("Cambio de cantidad");
         clearParticipantsUI();
-        setSendMsg("<span class='muted'>Cambiaste la cantidad. Presioná “Añadir participantes” para reservar nuevamente por 20 minutos.</span>");
+        setSendMsg("<span class='muted'>Cambiaste la cantidad. Presioná “Añadir participantes” para reservar nuevamente.</span>");
         applyUIAccess();
       }
       btnConfirm.disabled = !isFormValid();
@@ -1953,7 +1914,7 @@
       if (STATE.hold){
         await releaseHold("Cambio de cantidad (input)");
         clearParticipantsUI();
-        setSendMsg("<span class='muted'>Cambiaste la cantidad. Presioná “Añadir participantes” para reservar nuevamente por 20 minutos.</span>");
+        setSendMsg("<span class='muted'>Cambiaste la cantidad. Presioná “Añadir participantes” para reservar nuevamente.</span>");
         applyUIAccess();
       }
 
@@ -1962,11 +1923,7 @@
 
     billDocTypeEl.addEventListener("change", refreshBillingDocUI);
 
-    billDocNumberEl.addEventListener("blur", async () => {
-      await verifyRUCIfNeeded();
-    });
-
-    [billNameEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
+    [billNameEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
       el.addEventListener("input", ()=>{
         btnConfirm.disabled = !isFormValid();
         setSendMsg("");
@@ -2014,7 +1971,6 @@
         return;
       }
 
-      // si el DO devuelve cupos_disponibles, refrescar local
       const sid = String(commit.json.slot_id || "").trim();
       const av = Number(commit.json.cupos_disponibles);
       if (sid && Number.isFinite(av) && STATE.slots_by_id[sid]) {
@@ -2063,7 +2019,6 @@
       }
       STATE.slots_by_id = map;
 
-      // si ya había seleccionado uno antes, re-enlazar a la referencia actual
       if (STATE.selected_slot) {
         const sid = String(STATE.selected_slot.slot_id || "").trim();
         if (sid && STATE.slots_by_id[sid]) STATE.selected_slot = STATE.slots_by_id[sid];
