@@ -707,13 +707,22 @@
             <div id="namesWrap"></div>
           </div>
 
+          <!-- =========================
+               FACTURACIÓN (MODIFICADO)
+               Orden: tipo_entidad, tipo_doc, doc, nombre/apellido o razon_social, telefono, direccion, ciudad, pais, email
+               ========================= -->
           <div class="section">
             <h3>Facturación</h3>
+
             <div class="row">
               <div class="field">
-                <label for="billName">Razón social / Nombre *</label>
-                <input id="billName" type="text" placeholder="Ej: Juan Pérez / Todo Costura S.A." disabled>
+                <label for="billEntityType">Tipo de entidad *</label>
+                <select id="billEntityType" disabled>
+                  <option value="personal" selected>Personal</option>
+                  <option value="juridica">Entidad jurídica</option>
+                </select>
               </div>
+
               <div class="field">
                 <label for="billDocType">Tipo de documento *</label>
                 <select id="billDocType" disabled>
@@ -729,9 +738,21 @@
                 <input id="billDocNumber" type="text" placeholder="Ej: 1234567" disabled>
                 <div class="tiny muted" id="rucHint" style="margin-top:6px"></div>
               </div>
-              <div class="field">
-                <label for="billEmail">Correo de facturación *</label>
-                <input id="billEmail" type="email" placeholder="facturacion@dominio.com" disabled>
+
+              <!-- Juridica: Razon social -->
+              <div class="field" id="billRazWrap">
+                <label for="billRaz">Razón social *</label>
+                <input id="billRaz" type="text" placeholder="Ej: Todo Costura S.A." disabled>
+              </div>
+
+              <!-- Personal: Nombre + Apellido -->
+              <div class="field" id="billFirstWrap" style="display:none">
+                <label for="billFirstName">Nombre *</label>
+                <input id="billFirstName" type="text" placeholder="Ej: Juan" disabled>
+              </div>
+              <div class="field" id="billLastWrap" style="display:none">
+                <label for="billLastName">Apellido *</label>
+                <input id="billLastName" type="text" placeholder="Ej: Pérez" disabled>
               </div>
             </div>
 
@@ -740,6 +761,7 @@
                 <label for="billPhone">Teléfono (opcional)</label>
                 <input id="billPhone" type="text" placeholder="+595…" disabled>
               </div>
+
               <div class="field">
                 <label for="billAddress">Dirección *</label>
                 <input id="billAddress" type="text" placeholder="Calle, número, barrio" disabled>
@@ -750,6 +772,17 @@
               <div class="field">
                 <label for="billCity">Ciudad *</label>
                 <input id="billCity" type="text" placeholder="Ej: Asunción" disabled>
+              </div>
+              <div class="field">
+                <label for="billCountry">País *</label>
+                <input id="billCountry" type="text" placeholder="Ej: Paraguay" value="Paraguay" disabled>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="billEmail">Correo de facturación *</label>
+                <input id="billEmail" type="email" placeholder="facturacion@dominio.com" disabled>
               </div>
             </div>
           </div>
@@ -843,7 +876,7 @@
     const CONFIRM_ENDPOINT   = `${API_BASE}/api/confirm`;
 
     const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
-    const HOLD_MS = 25 * 60 * 1000;          // 25 minutos  ✅ (antes 15/20)
+    const HOLD_MS = 25 * 60 * 1000;          // 25 minutos  ✅
 
     const LOGO_URL = ""; // opcional
 
@@ -863,8 +896,9 @@
     const formMsg = document.getElementById("formMsg");
     const sendMsg = document.getElementById("sendMsg");
 
-    // Billing
-    const billNameEl = document.getElementById("billName");
+    // Billing (MOD)
+    const billEntityTypeEl = document.getElementById("billEntityType");
+
     const billDocTypeEl = document.getElementById("billDocType");
     const billDocLabelEl = document.getElementById("billDocLabel");
     const billDocNumberEl = document.getElementById("billDocNumber");
@@ -872,7 +906,16 @@
     const billPhoneEl = document.getElementById("billPhone");
     const billAddressEl = document.getElementById("billAddress");
     const billCityEl = document.getElementById("billCity");
+    const billCountryEl = document.getElementById("billCountry");
     const rucHintEl = document.getElementById("rucHint");
+
+    // Juridica / Personal
+    const billRazWrapEl = document.getElementById("billRazWrap");
+    const billRazEl = document.getElementById("billRaz");
+    const billFirstWrapEl = document.getElementById("billFirstWrap");
+    const billLastWrapEl = document.getElementById("billLastWrap");
+    const billFirstNameEl = document.getElementById("billFirstName");
+    const billLastNameEl = document.getElementById("billLastName");
 
     // Payment proof
     const payFileEl = document.getElementById("payFile");
@@ -1227,9 +1270,19 @@
       btnBuild.disabled = !buying || !hasSlot || !hasStock || !!STATE.hold;
 
       const canFill = buying && !!STATE.hold;
-      [billNameEl, billDocTypeEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl, payFileEl].forEach(el=>{
+
+      // ✅ incluir nuevos campos de facturación
+      [
+        billEntityTypeEl, billDocTypeEl, billDocNumberEl,
+        billRazEl, billFirstNameEl, billLastNameEl,
+        billEmailEl, billPhoneEl, billAddressEl, billCityEl, billCountryEl,
+        payFileEl
+      ].forEach(el=>{
+        if (!el) return;
         el.disabled = !canFill;
       });
+
+      refreshBillingEntityUI(); // asegura visibilidad correcta
 
       btnConfirm.disabled = !isFormValid();
       renderServiceInfo();
@@ -1680,8 +1733,30 @@
     }
 
     // =====================
-    // Billing (SIN validación RUC)
+    // Billing (tipo entidad + pais + UI condicional)
     // =====================
+    function refreshBillingEntityUI(){
+      const ent = String(billEntityTypeEl?.value || "personal");
+
+      const isJuridica = ent === "juridica";
+
+      // Mostrar/ocultar campos
+      if (billRazWrapEl) billRazWrapEl.style.display = isJuridica ? "" : "none";
+      if (billFirstWrapEl) billFirstWrapEl.style.display = isJuridica ? "none" : "";
+      if (billLastWrapEl) billLastWrapEl.style.display = isJuridica ? "none" : "";
+
+      // Limpiar valores del modo no usado (evita que pase validación por accidente)
+      if (isJuridica){
+        if (billFirstNameEl) billFirstNameEl.value = "";
+        if (billLastNameEl) billLastNameEl.value = "";
+      } else {
+        if (billRazEl) billRazEl.value = "";
+      }
+
+      btnConfirm.disabled = !isFormValid();
+    }
+
+    // SIN validación RUC (se mantiene)
     function refreshBillingDocUI(){
       const type = billDocTypeEl.value;
       rucHintEl.textContent = "";
@@ -1698,27 +1773,62 @@
     }
 
     function getBilling(){
+      const ent = String(billEntityTypeEl.value || "personal");
+      const isJuridica = ent === "juridica";
+
+      const nombre = (billFirstNameEl?.value || "").trim();
+      const apellido = (billLastNameEl?.value || "").trim();
+      const razon = (billRazEl?.value || "").trim();
+
+      // "razon_social / Nombre" según tipo
+      const displayName = isJuridica ? razon : [nombre, apellido].filter(Boolean).join(" ").trim();
+
       return {
-        razon_social: (billNameEl.value||"").trim(),
+        tipo_entidad: isJuridica ? "Entidad jurídica" : "Personal",
+
+        // compat: mantenemos razon_social como “nombre facturación” para backend/flow actual
+        razon_social: displayName,
+
+        // extra, por si querés mapear luego en Flow
+        nombre: isJuridica ? "" : nombre,
+        apellido: isJuridica ? "" : apellido,
+        razon_social_juridica: isJuridica ? razon : "",
+
         tipo_documento: billDocTypeEl.value,
         documento: (billDocNumberEl.value||"").trim(),
         email: (billEmailEl.value||"").trim(),
         telefono: (billPhoneEl.value||"").trim(),
         direccion: (billAddressEl.value||"").trim(),
         ciudad: (billCityEl.value||"").trim(),
-        tipo_entidad: "" // sin verificación DNIT
+        pais: (billCountryEl.value||"").trim(),
       };
     }
 
     function isBillingValid(){
       const b = getBilling();
-      if (!b.razon_social) return false;
+
+      if (!b.tipo_entidad) return false;
+
+      // Documento
       if (!b.tipo_documento) return false;
       if (!b.documento) return false;
-      if (!b.email || !isEmailBasic(b.email)) return false;
+
+      // Entidad
+      if (b.tipo_entidad === "Entidad jurídica"){
+        if (!b.razon_social_juridica) return false;
+      } else {
+        if (!b.nombre) return false;
+        if (!b.apellido) return false;
+      }
+
+      if (!b.telefono && b.telefono !== "") { /* opcional */ }
+
       if (!b.direccion) return false;
       if (!b.ciudad) return false;
-      // ✅ Eliminado: requisito de verificación RUC
+      if (!b.pais) return false;
+
+      if (!b.email || !isEmailBasic(b.email)) return false;
+
       return true;
     }
 
@@ -1921,9 +2031,15 @@
       btnConfirm.disabled = !isFormValid();
     });
 
+    // ✅ nuevos listeners
+    billEntityTypeEl.addEventListener("change", refreshBillingEntityUI);
     billDocTypeEl.addEventListener("change", refreshBillingDocUI);
 
-    [billNameEl, billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl].forEach(el=>{
+    [
+      billRazEl, billFirstNameEl, billLastNameEl,
+      billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl, billCountryEl
+    ].forEach(el=>{
+      if (!el) return;
       el.addEventListener("input", ()=>{
         btnConfirm.disabled = !isFormValid();
         setSendMsg("");
@@ -2061,6 +2177,7 @@
       renderServiceInfo();
       renderSlots(STATE.slots);
 
+      refreshBillingEntityUI();
       refreshBillingDocUI();
       applyUIAccess();
 
