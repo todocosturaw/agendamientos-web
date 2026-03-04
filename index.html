@@ -89,6 +89,7 @@
     .tc-modal__body{
       padding: 16px 18px;
       color:#111827;
+      white-space:pre-line;
     }
 
     .tc-modal__actions{
@@ -708,49 +709,55 @@
           </div>
 
           <!-- =========================
-               FACTURACIÓN (MODIFICADO)
-               Orden: tipo_entidad, tipo_doc, doc, nombre/apellido o razon_social, telefono, direccion, ciudad, pais, email
+               FACTURACIÓN
+               Reglas:
+               - Cliente elige CI o RUC
+               - CI: sin guion, pide Nombre+Apellido (independientes)
+               - RUC: consulta DNIT, autodetecta tipoPersona => juridica/personal
+                 - juridica => Razón social
+                 - personal => Nombre + Apellido (si DNIT devuelve nombre completo se separa)
                ========================= -->
           <div class="section">
             <h3>Facturación</h3>
 
             <div class="row">
               <div class="field">
+                <label for="billDocType">¿Qué documento vas a cargar? *</label>
+                <select id="billDocType" disabled>
+                  <option value="personal" selected>CI (Cédula)</option>
+                  <option value="fiscal">RUC</option>
+                </select>
+              </div>
+
+              <!-- Se mantiene (oculto/solo lectura): se setea automáticamente con DNIT si es RUC -->
+              <div class="field" style="display:none">
                 <label for="billEntityType">Tipo de entidad *</label>
                 <select id="billEntityType" disabled>
                   <option value="personal" selected>Personal</option>
                   <option value="juridica">Entidad jurídica</option>
                 </select>
               </div>
-
-              <div class="field">
-                <label for="billDocType">Tipo de documento *</label>
-                <select id="billDocType" disabled>
-                  <option value="personal" selected>Documento personal (Cédula)</option>
-                  <option value="fiscal">Documento fiscal (RUC)</option>
-                </select>
-              </div>
             </div>
 
             <div class="row">
               <div class="field">
-                <label id="billDocLabel" for="billDocNumber">Documento personal (Cédula) *</label>
+                <label id="billDocLabel" for="billDocNumber">CI (Cédula) *</label>
                 <input id="billDocNumber" type="text" placeholder="Ej: 1234567" disabled>
                 <div class="tiny muted" id="rucHint" style="margin-top:6px"></div>
               </div>
 
               <!-- Juridica: Razon social -->
-              <div class="field" id="billRazWrap">
+              <div class="field" id="billRazWrap" style="display:none">
                 <label for="billRaz">Razón social *</label>
                 <input id="billRaz" type="text" placeholder="Ej: Todo Costura S.A." disabled>
               </div>
 
               <!-- Personal: Nombre + Apellido -->
-              <div class="field" id="billFirstWrap" style="display:none">
+              <div class="field" id="billFirstWrap">
                 <label for="billFirstName">Nombre *</label>
                 <input id="billFirstName" type="text" placeholder="Ej: Juan" disabled>
               </div>
-              <div class="field" id="billLastWrap" style="display:none">
+              <div class="field" id="billLastWrap">
                 <label for="billLastName">Apellido *</label>
                 <input id="billLastName" type="text" placeholder="Ej: Pérez" disabled>
               </div>
@@ -875,8 +882,12 @@
     const RELEASE_ENDPOINT   = `${API_BASE}/api/release`;
     const CONFIRM_ENDPOINT   = `${API_BASE}/api/confirm`;
 
+    // NUEVO: endpoint de validación RUC (tu Worker debe exponerlo)
+    // Recomendado: GET /api/validar-ruc?ruc=80054996&dv=1
+    const VALIDAR_RUC_ENDPOINT = `${API_BASE}/api/validar-ruc`;
+
     const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
-    const HOLD_MS = 25 * 60 * 1000;          // 25 minutos  ✅
+    const HOLD_MS = 25 * 60 * 1000;          // 25 minutos ✅
 
     const LOGO_URL = ""; // opcional
 
@@ -896,9 +907,8 @@
     const formMsg = document.getElementById("formMsg");
     const sendMsg = document.getElementById("sendMsg");
 
-    // Billing (MOD)
-    const billEntityTypeEl = document.getElementById("billEntityType");
-
+    // Billing
+    const billEntityTypeEl = document.getElementById("billEntityType"); // hidden, internal
     const billDocTypeEl = document.getElementById("billDocType");
     const billDocLabelEl = document.getElementById("billDocLabel");
     const billDocNumberEl = document.getElementById("billDocNumber");
@@ -975,7 +985,23 @@
 
       ws: null,
 
-      payment_proof: null
+      payment_proof: null,
+
+      // NUEVO: resultado de validación de RUC (DNIT)
+      ruc_check: {
+        status: "idle",           // idle | checking | ok | error
+        ok: false,
+        ruc: "",
+        dv: "",
+        tipoPersona: "",
+        razonSocial: "",
+        estado: "",
+        raw: null,
+        msg: ""
+      },
+
+      // debounce timer
+      ruc_debounce: null
     };
 
     // =====================
@@ -1271,9 +1297,8 @@
 
       const canFill = buying && !!STATE.hold;
 
-      // ✅ incluir nuevos campos de facturación
       [
-        billEntityTypeEl, billDocTypeEl, billDocNumberEl,
+        billDocTypeEl, billDocNumberEl,
         billRazEl, billFirstNameEl, billLastNameEl,
         billEmailEl, billPhoneEl, billAddressEl, billCityEl, billCountryEl,
         payFileEl
@@ -1282,7 +1307,8 @@
         el.disabled = !canFill;
       });
 
-      refreshBillingEntityUI(); // asegura visibilidad correcta
+      refreshBillingDocUI();     // asegura labels + hint
+      refreshBillingEntityUI();  // asegura visibilidad correcta
 
       btnConfirm.disabled = !isFormValid();
       renderServiceInfo();
@@ -1532,6 +1558,9 @@
           payFileEl.value = "";
           payFileStatusEl.textContent = "Sin archivo";
 
+          // reset billing validations
+          resetRucCheck();
+
           setSendMsg("<span class='err'>Se venció el tiempo de reserva temporal. Volvé a presionar “Añadir participantes” para reservar nuevamente.</span>");
           applyUIAccess();
         }
@@ -1565,7 +1594,7 @@
       if (!res.ok || !res.json || res.json.ok !== true){
         const av = Number.isFinite(Number(res.json?.cupos_disponibles)) ? Number(res.json.cupos_disponibles) : selectedAvailable();
         openErrorModal(
-          `Tu cantidad supera la cantidad disponible. Actualmente otro cliente reservó antes. ` +
+          `Tu cantidad supera la cantidad disponible. Actualmente otro cliente reservó antes.\n` +
           `Disponibles ahora: ${Number.isFinite(av) ? av : "-"}`
         );
         return { ok:false, error:"hold_failed", res };
@@ -1605,6 +1634,9 @@
       STATE.payment_proof = null;
       payFileEl.value = "";
       payFileStatusEl.textContent = "Sin archivo";
+
+      // reset billing validations
+      resetRucCheck();
 
       applyUIAccess();
 
@@ -1733,46 +1765,214 @@
     }
 
     // =====================
-    // Billing (tipo entidad + pais + UI condicional)
+    // Billing: CI vs RUC + DNIT
     // =====================
+    function resetRucCheck(){
+      STATE.ruc_check = {
+        status: "idle",
+        ok: false,
+        ruc: "",
+        dv: "",
+        tipoPersona: "",
+        razonSocial: "",
+        estado: "",
+        raw: null,
+        msg: ""
+      };
+      rucHintEl.textContent = "";
+      // no borramos doc number automáticamente; solo el estado
+      btnConfirm.disabled = !isFormValid();
+    }
+
+    function setEntityFromTipoPersona(tipoPersona){
+      const t = String(tipoPersona || "").toUpperCase();
+      const isJuridica = t.includes("JURID");
+      billEntityTypeEl.value = isJuridica ? "juridica" : "personal";
+      refreshBillingEntityUI(); // ajusta visibilidad
+      return isJuridica;
+    }
+
+    function splitNombreApellido(full){
+      const s = String(full || "").trim().replace(/\s+/g, " ");
+      if (!s) return { nombre:"", apellido:"" };
+      const parts = s.split(" ");
+      if (parts.length === 1) return { nombre: parts[0], apellido: "" };
+      const apellido = parts.pop();
+      return { nombre: parts.join(" "), apellido: apellido };
+    }
+
     function refreshBillingEntityUI(){
       const ent = String(billEntityTypeEl?.value || "personal");
-
       const isJuridica = ent === "juridica";
 
-      // Mostrar/ocultar campos
       if (billRazWrapEl) billRazWrapEl.style.display = isJuridica ? "" : "none";
       if (billFirstWrapEl) billFirstWrapEl.style.display = isJuridica ? "none" : "";
       if (billLastWrapEl) billLastWrapEl.style.display = isJuridica ? "none" : "";
 
-      // Limpiar valores del modo no usado (evita que pase validación por accidente)
-      if (isJuridica){
-        if (billFirstNameEl) billFirstNameEl.value = "";
-        if (billLastNameEl) billLastNameEl.value = "";
-      } else {
-        if (billRazEl) billRazEl.value = "";
-      }
-
       btnConfirm.disabled = !isFormValid();
     }
 
-    // SIN validación RUC (se mantiene)
+    function normalizeCIInput(){
+  // CI: NO debe incluir guión. Puede incluir letras.
+  const raw = String(billDocNumberEl.value || "");
+  const noHyphen = raw.replace(/-/g, "").trim();
+  if (noHyphen !== raw) billDocNumberEl.value = noHyphen;
+
+  rucHintEl.textContent = "Ingresá tu cédula sin guión.";
+}
+
+    function parseRucAndDv(input){
+      const s = String(input || "").trim();
+      if (!s) return { ruc:"", dv:"" };
+
+      // acepta "80054996-1" o "800549961"
+      const m = s.match(/^(\d{5,10})\s*-\s*(\d{1})$/);
+      if (m) return { ruc: m[1], dv: m[2] };
+
+      const digits = s.replace(/\D+/g, "");
+      if (digits.length >= 6) {
+        const dv = digits.slice(-1);
+        const ruc = digits.slice(0, -1);
+        return { ruc, dv };
+      }
+      return { ruc:"", dv:"" };
+    }
+
+    function formatRucDisplay(ruc, dv){
+      const rr = String(ruc||"").replace(/\D+/g,"");
+      const dd = String(dv||"").replace(/\D+/g,"");
+      if (!rr) return "";
+      if (dd) return `${rr}-${dd}`;
+      return rr;
+    }
+
+    async function checkRucViaDnit(ruc, dv){
+      const canFill = (STATE.intent === "buy") && !!STATE.hold;
+      if (!canFill) return;
+
+      const rr = String(ruc||"").replace(/\D+/g,"");
+      const dd = String(dv||"").replace(/\D+/g,"");
+      if (!rr || !dd) {
+        resetRucCheck();
+        rucHintEl.textContent = "Ingresá tu RUC con dígito verificador. Ej: 80012345-6";
+        return;
+      }
+
+      // si ya validamos exactamente el mismo, no repetir
+      if (STATE.ruc_check.ok && STATE.ruc_check.ruc === rr && STATE.ruc_check.dv === dd) return;
+
+      STATE.ruc_check.status = "checking";
+      STATE.ruc_check.ok = false;
+      STATE.ruc_check.ruc = rr;
+      STATE.ruc_check.dv = dd;
+      STATE.ruc_check.msg = "";
+      rucHintEl.textContent = "Consultando DNIT…";
+
+      btnConfirm.disabled = true;
+
+      const url = `${VALIDAR_RUC_ENDPOINT}?ruc=${encodeURIComponent(rr)}&dv=${encodeURIComponent(dd)}`;
+
+      let res = null;
+      try {
+        res = await apiGet(url);
+      } catch (e) {
+        STATE.ruc_check.status = "error";
+        STATE.ruc_check.ok = false;
+        STATE.ruc_check.msg = "No se pudo conectar para validar el RUC.";
+        rucHintEl.textContent = "Error: no se pudo validar el RUC (red).";
+        btnConfirm.disabled = !isFormValid();
+        return;
+      }
+
+      const j = res.json;
+
+      // Soporta:
+      // A) { ok:true, response:{ codigo, estado, contribuyente:{ razonSocial, tipoPersona, estado } } }
+      // B) { ok:true, data:{ ... } }
+      // C) { codigo, estado, contribuyente:{...} } (directo)
+      const root = (j && typeof j === "object") ? j : null;
+      const payload = root?.response || root?.data || root || null;
+
+      const ok = Boolean(root?.ok === true || payload?.codigo === "VALIDO" || payload?.estado === "VALIDO");
+      const codigo = String(payload?.codigo || payload?.estado || root?.codigo || root?.estado || "").toUpperCase();
+
+      const contrib = payload?.contribuyente || root?.contribuyente || null;
+
+      const tipoPersona = String(contrib?.tipoPersona || payload?.tipoPersona || "").toUpperCase();
+      const razonSocial = String(contrib?.razonSocial || payload?.razonSocial || "").trim();
+      const estadoContrib = String(contrib?.estado || payload?.estadoContribuyente || contrib?.Estado || "").trim();
+
+      if (!res.ok || !root || root.ok !== true || !contrib || (!tipoPersona && !razonSocial) || !(codigo.includes("VALIDO") || ok)) {
+        STATE.ruc_check.status = "error";
+        STATE.ruc_check.ok = false;
+        STATE.ruc_check.raw = root;
+        STATE.ruc_check.msg = "RUC no válido o no encontrado.";
+        rucHintEl.textContent = "RUC inválido/no encontrado. Verificá el número y DV.";
+        // limpiar datos auto-cargados
+        billRazEl.value = "";
+        billFirstNameEl.value = "";
+        billLastNameEl.value = "";
+        btnConfirm.disabled = !isFormValid();
+        return;
+      }
+
+      // OK
+      STATE.ruc_check.status = "ok";
+      STATE.ruc_check.ok = true;
+      STATE.ruc_check.tipoPersona = tipoPersona || "";
+      STATE.ruc_check.razonSocial = razonSocial || "";
+      STATE.ruc_check.estado = estadoContrib || "";
+      STATE.ruc_check.raw = root;
+
+      // setea tipo entidad automático
+      const isJuridica = setEntityFromTipoPersona(tipoPersona || "");
+
+      // autopopula campos
+      if (isJuridica) {
+        billRazEl.value = razonSocial || "";
+        billFirstNameEl.value = "";
+        billLastNameEl.value = "";
+      } else {
+        // persona física: mostrar nombre/apellido. DNIT suele traer "razonSocial" como nombre completo
+        const { nombre, apellido } = splitNombreApellido(razonSocial || "");
+        billFirstNameEl.value = nombre;
+        billLastNameEl.value = apellido;
+        billRazEl.value = "";
+      }
+
+      rucHintEl.textContent = `DNIT: ${estadoContrib ? estadoContrib : "OK"} · ${tipoPersona ? tipoPersona : "—"}`;
+
+      refreshBillingEntityUI();
+      btnConfirm.disabled = !isFormValid();
+    }
+
     function refreshBillingDocUI(){
-      const type = billDocTypeEl.value;
-      rucHintEl.textContent = "";
+      const type = String(billDocTypeEl.value || "personal");
+      resetRucCheck();
 
       if (type === "fiscal"){
-        billDocLabelEl.textContent = "Documento fiscal (RUC) *";
-        billDocNumberEl.placeholder = "Ej: 80012345-6";
-        rucHintEl.textContent = "No se realiza verificación automática del RUC.";
+        billDocLabelEl.textContent = "RUC *";
+        billDocNumberEl.placeholder = "Ej: 80054996-1";
+
+        // En RUC, tipo entidad lo decide DNIT (auto). Inicialmente no sabemos:
+        billEntityTypeEl.value = "juridica"; // default visual neutro, se corrige al validar
+        refreshBillingEntityUI();
+        rucHintEl.textContent = "Ingresá el RUC con dígito verificador. Se validará automáticamente en DNIT.";
       } else {
-        billDocLabelEl.textContent = "Documento personal (Cédula) *";
+        billDocLabelEl.textContent = "CI (Cédula) *";
         billDocNumberEl.placeholder = "Ej: 1234567";
+
+        // En CI, el cliente es personal y se carga manualmente nombre/apellido
+        billEntityTypeEl.value = "personal";
+        refreshBillingEntityUI();
+        rucHintEl.textContent = "Ingresá tu cédula sin puntos ni guiones.";
       }
+
       btnConfirm.disabled = !isFormValid();
     }
 
     function getBilling(){
+      const docType = String(billDocTypeEl.value || "personal");
       const ent = String(billEntityTypeEl.value || "personal");
       const isJuridica = ent === "juridica";
 
@@ -1780,53 +1980,71 @@
       const apellido = (billLastNameEl?.value || "").trim();
       const razon = (billRazEl?.value || "").trim();
 
-      // "razon_social / Nombre" según tipo
       const displayName = isJuridica ? razon : [nombre, apellido].filter(Boolean).join(" ").trim();
 
       return {
+        tipo_documento: docType === "fiscal" ? "fiscal" : "personal",
+        documento: (billDocNumberEl.value||"").trim(),
+
+        // "tipo_entidad" se deriva (en RUC por DNIT; en CI fijo personal)
         tipo_entidad: isJuridica ? "Entidad jurídica" : "Personal",
 
-        // compat: mantenemos razon_social como “nombre facturación” para backend/flow actual
         razon_social: displayName,
 
-        // extra, por si querés mapear luego en Flow
         nombre: isJuridica ? "" : nombre,
         apellido: isJuridica ? "" : apellido,
         razon_social_juridica: isJuridica ? razon : "",
 
-        tipo_documento: billDocTypeEl.value,
-        documento: (billDocNumberEl.value||"").trim(),
         email: (billEmailEl.value||"").trim(),
         telefono: (billPhoneEl.value||"").trim(),
         direccion: (billAddressEl.value||"").trim(),
         ciudad: (billCityEl.value||"").trim(),
         pais: (billCountryEl.value||"").trim(),
+
+        // extra trazabilidad DNIT
+        dnit: (docType === "fiscal" && STATE.ruc_check.raw) ? {
+          tipoPersona: STATE.ruc_check.tipoPersona,
+          razonSocial: STATE.ruc_check.razonSocial,
+          estado: STATE.ruc_check.estado
+        } : null
       };
     }
 
     function isBillingValid(){
       const b = getBilling();
-
-      if (!b.tipo_entidad) return false;
+      const docType = String(billDocTypeEl.value || "personal");
 
       // Documento
       if (!b.tipo_documento) return false;
       if (!b.documento) return false;
 
-      // Entidad
-      if (b.tipo_entidad === "Entidad jurídica"){
-        if (!b.razon_social_juridica) return false;
-      } else {
+      if (docType === "personal"){
+        // CI: sin guion, solo números
+        if (String(b.documento).includes("-")) return false;
+
+        // personal: nombre + apellido obligatorios
         if (!b.nombre) return false;
         if (!b.apellido) return false;
-      }
+      } else {
+        // RUC: debe estar validado por DNIT
+        if (!STATE.ruc_check.ok) return false;
 
-      if (!b.telefono && b.telefono !== "") { /* opcional */ }
+        // además, el documento debe tener ruc/dv (no exigimos guion, pero sí parseable)
+        const { ruc, dv } = parseRucAndDv(b.documento);
+        if (!ruc || !dv) return false;
+
+        // tipo entidad según DNIT
+        if (b.tipo_entidad === "Entidad jurídica"){
+          if (!b.razon_social_juridica) return false;
+        } else {
+          if (!b.nombre) return false;
+          if (!b.apellido) return false;
+        }
+      }
 
       if (!b.direccion) return false;
       if (!b.ciudad) return false;
       if (!b.pais) return false;
-
       if (!b.email || !isEmailBasic(b.email)) return false;
 
       return true;
@@ -1996,6 +2214,9 @@
       }
 
       buildParticipants();
+
+      // al entrar al fill, refrescar modo CI/RUC
+      refreshBillingDocUI();
       applyUIAccess();
     });
 
@@ -2031,13 +2252,56 @@
       btnConfirm.disabled = !isFormValid();
     });
 
-    // ✅ nuevos listeners
-    billEntityTypeEl.addEventListener("change", refreshBillingEntityUI);
-    billDocTypeEl.addEventListener("change", refreshBillingDocUI);
+    // Doc type switch: CI vs RUC
+    billDocTypeEl.addEventListener("change", () => {
+      // limpiar campos de identidad
+      billDocNumberEl.value = "";
+      billRazEl.value = "";
+      billFirstNameEl.value = "";
+      billLastNameEl.value = "";
+      resetRucCheck();
+      refreshBillingDocUI();
+      applyUIAccess();
+    });
+
+    // Input documento: CI normaliza, RUC valida (debounce) + en blur valida definitivo
+    billDocNumberEl.addEventListener("input", () => {
+      const type = String(billDocTypeEl.value || "personal");
+      if (type === "personal"){
+        normalizeCIInput();
+        btnConfirm.disabled = !isFormValid();
+        setSendMsg("");
+        return;
+      }
+
+      // RUC: debounce validación
+      if (STATE.ruc_debounce) clearTimeout(STATE.ruc_debounce);
+      const { ruc, dv } = parseRucAndDv(billDocNumberEl.value);
+      STATE.ruc_debounce = setTimeout(() => {
+        checkRucViaDnit(ruc, dv);
+      }, 650);
+
+      btnConfirm.disabled = !isFormValid();
+      setSendMsg("");
+    });
+
+    billDocNumberEl.addEventListener("blur", () => {
+      const type = String(billDocTypeEl.value || "personal");
+      if (type === "personal"){
+        normalizeCIInput();
+        btnConfirm.disabled = !isFormValid();
+        return;
+      }
+      const { ruc, dv } = parseRucAndDv(billDocNumberEl.value);
+      // normalizar visual a ruc-dv
+      const formatted = formatRucDisplay(ruc, dv);
+      if (formatted) billDocNumberEl.value = formatted;
+      checkRucViaDnit(ruc, dv);
+    });
 
     [
       billRazEl, billFirstNameEl, billLastNameEl,
-      billDocNumberEl, billEmailEl, billPhoneEl, billAddressEl, billCityEl, billCountryEl
+      billEmailEl, billPhoneEl, billAddressEl, billCityEl, billCountryEl
     ].forEach(el=>{
       if (!el) return;
       el.addEventListener("input", ()=>{
@@ -2177,8 +2441,8 @@
       renderServiceInfo();
       renderSlots(STATE.slots);
 
-      refreshBillingEntityUI();
       refreshBillingDocUI();
+      refreshBillingEntityUI();
       applyUIAccess();
 
       connectWS();
